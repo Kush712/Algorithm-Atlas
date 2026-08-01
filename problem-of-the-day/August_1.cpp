@@ -44,5 +44,9 @@ int main() {
     vector<int> nums2 = {1, 5, 233, 7};
     bool result2 = solution.PredictTheWinner(nums2);
     cout << (result2 ? "Player 1 wins." : "Player 2 wins.") << endl;
+
+    vector<int> nums3 = {1, 5, 2, 4};
+    bool result3 = solution.PredictTheWinner(nums3);
+    cout << (result3 ? "Player 1 wins." : "Player 2 wins.") << endl;
     return 0;
 }
