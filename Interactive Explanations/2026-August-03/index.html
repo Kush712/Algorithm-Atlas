@@ -1,0 +1,1696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeetCode 1406 — Stone Game III | Algorithm Atlas</title>
+    <meta name="description" content="Interactive visual explanation of LeetCode Problem 1406: Stone Game III using Dynamic Programming, Game Theory and Minimax with memoization.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════════════════════
+           ROOT & RESET — "Study Hard" Palette
+           ═══════════════════════════════════════════════════════ */
+        *, *::before, *::after {
+            margin: 0; padding: 0; box-sizing: border-box;
+        }
+        :root {
+            --bg-primary: #f5f2e8;
+            --bg-secondary: #ece8d8;
+            --bg-card: rgba(255, 252, 243, 0.75);
+            --glass: rgba(135, 128, 79, 0.06);
+            --glass-border: rgba(135, 128, 79, 0.18);
+            --text-primary: #303030;
+            --text-secondary: #5a5646;
+            --text-muted: #8a8474;
+            --accent-1: #87804F;
+            --accent-2: #6C6E24;
+            --accent-3: #C3B293;
+            --accent-4: #9a4a2a;
+            --green: #5a7a34;
+            --yellow: #9e8a2e;
+            --cyan: #6C6E24;
+            --orange: #a87030;
+            --blue: #7a8a6a;
+            --pink: #8a6a70;
+            --neutral-1: #DFD8B1;
+            --neutral-2: #C0B0BC;
+            --gradient-hero: linear-gradient(135deg, #87804F 0%, #6C6E24 50%, #C3B293 100%);
+            --gradient-warm: linear-gradient(135deg, #C3B293, #87804F, #DFD8B1);
+            --gradient-cool: linear-gradient(135deg, #6C6E24, #87804F, #C3B293);
+            --shadow-glow: 0 0 60px rgba(135, 128, 79, 0.12);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           ANIMATED BACKGROUND — Enhanced with particles
+           ═══════════════════════════════════════════════════════ */
+        .bg-mesh {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            overflow: hidden;
+        }
+        .bg-mesh .orb {
+            position: absolute; border-radius: 50%; filter: blur(120px);
+            animation: orbFloat 20s ease-in-out infinite;
+        }
+        .bg-mesh .orb:nth-child(1) {
+            width: 600px; height: 600px; top: -10%; left: -5%;
+            background: rgba(135, 128, 79, 0.12);
+            animation-duration: 25s;
+        }
+        .bg-mesh .orb:nth-child(2) {
+            width: 500px; height: 500px; top: 40%; right: -10%;
+            background: rgba(108, 110, 36, 0.10);
+            animation-duration: 30s; animation-delay: -5s;
+        }
+        .bg-mesh .orb:nth-child(3) {
+            width: 400px; height: 400px; bottom: -5%; left: 30%;
+            background: rgba(195, 178, 147, 0.12);
+            animation-duration: 22s; animation-delay: -10s;
+        }
+        .bg-mesh .orb:nth-child(4) {
+            width: 300px; height: 300px; top: 20%; left: 50%;
+            background: rgba(192, 176, 188, 0.08);
+            animation-duration: 28s; animation-delay: -15s;
+        }
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            25% { transform: translate(60px,-40px) scale(1.1); }
+            50% { transform: translate(-30px,60px) scale(0.95); }
+            75% { transform: translate(40px,30px) scale(1.05); }
+        }
+
+        /* Floating stone particles */
+        .particle {
+            position: fixed; pointer-events: none; z-index: 0;
+            width: 6px; height: 6px; border-radius: 50%;
+            background: rgba(135, 128, 79, 0.15);
+            animation: particleDrift linear infinite;
+        }
+        .particle:nth-child(odd) { background: rgba(108, 110, 36, 0.12); width: 4px; height: 4px; }
+        .particle:nth-child(5) { width: 8px; height: 8px; background: rgba(195, 178, 147, 0.18); }
+        .particle:nth-child(7) { width: 3px; height: 3px; background: rgba(192, 176, 188, 0.15); }
+        @keyframes particleDrift {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           LAYOUT
+           ═══════════════════════════════════════════════════════ */
+        .container {
+            position: relative; z-index: 1;
+            max-width: 900px; margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           NAVIGATION — with subtle shimmer
+           ═══════════════════════════════════════════════════════ */
+        .navbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            backdrop-filter: blur(20px) saturate(1.8);
+            -webkit-backdrop-filter: blur(20px) saturate(1.8);
+            background: rgba(245, 242, 232, 0.85);
+            border-bottom: 1px solid var(--glass-border);
+            transition: box-shadow 0.3s, background 0.3s;
+        }
+        .navbar.scrolled {
+            box-shadow: 0 4px 30px rgba(48,48,48,0.08);
+            background: rgba(245, 242, 232, 0.95);
+        }
+        .navbar-inner {
+            max-width: 900px; margin: 0 auto; padding: 0 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 64px;
+        }
+        .nav-brand {
+            display: flex; align-items: center; gap: 10px;
+            font-weight: 700; font-size: 1.05rem;
+            text-decoration: none; color: var(--text-primary);
+            transition: transform 0.2s;
+        }
+        .nav-brand:hover { transform: scale(1.02); }
+        .nav-brand .logo {
+            width: 32px; height: 32px; border-radius: 8px;
+            background: var(--gradient-hero);
+            display: grid; place-items: center;
+            font-size: 0.85rem; font-weight: 800;
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(135, 128, 79, 0.25);
+        }
+        .nav-links {
+            display: flex; align-items: center; gap: 16px;
+        }
+        .nav-date {
+            font-size: 0.82rem; color: var(--text-secondary);
+            font-weight: 500;
+            padding: 6px 14px; border-radius: 20px;
+            background: var(--glass); border: 1px solid var(--glass-border);
+            transition: all 0.2s;
+        }
+        .nav-difficulty {
+            font-size: 0.72rem; font-weight: 700;
+            padding: 4px 12px; border-radius: 20px;
+            background: rgba(154, 74, 42, 0.1);
+            color: var(--accent-4);
+            border: 1px solid rgba(154, 74, 42, 0.2);
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           HERO SECTION — Enhanced with animated stones
+           ═══════════════════════════════════════════════════════ */
+        .hero {
+            padding: 120px 0 60px;
+            text-align: center;
+            position: relative;
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 7px 18px; border-radius: 50px;
+            background: rgba(135, 128, 79, 0.10);
+            border: 1px solid rgba(135, 128, 79, 0.25);
+            font-size: 0.78rem; font-weight: 600;
+            color: var(--accent-1);
+            text-transform: uppercase; letter-spacing: 1.5px;
+            margin-bottom: 24px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+        .hero-badge .dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--accent-2);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%,100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+        .hero h1 {
+            font-size: clamp(2.2rem, 5vw, 3.4rem);
+            font-weight: 900; line-height: 1.15;
+            letter-spacing: -1.5px;
+            color: var(--text-primary);
+            animation: fadeInUp 0.8s ease-out 0.1s both;
+        }
+        .hero h1 .gradient-text {
+            background: var(--gradient-hero);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero h1 .leetcode-num {
+            display: block;
+            font-size: 0.45em;
+            letter-spacing: 2px;
+            -webkit-text-fill-color: var(--text-muted);
+            background: none;
+            margin-top: 6px;
+        }
+        .hero-subtitle {
+            margin-top: 18px;
+            font-size: 1.1rem; color: var(--text-secondary);
+            max-width: 620px; margin-left: auto; margin-right: auto;
+            line-height: 1.7;
+            animation: fadeInUp 0.8s ease-out 0.25s both;
+        }
+        .hero-tags {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+            margin-top: 28px;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+        .hero-tag {
+            padding: 6px 16px; border-radius: 20px; font-size: 0.78rem;
+            font-weight: 600; border: 1px solid;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .hero-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .hero-tag.diff-hard {
+            color: var(--accent-4); border-color: rgba(154, 74, 42, 0.3);
+            background: rgba(154, 74, 42, 0.08);
+        }
+        .hero-tag.cat {
+            color: var(--accent-2); border-color: rgba(108, 110, 36, 0.3);
+            background: rgba(108, 110, 36, 0.08);
+        }
+        .hero-tag.pattern {
+            color: #7a5a30; border-color: rgba(122, 90, 48, 0.3);
+            background: rgba(122, 90, 48, 0.08);
+        }
+
+        /* Hero decorative stones animation */
+        .hero-stones {
+            display: flex; justify-content: center; gap: 18px;
+            margin-top: 36px;
+            animation: fadeInUp 0.8s ease-out 0.55s both;
+        }
+        .hero-stone {
+            width: 46px; height: 46px; border-radius: 12px;
+            display: grid; place-items: center;
+            font-size: 1rem; font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            animation: stoneFloat 3s ease-in-out infinite;
+            border: 2px solid;
+        }
+        .hero-stone:nth-child(1) { background: rgba(135,128,79,0.1); border-color: rgba(135,128,79,0.3); color: var(--accent-1); animation-delay: 0s; }
+        .hero-stone:nth-child(2) { background: rgba(108,110,36,0.1); border-color: rgba(108,110,36,0.3); color: var(--accent-2); animation-delay: 0.3s; }
+        .hero-stone:nth-child(3) { background: rgba(195,178,147,0.15); border-color: rgba(195,178,147,0.35); color: var(--orange); animation-delay: 0.6s; }
+        .hero-stone:nth-child(4) { background: rgba(90,122,52,0.1); border-color: rgba(90,122,52,0.3); color: var(--green); animation-delay: 0.9s; }
+        @keyframes stoneFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           ANIMATIONS
+           ═══════════════════════════════════════════════════════ */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInLeft {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        .reveal {
+            opacity: 0; transform: translateY(40px);
+            transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+        }
+        .reveal.visible {
+            opacity: 1; transform: translateY(0);
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           GLASS CARD — Enhanced hover effects
+           ═══════════════════════════════════════════════════════ */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 36px;
+            margin-bottom: 32px;
+            transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(135,128,79,0.03), transparent);
+            transition: left 0.6s ease;
+        }
+        .card:hover::before {
+            left: 100%;
+        }
+        .card:hover {
+            border-color: rgba(135, 128, 79, 0.3);
+            box-shadow: var(--shadow-glow);
+            transform: translateY(-2px);
+        }
+        .card-header {
+            display: flex; align-items: center; gap: 14px;
+            margin-bottom: 22px;
+        }
+        .card-icon {
+            width: 48px; height: 48px; border-radius: 14px;
+            display: grid; place-items: center;
+            font-size: 1.3rem; flex-shrink: 0;
+            transition: transform 0.3s;
+        }
+        .card:hover .card-icon {
+            transform: scale(1.1) rotate(-3deg);
+        }
+        .card-title {
+            font-size: 1.35rem; font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+        }
+        .card p, .card li {
+            color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8;
+        }
+        .card ul { list-style: none; padding: 0; }
+        .card ul li {
+            padding: 6px 0; padding-left: 22px; position: relative;
+        }
+        .card ul li::before {
+            content: '▸'; position: absolute; left: 0;
+            color: var(--accent-1); font-weight: 700;
+        }
+        .card strong { color: var(--text-primary); }
+
+        /* ═══════════════════════════════════════════════════════
+           SECTION DIVIDER — with number glow
+           ═══════════════════════════════════════════════════════ */
+        .section-label {
+            display: flex; align-items: center; gap: 14px;
+            margin: 50px 0 24px; font-size: 0.72rem;
+            text-transform: uppercase; letter-spacing: 3px;
+            font-weight: 700; color: var(--text-muted);
+        }
+        .section-label .sec-num {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; border-radius: 8px;
+            background: var(--gradient-hero);
+            color: #fff; font-size: 0.7rem; font-weight: 800;
+            flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(135, 128, 79, 0.2);
+        }
+        .section-label::after {
+            content: ''; flex: 1; height: 1px;
+            background: linear-gradient(90deg, var(--glass-border), transparent);
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           INTERACTIVE GAME BOARD — Enhanced for 1/2/3 stone picks
+           ═══════════════════════════════════════════════════════ */
+        .game-board {
+            text-align: center;
+        }
+        .game-nums {
+            display: flex; justify-content: center; gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .game-num {
+            width: 58px; height: 58px; border-radius: 14px;
+            display: grid; place-items: center;
+            font-size: 1.2rem; font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--glass);
+            border: 2px solid var(--glass-border);
+            color: var(--text-primary);
+            transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+            position: relative;
+        }
+        .game-num .stone-idx {
+            position: absolute; top: -6px; right: -6px;
+            font-size: 0.55rem; font-weight: 700;
+            background: var(--bg-secondary); color: var(--text-muted);
+            width: 18px; height: 18px; border-radius: 50%;
+            display: grid; place-items: center;
+            border: 1px solid var(--glass-border);
+        }
+        .game-num.picked-1 {
+            background: rgba(135, 128, 79, 0.2);
+            border-color: var(--accent-1);
+            color: var(--accent-1);
+            transform: scale(1.08) translateY(-4px);
+            box-shadow: 0 8px 25px rgba(135, 128, 79, 0.25);
+        }
+        .game-num.picked-2 {
+            background: rgba(108, 110, 36, 0.2);
+            border-color: var(--accent-2);
+            color: var(--accent-2);
+            transform: scale(1.08) translateY(-4px);
+            box-shadow: 0 8px 25px rgba(108, 110, 36, 0.25);
+        }
+        .game-num.faded {
+            opacity: 0.15; transform: scale(0.8);
+            filter: grayscale(0.5);
+        }
+        .game-num.next-pick {
+            border-color: var(--accent-2);
+            box-shadow: 0 0 20px rgba(108, 110, 36, 0.15);
+            animation: nextPickPulse 1.5s ease-in-out infinite;
+        }
+        @keyframes nextPickPulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(108, 110, 36, 0.1); }
+            50% { box-shadow: 0 0 25px rgba(108, 110, 36, 0.25); }
+        }
+        .game-num.negative {
+            color: var(--accent-4);
+        }
+        .game-scores {
+            display: flex; justify-content: center; gap: 50px;
+            margin-top: 24px;
+        }
+        .game-score {
+            text-align: center;
+            padding: 16px 28px;
+            border-radius: var(--radius-sm);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            min-width: 120px;
+            transition: all 0.3s;
+        }
+        .game-score .label {
+            font-size: 0.72rem; text-transform: uppercase;
+            letter-spacing: 2px; font-weight: 700;
+            color: var(--text-muted); margin-bottom: 6px;
+        }
+        .game-score .value {
+            font-size: 2.2rem; font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.3s;
+        }
+        .game-score.p1 { border-color: rgba(135,128,79,0.25); }
+        .game-score.p1 .value { color: var(--accent-1); }
+        .game-score.p2 { border-color: rgba(108,110,36,0.25); }
+        .game-score.p2 .value { color: var(--accent-2); }
+        .game-score.p1.active { border-color: var(--accent-1); box-shadow: 0 0 20px rgba(135,128,79,0.15); }
+        .game-score.p2.active { border-color: var(--accent-2); box-shadow: 0 0 20px rgba(108,110,36,0.15); }
+        .game-controls {
+            display: flex; justify-content: center; gap: 12px;
+            margin-top: 24px; flex-wrap: wrap;
+        }
+        .game-btn {
+            padding: 10px 24px; border-radius: 10px; border: none;
+            font-family: 'Inter', sans-serif; font-weight: 600;
+            font-size: 0.85rem; cursor: pointer;
+            transition: all 0.25s;
+        }
+        .game-btn.primary {
+            background: var(--gradient-hero); color: #fff;
+            box-shadow: 0 4px 20px rgba(135, 128, 79, 0.25);
+        }
+        .game-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(135, 128, 79, 0.4);
+        }
+        .game-btn.primary:disabled {
+            opacity: 0.5; cursor: not-allowed;
+            transform: none; box-shadow: none;
+        }
+        .game-btn.secondary {
+            background: var(--glass); color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+        .game-btn.secondary:hover {
+            border-color: var(--accent-1);
+            transform: translateY(-1px);
+        }
+        .game-result {
+            margin-top: 18px; font-weight: 700; font-size: 1.05rem;
+            min-height: 32px;
+        }
+        .game-result .winner { color: var(--green); }
+        .game-result .loser { color: var(--accent-4); }
+        .game-result .tie { color: var(--yellow); }
+        .game-step-info {
+            margin-top: 14px; font-size: 0.88rem;
+            color: var(--text-secondary); min-height: 24px;
+            padding: 8px 16px; border-radius: 8px;
+            background: rgba(135,128,79,0.04);
+            display: inline-block;
+        }
+        .take-indicator {
+            display: flex; justify-content: center; gap: 8px;
+            margin-top: 16px; margin-bottom: 8px;
+        }
+        .take-indicator .take-label {
+            font-size: 0.72rem; text-transform: uppercase;
+            letter-spacing: 1.5px; font-weight: 700;
+            color: var(--text-muted);
+            padding: 4px 12px; border-radius: 6px;
+            background: rgba(135,128,79,0.06);
+        }
+        .take-indicator .take-count {
+            font-size: 0.78rem; font-weight: 800;
+            padding: 4px 14px; border-radius: 6px;
+            background: var(--gradient-hero); color: #fff;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           APPROACH STEPS — TIMELINE with animated dots
+           ═══════════════════════════════════════════════════════ */
+        .timeline {
+            position: relative; padding-left: 40px;
+        }
+        .timeline::before {
+            content: ''; position: absolute; left: 16px; top: 0; bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--accent-1), var(--accent-2), var(--accent-3), var(--neutral-2));
+            border-radius: 2px;
+        }
+        .timeline-item {
+            position: relative; margin-bottom: 32px;
+            padding-left: 4px;
+        }
+        .timeline-dot {
+            position: absolute; left: -31px; top: 4px;
+            width: 16px; height: 16px; border-radius: 50%;
+            border: 3px solid var(--accent-1);
+            background: var(--bg-primary);
+            transition: all 0.3s;
+        }
+        .timeline-item:hover .timeline-dot {
+            transform: scale(1.3);
+            box-shadow: 0 0 12px rgba(135,128,79,0.3);
+        }
+        .timeline-item:nth-child(2) .timeline-dot { border-color: var(--accent-2); }
+        .timeline-item:nth-child(3) .timeline-dot { border-color: var(--accent-3); }
+        .timeline-item:nth-child(4) .timeline-dot { border-color: var(--neutral-2); }
+        .timeline-item:nth-child(5) .timeline-dot { border-color: var(--orange); }
+        .timeline-item h4 {
+            font-size: 1.02rem; font-weight: 700; margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+        .timeline-item p {
+            color: var(--text-secondary); font-size: 0.9rem; line-height: 1.75;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           INLINE HIGHLIGHT
+           ═══════════════════════════════════════════════════════ */
+        .hl {
+            padding: 2px 8px; border-radius: 5px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82em; font-weight: 600;
+        }
+        .hl-purple { background: rgba(135, 128, 79, 0.12); color: #6b6538; }
+        .hl-pink { background: rgba(192, 176, 188, 0.2); color: #7a5a6a; }
+        .hl-cyan { background: rgba(108, 110, 36, 0.12); color: #5a5c1a; }
+        .hl-green { background: rgba(90, 122, 52, 0.12); color: #4a6828; }
+        .hl-yellow { background: rgba(158, 138, 46, 0.12); color: #7a6a1e; }
+        .hl-orange { background: rgba(168, 112, 48, 0.12); color: #8a5a20; }
+        .hl-red { background: rgba(154, 74, 42, 0.1); color: #9a4a2a; }
+
+        /* ═══════════════════════════════════════════════════════
+           CODE BLOCK — with line numbers
+           ═══════════════════════════════════════════════════════ */
+        .code-container {
+            position: relative; border-radius: var(--radius);
+            overflow: hidden;
+            background: #2a2820;
+            border: 1px solid rgba(135, 128, 79, 0.2);
+        }
+        .code-topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(135, 128, 79, 0.15);
+        }
+        .code-dots {
+            display: flex; gap: 7px;
+        }
+        .code-dots span {
+            width: 12px; height: 12px; border-radius: 50%;
+            transition: transform 0.2s;
+        }
+        .code-dots span:hover { transform: scale(1.3); }
+        .code-dots span:nth-child(1) { background: #9a4a2a; }
+        .code-dots span:nth-child(2) { background: #9e8a2e; }
+        .code-dots span:nth-child(3) { background: #5a7a34; }
+        .code-lang {
+            font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 1.5px; color: #8a8474;
+        }
+        .code-body {
+            padding: 24px; overflow-x: auto;
+        }
+        .code-body pre {
+            margin: 0; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem; line-height: 1.85;
+            color: #c8c2a8;
+        }
+        /* Syntax colors — earthy tones */
+        .syn-kw { color: #C3B293; }
+        .syn-type { color: #a8b86a; }
+        .syn-fn { color: #d4b86a; }
+        .syn-num { color: #c09070; }
+        .syn-str { color: #8aaa5a; }
+        .syn-cmt { color: #5a5646; font-style: italic; }
+        .syn-op { color: #9a9480; }
+        .syn-pp { color: #b8906a; }
+        .syn-bool { color: #c0884a; }
+
+        /* ═══════════════════════════════════════════════════════
+           COMPLEXITY PILLS
+           ═══════════════════════════════════════════════════════ */
+        .complexity-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+        }
+        .complexity-pill {
+            padding: 24px; border-radius: var(--radius-sm);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .complexity-pill:hover {
+            border-color: rgba(135, 128, 79, 0.35);
+            transform: translateY(-2px);
+        }
+        .complexity-pill .label {
+            font-size: 0.72rem; text-transform: uppercase;
+            letter-spacing: 2px; font-weight: 600; color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .complexity-pill .big {
+            font-size: 1.6rem; font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .complexity-pill .note {
+            font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           RECURSION TREE (visual diagram)
+           ═══════════════════════════════════════════════════════ */
+        .tree-container {
+            overflow-x: auto; padding: 10px 0;
+        }
+        .tree-svg {
+            display: block; margin: 0 auto;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           KEY INSIGHT CALLOUT — Enhanced
+           ═══════════════════════════════════════════════════════ */
+        .callout {
+            display: flex; gap: 16px;
+            padding: 22px 24px; border-radius: var(--radius-sm);
+            border-left: 4px solid;
+            margin: 20px 0;
+            transition: transform 0.2s;
+        }
+        .callout:hover { transform: translateX(4px); }
+        .callout.insight {
+            background: rgba(135, 128, 79, 0.06);
+            border-color: var(--accent-1);
+        }
+        .callout.warning {
+            background: rgba(158, 138, 46, 0.06);
+            border-color: var(--yellow);
+        }
+        .callout.danger {
+            background: rgba(154, 74, 42, 0.05);
+            border-color: var(--accent-4);
+        }
+        .callout .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+        .callout .callout-text { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7; }
+        .callout .callout-text strong { color: var(--text-primary); }
+
+        /* ═══════════════════════════════════════════════════════
+           COMPARISON TABLE — 3-way choice visual
+           ═══════════════════════════════════════════════════════ */
+        .choice-grid {
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px;
+            margin: 20px 0;
+        }
+        .choice-card {
+            padding: 20px 16px; border-radius: var(--radius-sm);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .choice-card:hover {
+            border-color: rgba(135, 128, 79, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(135,128,79,0.08);
+        }
+        .choice-card .choice-num {
+            font-size: 2rem; font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--gradient-hero);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .choice-card .choice-label {
+            font-size: 0.75rem; text-transform: uppercase;
+            letter-spacing: 1.5px; font-weight: 700;
+            color: var(--text-muted); margin-top: 6px;
+        }
+        .choice-card .choice-desc {
+            font-size: 0.82rem; color: var(--text-secondary);
+            margin-top: 8px; line-height: 1.5;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           FOOTER
+           ═══════════════════════════════════════════════════════ */
+        .footer {
+            text-align: center; padding: 60px 0 40px;
+            color: var(--text-muted); font-size: 0.8rem;
+        }
+        .footer .heart { color: var(--accent-4); }
+        .footer a {
+            color: var(--accent-1); text-decoration: none;
+        }
+        .footer a:hover { text-decoration: underline; }
+
+        /* ═══════════════════════════════════════════════════════
+           RESPONSIVE
+           ═══════════════════════════════════════════════════════ */
+        @media (max-width: 640px) {
+            .card { padding: 24px; }
+            .complexity-grid { grid-template-columns: 1fr; }
+            .choice-grid { grid-template-columns: 1fr; }
+            .game-num { width: 46px; height: 46px; font-size: 1rem; }
+            .game-scores { gap: 16px; flex-direction: column; align-items: center; }
+            .navbar-inner { padding: 0 16px; }
+            .container { padding: 0 16px; }
+            .nav-difficulty { display: none; }
+            .hero-stones { gap: 12px; }
+            .hero-stone { width: 38px; height: 38px; font-size: 0.85rem; }
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           VISUAL TABLE
+           ═══════════════════════════════════════════════════════ */
+        .visual-table {
+            width: 100%; border-collapse: separate; border-spacing: 0;
+            border-radius: var(--radius-sm); overflow: hidden;
+            margin: 16px 0;
+        }
+        .visual-table th {
+            background: rgba(135, 128, 79, 0.1);
+            color: var(--accent-1);
+            font-size: 0.78rem; text-transform: uppercase;
+            letter-spacing: 1px; font-weight: 700;
+            padding: 12px 16px; text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .visual-table td {
+            padding: 12px 16px; font-size: 0.88rem;
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(135, 128, 79, 0.06);
+            transition: background 0.2s;
+        }
+        .visual-table tr:last-child td { border-bottom: none; }
+        .visual-table tr:hover td {
+            background: rgba(135, 128, 79, 0.04);
+        }
+        .visual-table code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82em; color: #5a5c1a;
+            background: rgba(108, 110, 36, 0.08);
+            padding: 2px 7px; border-radius: 4px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           PATTERN BADGE
+           ═══════════════════════════════════════════════════════ */
+        .pattern-badges {
+            display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0;
+        }
+        .pattern-badge {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 18px; border-radius: 10px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            font-size: 0.85rem; font-weight: 600;
+            color: var(--text-primary);
+            transition: all 0.3s;
+        }
+        .pattern-badge:hover {
+            border-color: var(--accent-1);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(135,128,79,0.1);
+        }
+        .pattern-badge .emoji { font-size: 1.1rem; }
+
+        /* ═══════════════════════════════════════════════════════
+           SCROLLBAR
+           ═══════════════════════════════════════════════════════ */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(135, 128, 79, 0.3); border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(135, 128, 79, 0.5); }
+
+        /* ═══════════════════════════════════════════════════════
+           KEY DIFFERENCE BANNER
+           ═══════════════════════════════════════════════════════ */
+        .diff-banner {
+            display: flex; gap: 14px; align-items: flex-start;
+            padding: 18px 22px; border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, rgba(135,128,79,0.08), rgba(108,110,36,0.06));
+            border: 1px solid rgba(135, 128, 79, 0.15);
+            margin: 16px 0;
+        }
+        .diff-banner .diff-icon {
+            font-size: 1.5rem; flex-shrink: 0;
+        }
+        .diff-banner .diff-content {
+            font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;
+        }
+        .diff-banner .diff-content strong { color: var(--text-primary); }
+    </style>
+
+</head>
+<body>
+    <!-- Animated background orbs -->
+    <div class="bg-mesh">
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+    </div>
+
+    <!-- Floating particles (generated by JS) -->
+    <div id="particles"></div>
+
+    <!-- ─── Navigation ─── -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar-inner">
+            <a href="#" class="nav-brand">
+                <div class="logo">A²</div>
+                Algorithm Atlas
+            </a>
+            <div class="nav-links">
+                <span class="nav-difficulty">Hard</span>
+                <span class="nav-date">📅 03 Aug 2026</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ─── Hero ─── -->
+    <div class="container">
+        <section class="hero">
+            <div class="hero-badge">
+                <span class="dot"></span>
+                Problem of the Day
+            </div>
+            <h1>
+                <span class="gradient-text">Stone Game III</span>
+                <span class="leetcode-num">LeetCode #1406</span>
+            </h1>
+            <p class="hero-subtitle">
+                Alice and Bob take turns picking <strong>1, 2, or 3</strong> stones from the front of a row.<br>
+                Some stones have <strong>negative values</strong>! Who plays the optimal strategy?
+            </p>
+            <div class="hero-tags">
+                <span class="hero-tag diff-hard">🔥 Hard</span>
+                <span class="hero-tag cat">🎯 Dynamic Programming</span>
+                <span class="hero-tag cat">🧠 Game Theory</span>
+                <span class="hero-tag pattern">🔄 Memoization</span>
+                <span class="hero-tag pattern">🎮 Minimax</span>
+            </div>
+            <div class="hero-stones">
+                <div class="hero-stone">1</div>
+                <div class="hero-stone">2</div>
+                <div class="hero-stone">3</div>
+                <div class="hero-stone">-9</div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 1 : Problem Understanding
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">01</span> The Problem</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(135,128,79,0.12); color:var(--accent-1);">📖</div>
+                <div class="card-title">What's the Problem?</div>
+            </div>
+            <p>
+                Alice and Bob take turns picking stones from a row. On each turn, a player can take
+                <strong>1, 2, or 3 stones</strong> from the <strong>front</strong> of the remaining row.
+                The stone values can be <span class="hl hl-red">negative</span>!
+                Alice goes first. The player with the higher total score wins.
+            </p>
+            <br>
+            <p>
+                Return <span class="hl hl-green">"Alice"</span> if Alice wins,
+                <span class="hl hl-cyan">"Bob"</span> if Bob wins,
+                or <span class="hl hl-yellow">"Tie"</span> if they tie.
+            </p>
+
+            <!-- 3-way choice visual -->
+            <div class="choice-grid" style="margin-top: 24px;">
+                <div class="choice-card">
+                    <div class="choice-num">1</div>
+                    <div class="choice-label">Stone</div>
+                    <div class="choice-desc">Take just the front stone</div>
+                </div>
+                <div class="choice-card">
+                    <div class="choice-num">2</div>
+                    <div class="choice-label">Stones</div>
+                    <div class="choice-desc">Take the front two stones</div>
+                </div>
+                <div class="choice-card">
+                    <div class="choice-num">3</div>
+                    <div class="choice-label">Stones</div>
+                    <div class="choice-desc">Take the front three stones</div>
+                </div>
+            </div>
+
+            <div class="callout danger" style="margin-top:20px;">
+                <div class="callout-icon">⚠️</div>
+                <div class="callout-text">
+                    <strong>The twist:</strong> Stone values can be <strong>negative</strong>!
+                    This means sometimes you're <em>forced</em> to take bad stones to prevent your
+                    opponent from getting good ones later. Greedy doesn't work — you need
+                    <strong>game-theoretic DP</strong>.
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 2 : Key Difference
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">02</span> What Makes This Different?</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(108,110,36,0.12); color:var(--accent-2);">🆚</div>
+                <div class="card-title">Stone Game I vs III</div>
+            </div>
+
+            <table class="visual-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Stone Game I (#877)</th>
+                        <th>Stone Game III (#1406)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Pick from</strong></td>
+                        <td>Either <code>end</code></td>
+                        <td>Only the <code>front</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Pick count</strong></td>
+                        <td>Exactly <code>1</code></td>
+                        <td><code>1, 2, or 3</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Values</strong></td>
+                        <td>All <code>positive</code></td>
+                        <td>Can be <code>negative</code>!</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Result</strong></td>
+                        <td>Alice always wins</td>
+                        <td>Alice, Bob, <code>or Tie</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>State</strong></td>
+                        <td><code>dp[i][j]</code> — 2D</td>
+                        <td><code>dp[i]</code> — 1D</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="diff-banner">
+                <div class="diff-icon">💡</div>
+                <div class="diff-content">
+                    <strong>The key trick:</strong> Instead of tracking both players' scores separately,
+                    we compute the <strong>relative score difference</strong>.
+                    <code style="font-family:'JetBrains Mono';font-size:0.85em;color:#5a5c1a;background:rgba(108,110,36,0.08);padding:2px 6px;border-radius:4px;">solve(i)</code>
+                    returns how much better the current player does than the opponent from index <code style="font-family:'JetBrains Mono';font-size:0.85em;color:#5a5c1a;background:rgba(108,110,36,0.08);padding:2px 6px;border-radius:4px;">i</code> onward.
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 3 : Interactive Demo
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">03</span> Try It Yourself</div>
+
+        <div class="card reveal" id="game-card">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(90,122,52,0.12); color:var(--green);">🎮</div>
+                <div class="card-title">Interactive Game Simulation</div>
+            </div>
+            <p style="margin-bottom:14px;">Watch the optimal strategy unfold. Each step shows <strong>how many stones</strong> the current player takes. Hit <strong>Play Step</strong> to advance.</p>
+
+            <div class="game-board">
+                <div class="game-nums" id="game-nums"></div>
+                <div id="take-indicator" class="take-indicator" style="display:none;">
+                    <span class="take-label">Takes</span>
+                    <span class="take-count" id="take-count">1</span>
+                </div>
+                <div class="game-scores">
+                    <div class="game-score p1" id="score-card-1">
+                        <div class="label">Alice</div>
+                        <div class="value" id="p1-score">0</div>
+                    </div>
+                    <div class="game-score p2" id="score-card-2">
+                        <div class="label">Bob</div>
+                        <div class="value" id="p2-score">0</div>
+                    </div>
+                </div>
+                <div class="game-step-info" id="step-info"></div>
+                <div class="game-result" id="game-result"></div>
+                <div class="game-controls">
+                    <button class="game-btn primary" id="btn-play" onclick="playStep()">▶ Play Step</button>
+                    <button class="game-btn secondary" onclick="resetGame()">↻ Reset</button>
+                    <button class="game-btn secondary" onclick="changeExample()">⟳ Next Example</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 4 : Intuition
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">04</span> Intuition</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(192,176,188,0.15); color:var(--pink);">🧠</div>
+                <div class="card-title">The Relative Score Trick</div>
+            </div>
+            <p>Instead of tracking Alice's and Bob's scores separately, we define:</p>
+            <br>
+            <div class="callout insight">
+                <div class="callout-icon">🎯</div>
+                <div class="callout-text">
+                    <strong><code style="font-family:'JetBrains Mono';font-size:0.9em;color:#5a5c1a;background:rgba(108,110,36,0.08);padding:2px 8px;border-radius:4px;">solve(i)</code> = the maximum score advantage the current player can achieve starting from index <code style="font-family:'JetBrains Mono';font-size:0.9em;color:#5a5c1a;background:rgba(108,110,36,0.08);padding:2px 8px;border-radius:4px;">i</code></strong>
+                </div>
+            </div>
+            <br>
+            <p>The magic formula:</p>
+            <ul style="margin-top:10px;">
+                <li><strong>Take 1 stone:</strong> <span class="hl hl-cyan">stone[i]</span> <span class="hl hl-pink">−</span> <span class="hl hl-purple">solve(i+1)</span></li>
+                <li><strong>Take 2 stones:</strong> <span class="hl hl-cyan">stone[i] + stone[i+1]</span> <span class="hl hl-pink">−</span> <span class="hl hl-purple">solve(i+2)</span></li>
+                <li><strong>Take 3 stones:</strong> <span class="hl hl-cyan">stone[i] + stone[i+1] + stone[i+2]</span> <span class="hl hl-pink">−</span> <span class="hl hl-purple">solve(i+3)</span></li>
+                <li><strong>Choose the <span class="hl hl-green">max</span></strong> of all valid options!</li>
+            </ul>
+
+            <div class="callout warning" style="margin-top:20px;">
+                <div class="callout-icon">🔑</div>
+                <div class="callout-text">
+                    <strong>Why subtract <code style="font-family:'JetBrains Mono';font-size:0.85em;color:#5a5c1a;background:rgba(108,110,36,0.1);padding:2px 6px;border-radius:4px;">solve(i+k)</code>?</strong><br>
+                    After you take stones, the <em>opponent</em> plays optimally from the remaining position.
+                    Their best advantage becomes <em>your disadvantage</em>.
+                    So we subtract: <strong>my gain − opponent's best advantage</strong>.
+                    If the result is positive → I'm winning. Negative → opponent is winning.
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 5 : Approach Steps
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">05</span> Approach</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(108,110,36,0.12); color:var(--accent-2);">🗺️</div>
+                <div class="card-title">Step-by-Step Approach</div>
+            </div>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>1. Define <span class="hl hl-purple">solve(i)</span> — relative advantage</h4>
+                    <p>Returns how much <strong>better</strong> the current player does than their opponent from index <span class="hl hl-cyan">i</span> onward. Positive = current player leads.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>2. Base case</h4>
+                    <p>If <span class="hl hl-yellow">i ≥ n</span> → no stones left → return 0. If already memoized in <span class="hl hl-yellow">t[i]</span>, return cached result.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>3. Try taking 1, 2, or 3 stones</h4>
+                    <p><strong>Take 1:</strong> <span class="hl hl-cyan">stone[i]</span> − solve(i+1)<br>
+                       <strong>Take 2:</strong> <span class="hl hl-cyan">stone[i]+stone[i+1]</span> − solve(i+2)<br>
+                       <strong>Take 3:</strong> <span class="hl hl-cyan">stone[i]+stone[i+1]+stone[i+2]</span> − solve(i+3)<br>
+                       Store the <span class="hl hl-green">max</span> in <span class="hl hl-yellow">t[i]</span>.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>4. Interpret the final result</h4>
+                    <p><span class="hl hl-green">result &gt; 0</span> → "Alice" wins<br>
+                       <span class="hl hl-red">result &lt; 0</span> → "Bob" wins<br>
+                       <span class="hl hl-yellow">result == 0</span> → "Tie"</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 6 : Recursion Tree
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">06</span> Recursion Tree</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(168,112,48,0.12); color:var(--orange);">🌳</div>
+                <div class="card-title">How Recursion Unfolds</div>
+            </div>
+            <p style="margin-bottom:16px;">For <span class="hl hl-cyan">stone = [1, 2, 3, -9]</span>, here's the recursion. Each node shows <span class="hl hl-purple">solve(i)</span> and the choices explored:</p>
+
+            <div class="tree-container">
+                <svg class="tree-svg" viewBox="0 0 740 420" width="100%" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Level 0: solve(0) -->
+                    <line x1="370" y1="55" x2="140" y2="140" stroke="rgba(135,128,79,0.35)" stroke-width="2"/>
+                    <line x1="370" y1="55" x2="370" y2="140" stroke="rgba(108,110,36,0.35)" stroke-width="2"/>
+                    <line x1="370" y1="55" x2="600" y2="140" stroke="rgba(168,112,48,0.35)" stroke-width="2"/>
+                    <rect x="290" y="16" width="160" height="46" rx="12" fill="rgba(135,128,79,0.12)" stroke="rgba(135,128,79,0.4)" stroke-width="1.5"/>
+                    <text x="370" y="44" text-anchor="middle" fill="#87804F" font-family="JetBrains Mono" font-size="13" font-weight="700">solve(0) → 6</text>
+
+                    <!-- Take 1: stone[0]=1, solve(1) -->
+                    <rect x="55" y="135" width="170" height="48" rx="12" fill="rgba(108,110,36,0.08)" stroke="rgba(108,110,36,0.3)" stroke-width="1.5"/>
+                    <text x="140" y="155" text-anchor="middle" fill="#6C6E24" font-family="JetBrains Mono" font-size="10" font-weight="600">take 1: stone[0]=1</text>
+                    <text x="140" y="173" text-anchor="middle" fill="#8a8474" font-family="JetBrains Mono" font-size="9">1 − solve(1) = 1−(−5) = 6</text>
+
+                    <!-- Take 2: stone[0]+stone[1]=3, solve(2) -->
+                    <rect x="285" y="135" width="170" height="48" rx="12" fill="rgba(108,110,36,0.08)" stroke="rgba(108,110,36,0.3)" stroke-width="1.5"/>
+                    <text x="370" y="155" text-anchor="middle" fill="#6C6E24" font-family="JetBrains Mono" font-size="10" font-weight="600">take 2: 1+2 = 3</text>
+                    <text x="370" y="173" text-anchor="middle" fill="#8a8474" font-family="JetBrains Mono" font-size="9">3 − solve(2) = 3−(−6) = 9</text>
+
+                    <!-- Take 3: stone[0]+stone[1]+stone[2]=6, solve(3) -->
+                    <rect x="515" y="135" width="170" height="48" rx="12" fill="rgba(168,112,48,0.08)" stroke="rgba(168,112,48,0.3)" stroke-width="1.5"/>
+                    <text x="600" y="155" text-anchor="middle" fill="#a87030" font-family="JetBrains Mono" font-size="10" font-weight="600">take 3: 1+2+3 = 6</text>
+                    <text x="600" y="173" text-anchor="middle" fill="#8a8474" font-family="JetBrains Mono" font-size="9">6 − solve(3) = 6−(−9) = 15</text>
+
+                    <!-- Level 2: sub-problems -->
+                    <line x1="140" y1="183" x2="90" y2="250" stroke="rgba(90,122,52,0.25)" stroke-width="1.2"/>
+                    <line x1="370" y1="183" x2="330" y2="250" stroke="rgba(90,122,52,0.25)" stroke-width="1.2"/>
+                    <line x1="600" y1="183" x2="560" y2="250" stroke="rgba(90,122,52,0.25)" stroke-width="1.2"/>
+
+                    <rect x="30" y="245" width="120" height="36" rx="10" fill="rgba(90,122,52,0.08)" stroke="rgba(90,122,52,0.25)" stroke-width="1.2"/>
+                    <text x="90" y="268" text-anchor="middle" fill="#5a7a34" font-family="JetBrains Mono" font-size="10" font-weight="600">solve(1) → −5</text>
+
+                    <rect x="270" y="245" width="120" height="36" rx="10" fill="rgba(90,122,52,0.08)" stroke="rgba(90,122,52,0.25)" stroke-width="1.2"/>
+                    <text x="330" y="268" text-anchor="middle" fill="#5a7a34" font-family="JetBrains Mono" font-size="10" font-weight="600">solve(2) → −6</text>
+
+                    <rect x="500" y="245" width="120" height="36" rx="10" fill="rgba(90,122,52,0.08)" stroke="rgba(90,122,52,0.25)" stroke-width="1.2"/>
+                    <text x="560" y="268" text-anchor="middle" fill="#5a7a34" font-family="JetBrains Mono" font-size="10" font-weight="600">solve(3) → −9</text>
+
+                    <!-- Result annotations -->
+                    <rect x="120" y="310" width="200" height="30" rx="8" fill="rgba(135,128,79,0.06)" stroke="rgba(135,128,79,0.15)" stroke-width="1"/>
+                    <text x="220" y="330" text-anchor="middle" fill="#87804F" font-family="JetBrains Mono" font-size="10">max(6, 9, 15) = 15</text>
+
+                    <!-- Wait — actual solve(0) -->
+                    <rect x="400" y="310" width="220" height="30" rx="8" fill="rgba(108,110,36,0.06)" stroke="rgba(108,110,36,0.15)" stroke-width="1"/>
+                    <text x="510" y="330" text-anchor="middle" fill="#6C6E24" font-family="JetBrains Mono" font-size="10">but solve(0) picks best = 6 ✦</text>
+
+                    <!-- Final -->
+                    <rect x="190" y="365" width="360" height="34" rx="8" fill="rgba(90,122,52,0.08)" stroke="rgba(90,122,52,0.25)" stroke-width="1"/>
+                    <text x="370" y="387" text-anchor="middle" fill="#5a7a34" font-family="JetBrains Mono" font-size="11" font-weight="700">solve(0) = 6 > 0  →  "Alice" wins ✔</text>
+
+                    <!-- ✦ annotation -->
+                    <text x="370" y="348" text-anchor="middle" fill="#8a8474" font-family="Inter" font-size="9" font-style="italic">✦ optimal play: take 1 stone, force Bob into [2,3,−9]</text>
+                </svg>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 7 : Methods & Functions
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">07</span> Methods & Functions</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(158,138,46,0.12); color:var(--yellow);">⚙️</div>
+                <div class="card-title">Key Functions Explained</div>
+            </div>
+
+            <table class="visual-table">
+                <thead>
+                    <tr>
+                        <th>Function</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>solve(stone, i)</code></td>
+                        <td>Recursively finds the <strong>relative score advantage</strong> of the current player from index <code>i</code> onward. Uses <code>t[i]</code> memoization.</td>
+                    </tr>
+                    <tr>
+                        <td><code>stoneGameIII(stone)</code></td>
+                        <td>Driver function — initializes memo table, calls <code>solve(stone, 0)</code>, then maps the result to <code>"Alice"</code>, <code>"Bob"</code>, or <code>"Tie"</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><code>t.resize(n+1, -1)</code></td>
+                        <td>Creates the 1D memoization vector with <code>-1</code> sentinel values for <strong>uncomputed states</strong>.</td>
+                    </tr>
+                    <tr>
+                        <td><code>max(a, b)</code></td>
+                        <td>The current player picks whichever option (take 1, 2, or 3) gives the <strong>highest advantage</strong>.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 8 : Patterns
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">08</span> Patterns Used</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(122,138,106,0.12); color:var(--blue);">🧩</div>
+                <div class="card-title">Design Patterns</div>
+            </div>
+            <div class="pattern-badges">
+                <div class="pattern-badge"><span class="emoji">🎮</span> Minimax via Relative Score</div>
+                <div class="pattern-badge"><span class="emoji">🔄</span> Recursion + Memoization</div>
+                <div class="pattern-badge"><span class="emoji">📦</span> 1D DP on Index</div>
+                <div class="pattern-badge"><span class="emoji">🧪</span> Optimal Substructure</div>
+                <div class="pattern-badge"><span class="emoji">🎲</span> Variable-Width Picks</div>
+            </div>
+            <ul style="margin-top:16px;">
+                <li><strong>Relative Score Minimax:</strong> Instead of two separate scores, track the <em>difference</em>. Your gain minus opponent's best = your advantage. Elegant and 1D!</li>
+                <li><strong>Variable-Width Picks:</strong> Unlike classic games where you pick 1, here you can pick <strong>1, 2, or 3</strong> — creating a 3-way branching recursion.</li>
+                <li><strong>1D DP:</strong> State is just the starting index <span class="hl hl-cyan">i</span>. Much simpler than 2D interval DP!</li>
+                <li><strong>Subtraction = Opponent's Turn:</strong> The <span class="hl hl-pink">minus</span> in the formula naturally models turn-switching without explicit player tracking.</li>
+            </ul>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 9 : Code
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">09</span> Full Code</div>
+
+        <div class="card reveal" style="padding:0; overflow:hidden;">
+            <div class="code-container">
+                <div class="code-topbar">
+                    <div class="code-dots"><span></span><span></span><span></span></div>
+                    <span class="code-lang">C++ • solution.cpp</span>
+                </div>
+                <div class="code-body">
+<pre><span class="syn-pp">#include</span> <span class="syn-str">&lt;iostream&gt;</span>
+<span class="syn-pp">#include</span> <span class="syn-str">&lt;vector&gt;</span>
+<span class="syn-pp">#include</span> <span class="syn-str">&lt;algorithm&gt;</span>
+<span class="syn-kw">using namespace</span> std;
+
+<span class="syn-kw">class</span> <span class="syn-type">Solution</span> {
+<span class="syn-kw">public</span>:
+    <span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt; t;                       <span class="syn-cmt">// memoization table</span>
+
+    <span class="syn-type">int</span> <span class="syn-fn">solve</span>(<span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt;&amp; stone, <span class="syn-type">int</span> i) {
+        <span class="syn-type">int</span> n <span class="syn-op">=</span> stone.<span class="syn-fn">size</span>();
+        <span class="syn-kw">if</span>(i <span class="syn-op">&gt;=</span> n) {                     <span class="syn-cmt">// no stones left</span>
+            <span class="syn-kw">return</span> <span class="syn-num">0</span>;
+        }
+        <span class="syn-kw">if</span>(t[i] <span class="syn-op">!=</span> <span class="syn-num">-1</span>) {                  <span class="syn-cmt">// already computed</span>
+            <span class="syn-kw">return</span> t[i];
+        }
+
+        <span class="syn-cmt">// Take 1 stone</span>
+        <span class="syn-type">int</span> result <span class="syn-op">=</span> stone[i] <span class="syn-op">-</span> <span class="syn-fn">solve</span>(stone, i <span class="syn-op">+</span> <span class="syn-num">1</span>);
+
+        <span class="syn-cmt">// Take 2 stones (if possible)</span>
+        <span class="syn-kw">if</span>(i <span class="syn-op">+</span> <span class="syn-num">1</span> <span class="syn-op">&lt;</span> n) {
+            result <span class="syn-op">=</span> <span class="syn-fn">max</span>(result,
+                stone[i] <span class="syn-op">+</span> stone[i<span class="syn-op">+</span><span class="syn-num">1</span>] <span class="syn-op">-</span> <span class="syn-fn">solve</span>(stone, i <span class="syn-op">+</span> <span class="syn-num">2</span>));
+        }
+
+        <span class="syn-cmt">// Take 3 stones (if possible)</span>
+        <span class="syn-kw">if</span>(i <span class="syn-op">+</span> <span class="syn-num">2</span> <span class="syn-op">&lt;</span> n) {
+            result <span class="syn-op">=</span> <span class="syn-fn">max</span>(result,
+                stone[i] <span class="syn-op">+</span> stone[i<span class="syn-op">+</span><span class="syn-num">1</span>] <span class="syn-op">+</span> stone[i<span class="syn-op">+</span><span class="syn-num">2</span>] <span class="syn-op">-</span> <span class="syn-fn">solve</span>(stone, i <span class="syn-op">+</span> <span class="syn-num">3</span>));
+        }
+
+        <span class="syn-kw">return</span> t[i] <span class="syn-op">=</span> result;             <span class="syn-cmt">// cache &amp; return</span>
+    }
+
+    <span class="syn-type">string</span> <span class="syn-fn">stoneGameIII</span>(<span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt;&amp; stone) {
+        <span class="syn-type">int</span> n <span class="syn-op">=</span> stone.<span class="syn-fn">size</span>();
+        t.<span class="syn-fn">resize</span>(n <span class="syn-op">+</span> <span class="syn-num">1</span>, <span class="syn-num">-1</span>);             <span class="syn-cmt">// init memo</span>
+        <span class="syn-type">int</span> result <span class="syn-op">=</span> <span class="syn-fn">solve</span>(stone, <span class="syn-num">0</span>);
+
+        <span class="syn-kw">if</span>(result <span class="syn-op">&lt;</span> <span class="syn-num">0</span>)       <span class="syn-kw">return</span> <span class="syn-str">"Bob"</span>;
+        <span class="syn-kw">else if</span>(result <span class="syn-op">&gt;</span> <span class="syn-num">0</span>) <span class="syn-kw">return</span> <span class="syn-str">"Alice"</span>;
+        <span class="syn-kw">else</span>                 <span class="syn-kw">return</span> <span class="syn-str">"Tie"</span>;
+    }
+};
+
+<span class="syn-type">int</span> <span class="syn-fn">main</span>() {
+    <span class="syn-type">Solution</span> solution;
+
+    <span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt; stone <span class="syn-op">=</span> {<span class="syn-num">1</span>, <span class="syn-num">2</span>, <span class="syn-num">3</span>, <span class="syn-num">7</span>};
+    cout <span class="syn-op">&lt;&lt;</span> solution.<span class="syn-fn">stoneGameIII</span>(stone) <span class="syn-op">&lt;&lt;</span> endl;   <span class="syn-cmt">// "Bob"</span>
+
+    <span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt; stone3 <span class="syn-op">=</span> {<span class="syn-num">1</span>, <span class="syn-num">2</span>, <span class="syn-num">3</span>};
+    cout <span class="syn-op">&lt;&lt;</span> solution.<span class="syn-fn">stoneGameIII</span>(stone3) <span class="syn-op">&lt;&lt;</span> endl;  <span class="syn-cmt">// "Tie"</span>
+
+    <span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt; stone2 <span class="syn-op">=</span> {<span class="syn-num">1</span>, <span class="syn-num">2</span>, <span class="syn-num">3</span>, <span class="syn-num">-9</span>};
+    cout <span class="syn-op">&lt;&lt;</span> solution.<span class="syn-fn">stoneGameIII</span>(stone2) <span class="syn-op">&lt;&lt;</span> endl;  <span class="syn-cmt">// "Alice"</span>
+    <span class="syn-kw">return</span> <span class="syn-num">0</span>;
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 10 : Code Walkthrough
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">10</span> Code Walkthrough</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(192,176,188,0.15); color:var(--pink);">🔍</div>
+                <div class="card-title">Line-by-Line Breakdown</div>
+            </div>
+
+            <table class="visual-table">
+                <thead>
+                    <tr>
+                        <th style="width:40%">Code</th>
+                        <th>What it does</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>vector&lt;int&gt; t</code></td>
+                        <td><strong>1D memoization vector</strong> — <code>t[i]</code> stores the relative advantage from position <code>i</code>. Init to <code>-1</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><code>if(i >= n) return 0</code></td>
+                        <td>No stones left — no advantage for either player.</td>
+                    </tr>
+                    <tr>
+                        <td><code>if(t[i] != -1) return t[i]</code></td>
+                        <td>Already solved this subproblem — return <strong>cached result</strong>.</td>
+                    </tr>
+                    <tr>
+                        <td><code>stone[i] - solve(stone, i+1)</code></td>
+                        <td>Take <strong>1 stone</strong>. Gain <code>stone[i]</code>, subtract opponent's best from remaining.</td>
+                    </tr>
+                    <tr>
+                        <td><code>stone[i]+stone[i+1] - solve(..., i+2)</code></td>
+                        <td>Take <strong>2 stones</strong>. Gain their sum, subtract opponent's best.</td>
+                    </tr>
+                    <tr>
+                        <td><code>stone[i]+stone[i+1]+stone[i+2] - solve(..., i+3)</code></td>
+                        <td>Take <strong>3 stones</strong>. Gain their sum, subtract opponent's best.</td>
+                    </tr>
+                    <tr>
+                        <td><code>return t[i] = result</code></td>
+                        <td>Cache the <code>max</code> of all valid choices and return.</td>
+                    </tr>
+                    <tr>
+                        <td><code>result < 0 → "Bob"</code></td>
+                        <td>Alice's relative advantage is <strong>negative</strong> — Bob wins.</td>
+                    </tr>
+                    <tr>
+                        <td><code>result > 0 → "Alice"</code></td>
+                        <td>Alice's relative advantage is <strong>positive</strong> — Alice wins.</td>
+                    </tr>
+                    <tr>
+                        <td><code>result == 0 → "Tie"</code></td>
+                        <td>Both players score <strong>equally</strong>.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 11 : Complexity
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">11</span> Complexity Analysis</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(168,112,48,0.12); color:var(--orange);">📊</div>
+                <div class="card-title">Time & Space Complexity</div>
+            </div>
+
+            <div class="complexity-grid">
+                <div class="complexity-pill">
+                    <div class="label">Time</div>
+                    <div class="big" style="color:var(--accent-1);">O(n)</div>
+                    <div class="note">n unique states, each doing<br>O(1) work (max of 3 options).</div>
+                </div>
+                <div class="complexity-pill">
+                    <div class="label">Space</div>
+                    <div class="big" style="color:var(--accent-2);">O(n)</div>
+                    <div class="note">1D memoization vector of size n<br>+ O(n) recursion stack.</div>
+                </div>
+            </div>
+
+            <div class="callout insight" style="margin-top:20px;">
+                <div class="callout-icon">🚀</div>
+                <div class="callout-text">
+                    <strong>Why O(n) and not O(3ⁿ)?</strong> Without memoization, the recursion branches 3 ways at each level — exponential!
+                    But with the <span class="hl hl-yellow">t[i]</span> cache, each of the <strong>n</strong> states is computed exactly once.
+                    The memoization brings it down from exponential to <strong>linear</strong> — a massive win!
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 12 : Key Takeaways
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">12</span> Key Takeaways</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(90,122,52,0.12); color:var(--green);">✅</div>
+                <div class="card-title">Remember These</div>
+            </div>
+            <ul>
+                <li><strong>Relative score trick:</strong> <span class="hl hl-purple">my_gain − solve(next)</span> elegantly handles turn-switching without tracking whose turn it is.</li>
+                <li>The <span class="hl hl-pink">subtraction</span> models the opponent playing optimally — what they gain becomes your loss.</li>
+                <li><strong>Negative values</strong> make this problem much harder than Stone Game I — greedy fails!</li>
+                <li>State is just <span class="hl hl-cyan">index i</span> — 1D DP, since we always pick from the front.</li>
+                <li>Three possible outcomes: <span class="hl hl-green">"Alice"</span>, <span class="hl hl-red">"Bob"</span>, or <span class="hl hl-yellow">"Tie"</span>.</li>
+                <li><strong>Memoization</strong> drops time from O(3ⁿ) to <span class="hl hl-green">O(n)</span> — always memoize overlapping subproblems!</li>
+                <li>This "relative advantage" pattern works for all variable-pick game problems (Stone Game IV, V, etc.).</li>
+            </ul>
+        </div>
+
+        <!-- ─── Footer ─── -->
+        <footer class="footer">
+            <p>Made with <span class="heart">♥</span> by <a href="#">Algorithm Atlas</a></p>
+            <p style="margin-top:6px;">LeetCode Problem of the Day — 03 August 2026</p>
+        </footer>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         JAVASCRIPT
+         ═══════════════════════════════════════════════════════ -->
+    <script>
+        // ─── Floating Particles ───
+        (function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 12; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDuration = (15 + Math.random() * 25) + 's';
+                p.style.animationDelay = -(Math.random() * 30) + 's';
+                container.appendChild(p);
+            }
+        })();
+
+        // ─── Navbar scroll effect ───
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            navbar.classList.toggle('scrolled', window.scrollY > 20);
+        });
+
+        // ─── Reveal on scroll ───
+        const reveals = document.querySelectorAll('.reveal');
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach((e, i) => {
+                if (e.isIntersecting) {
+                    setTimeout(() => e.target.classList.add('visible'), i * 80);
+                    revealObserver.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        reveals.forEach(r => revealObserver.observe(r));
+
+        // ─── Interactive Game Simulation for Stone Game III ───
+        const examples = [
+            { nums: [1, 2, 3, 7],     name: "Example 1 — Bob wins" },
+            { nums: [1, 2, 3],        name: "Example 2 — Tie" },
+            { nums: [1, 2, 3, -9],    name: "Example 3 — Alice wins" },
+            { nums: [1, 2, 3, -1, -2, -3, 7], name: "Example 4 — Tricky negatives" },
+        ];
+        let currentExample = 0;
+        let gameState = null;
+
+        // Solve using relative-score DP and record optimal moves
+        function solveFull(nums) {
+            const n = nums.length;
+            const memo = new Array(n + 1).fill(undefined);
+
+            function rec(i) {
+                if (i >= n) return 0;
+                if (memo[i] !== undefined) return memo[i];
+                // Take 1
+                let best = nums[i] - rec(i + 1);
+                // Take 2
+                if (i + 1 < n) {
+                    best = Math.max(best, nums[i] + nums[i + 1] - rec(i + 2));
+                }
+                // Take 3
+                if (i + 2 < n) {
+                    best = Math.max(best, nums[i] + nums[i + 1] + nums[i + 2] - rec(i + 3));
+                }
+                memo[i] = best;
+                return best;
+            }
+
+            rec(0); // fill memo
+
+            // Reconstruct optimal moves
+            const moves = [];
+            let pos = 0;
+            let turn = 1; // 1 = Alice, 2 = Bob
+            while (pos < n) {
+                const val = memo[pos];
+                let bestTake = 1;
+                let bestScore = nums[pos] - (pos + 1 < n ? (memo[pos + 1] !== undefined ? memo[pos + 1] : 0) : 0);
+
+                if (pos + 1 < n) {
+                    const s2 = nums[pos] + nums[pos + 1] - (pos + 2 <= n ? (memo[pos + 2] !== undefined ? memo[pos + 2] : 0) : 0);
+                    if (s2 > bestScore) { bestScore = s2; bestTake = 2; }
+                }
+                if (pos + 2 < n) {
+                    const s3 = nums[pos] + nums[pos + 1] + nums[pos + 2] - (pos + 3 <= n ? (memo[pos + 3] !== undefined ? memo[pos + 3] : 0) : 0);
+                    if (s3 > bestScore) { bestScore = s3; bestTake = 3; }
+                }
+
+                let sum = 0;
+                const indices = [];
+                for (let k = 0; k < bestTake && pos + k < n; k++) {
+                    sum += nums[pos + k];
+                    indices.push(pos + k);
+                }
+                moves.push({ player: turn, take: bestTake, indices, value: sum });
+                pos += bestTake;
+                turn = turn === 1 ? 2 : 1;
+            }
+            return moves;
+        }
+
+        function initGame() {
+            const ex = examples[currentExample];
+            const numsContainer = document.getElementById('game-nums');
+            numsContainer.innerHTML = '';
+            ex.nums.forEach((num, idx) => {
+                const div = document.createElement('div');
+                div.className = 'game-num' + (num < 0 ? ' negative' : '');
+                div.id = 'gn-' + idx;
+                div.innerHTML = `${num}<span class="stone-idx">${idx}</span>`;
+                numsContainer.appendChild(div);
+            });
+            document.getElementById('p1-score').textContent = '0';
+            document.getElementById('p2-score').textContent = '0';
+            document.getElementById('game-result').innerHTML = '';
+            document.getElementById('step-info').textContent = `${ex.name} — [${ex.nums.join(', ')}]`;
+            document.getElementById('btn-play').disabled = false;
+            document.getElementById('take-indicator').style.display = 'none';
+            document.getElementById('score-card-1').classList.remove('active');
+            document.getElementById('score-card-2').classList.remove('active');
+            document.getElementById('score-card-1').classList.add('active');
+
+            gameState = {
+                moves: solveFull([...ex.nums]),
+                step: 0,
+                scores: { 1: 0, 2: 0 },
+                nums: [...ex.nums],
+            };
+
+            highlightNext();
+        }
+
+        function highlightNext() {
+            document.querySelectorAll('.game-num').forEach(el => el.classList.remove('next-pick'));
+            if (gameState && gameState.step < gameState.moves.length) {
+                const move = gameState.moves[gameState.step];
+                move.indices.forEach(idx => {
+                    const el = document.getElementById('gn-' + idx);
+                    if (el) el.classList.add('next-pick');
+                });
+            }
+        }
+
+        function playStep() {
+            if (!gameState || gameState.step >= gameState.moves.length) return;
+            const move = gameState.moves[gameState.step];
+
+            // Remove highlights
+            document.querySelectorAll('.game-num').forEach(e => e.classList.remove('next-pick'));
+
+            // Show take count indicator
+            const takeInd = document.getElementById('take-indicator');
+            takeInd.style.display = 'flex';
+            document.getElementById('take-count').textContent = move.take + (move.take === 1 ? ' stone' : ' stones');
+
+            // Animate each picked stone
+            move.indices.forEach((idx, k) => {
+                const el = document.getElementById('gn-' + idx);
+                setTimeout(() => {
+                    el.classList.add(move.player === 1 ? 'picked-1' : 'picked-2');
+                }, k * 150);
+                setTimeout(() => {
+                    el.classList.remove('picked-1', 'picked-2');
+                    el.classList.add('faded');
+                }, 600 + k * 150);
+            });
+
+            gameState.scores[move.player] += move.value;
+            gameState.step++;
+
+            // Active score highlight
+            document.getElementById('score-card-1').classList.toggle('active', move.player === 1);
+            document.getElementById('score-card-2').classList.toggle('active', move.player === 2);
+
+            const delay = 400 + move.indices.length * 150;
+            setTimeout(() => {
+                document.getElementById('p1-score').textContent = gameState.scores[1];
+                document.getElementById('p2-score').textContent = gameState.scores[2];
+
+                const playerName = move.player === 1 ? 'Alice' : 'Bob';
+                const takeText = move.take === 1 ? '1 stone' : move.take + ' stones';
+                document.getElementById('step-info').innerHTML =
+                    `<strong>${playerName}</strong> takes <strong>${takeText}</strong> → gains <strong>${move.value}</strong>`;
+
+                if (gameState.step >= gameState.moves.length) {
+                    const s1 = gameState.scores[1], s2 = gameState.scores[2];
+                    const resultEl = document.getElementById('game-result');
+                    if (s1 > s2) {
+                        resultEl.innerHTML = `<span class="winner">🏆 Alice wins! (${s1} > ${s2}) → returns "Alice"</span>`;
+                    } else if (s2 > s1) {
+                        resultEl.innerHTML = `<span class="loser">🏆 Bob wins! (${s2} > ${s1}) → returns "Bob"</span>`;
+                    } else {
+                        resultEl.innerHTML = `<span class="tie">🤝 It's a Tie! (${s1} = ${s2}) → returns "Tie"</span>`;
+                    }
+                    document.getElementById('btn-play').disabled = true;
+                    document.getElementById('score-card-1').classList.remove('active');
+                    document.getElementById('score-card-2').classList.remove('active');
+                } else {
+                    // Switch active turn indicator
+                    const nextPlayer = gameState.moves[gameState.step].player;
+                    document.getElementById('score-card-1').classList.toggle('active', nextPlayer === 1);
+                    document.getElementById('score-card-2').classList.toggle('active', nextPlayer === 2);
+                    highlightNext();
+                }
+            }, delay);
+        }
+
+        function resetGame() {
+            initGame();
+        }
+
+        function changeExample() {
+            currentExample = (currentExample + 1) % examples.length;
+            initGame();
+        }
+
+        // Init on load
+        initGame();
+    </script>
+</body>
+</html>
