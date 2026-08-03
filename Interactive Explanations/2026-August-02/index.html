@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeetCode 877 — Stone Game | Algorithm Atlas</title>
+    <meta name="description" content="Interactive visual explanation of LeetCode Problem 877: Stone Game using Game Theory and Minimax recursion with memoization.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════════════════════
+           ROOT & RESET — "Study Hard" Palette
+           ═══════════════════════════════════════════════════════ */
+        *, *::before, *::after {
+            margin: 0; padding: 0; box-sizing: border-box;
+        }
+        :root {
+            --bg-primary: #f5f2e8;
+            --bg-secondary: #ece8d8;
+            --bg-card: rgba(255, 252, 243, 0.75);
+            --glass: rgba(135, 128, 79, 0.06);
+            --glass-border: rgba(135, 128, 79, 0.18);
+            --text-primary: #303030;
+            --text-secondary: #5a5646;
+            --text-muted: #8a8474;
+            --accent-1: #87804F;       /* Primary olive-brown */
+            --accent-2: #6C6E24;       /* Accent olive-green */
+            --accent-3: #C3B293;       /* Primary tan */
+            --accent-4: #9a4a2a;       /* warm red-brown */
+            --green: #5a7a34;
+            --yellow: #9e8a2e;
+            --cyan: #6C6E24;
+            --orange: #a87030;
+            --blue: #7a8a6a;
+            --pink: #8a6a70;
+            --neutral-1: #DFD8B1;      /* Neutral cream */
+            --neutral-2: #C0B0BC;      /* Neutral mauve */
+            --gradient-hero: linear-gradient(135deg, #87804F 0%, #6C6E24 50%, #C3B293 100%);
+            --gradient-warm: linear-gradient(135deg, #C3B293, #87804F, #DFD8B1);
+            --gradient-cool: linear-gradient(135deg, #6C6E24, #87804F, #C3B293);
+            --shadow-glow: 0 0 60px rgba(135, 128, 79, 0.12);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        /* ═══════════════════════════════════════════════════════
+           ANIMATED BACKGROUND
+           ═══════════════════════════════════════════════════════ */
+        .bg-mesh {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            overflow: hidden;
+        }
+        .bg-mesh .orb {
+            position: absolute; border-radius: 50%; filter: blur(120px);
+            animation: orbFloat 20s ease-in-out infinite;
+        }
+        .bg-mesh .orb:nth-child(1) {
+            width: 600px; height: 600px; top: -10%; left: -5%;
+            background: rgba(135, 128, 79, 0.12);
+            animation-duration: 25s;
+        }
+        .bg-mesh .orb:nth-child(2) {
+            width: 500px; height: 500px; top: 40%; right: -10%;
+            background: rgba(108, 110, 36, 0.10);
+            animation-duration: 30s; animation-delay: -5s;
+        }
+        .bg-mesh .orb:nth-child(3) {
+            width: 400px; height: 400px; bottom: -5%; left: 30%;
+            background: rgba(195, 178, 147, 0.12);
+            animation-duration: 22s; animation-delay: -10s;
+        }
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            25% { transform: translate(60px,-40px) scale(1.1); }
+            50% { transform: translate(-30px,60px) scale(0.95); }
+            75% { transform: translate(40px,30px) scale(1.05); }
+        }
+        /* ═══════════════════════════════════════════════════════
+           LAYOUT
+           ═══════════════════════════════════════════════════════ */
+        .container {
+            position: relative; z-index: 1;
+            max-width: 900px; margin: 0 auto;
+            padding: 0 24px;
+        }
+        /* ═══════════════════════════════════════════════════════
+           NAVIGATION
+           ═══════════════════════════════════════════════════════ */
+        .navbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            backdrop-filter: blur(20px) saturate(1.8);
+            -webkit-backdrop-filter: blur(20px) saturate(1.8);
+            background: rgba(245, 242, 232, 0.85);
+            border-bottom: 1px solid var(--glass-border);
+            transition: box-shadow 0.3s;
+        }
+        .navbar.scrolled { box-shadow: 0 4px 30px rgba(48,48,48,0.08); }
+        .navbar-inner {
+            max-width: 900px; margin: 0 auto; padding: 0 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 64px;
+        }
+        .nav-brand {
+            display: flex; align-items: center; gap: 10px;
+            font-weight: 700; font-size: 1.05rem;
+            text-decoration: none; color: var(--text-primary);
+        }
+        .nav-brand .logo {
+            width: 32px; height: 32px; border-radius: 8px;
+            background: var(--gradient-hero);
+            display: grid; place-items: center;
+            font-size: 0.85rem; font-weight: 800;
+            color: #fff;
+        }
+        .nav-date {
+            font-size: 0.82rem; color: var(--text-secondary);
+            font-weight: 500;
+            padding: 6px 14px; border-radius: 20px;
+            background: var(--glass); border: 1px solid var(--glass-border);
+        }
+        /* ═══════════════════════════════════════════════════════
+           HERO SECTION
+           ═══════════════════════════════════════════════════════ */
+        .hero {
+            padding: 120px 0 60px;
+            text-align: center;
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 7px 18px; border-radius: 50px;
+            background: rgba(135, 128, 79, 0.10);
+            border: 1px solid rgba(135, 128, 79, 0.25);
+            font-size: 0.78rem; font-weight: 600;
+            color: var(--accent-1);
+            text-transform: uppercase; letter-spacing: 1.5px;
+            margin-bottom: 24px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+        .hero-badge .dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--accent-2);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%,100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+        .hero h1 {
+            font-size: clamp(2.2rem, 5vw, 3.4rem);
+            font-weight: 900; line-height: 1.15;
+            letter-spacing: -1.5px;
+            color: var(--text-primary);
+            animation: fadeInUp 0.8s ease-out 0.1s both;
+        }
+        .hero h1 .gradient-text {
+            background: var(--gradient-hero);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-subtitle {
+            margin-top: 18px;
+            font-size: 1.1rem; color: var(--text-secondary);
+            max-width: 600px; margin-left: auto; margin-right: auto;
+            line-height: 1.7;
+            animation: fadeInUp 0.8s ease-out 0.25s both;
+        }
+        .hero-tags {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+            margin-top: 28px;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+        .hero-tag {
+            padding: 6px 16px; border-radius: 20px; font-size: 0.78rem;
+            font-weight: 600; border: 1px solid;
+        }
+        .hero-tag.diff {
+            color: var(--accent-1); border-color: rgba(135, 128, 79, 0.3);
+            background: rgba(135, 128, 79, 0.08);
+        }
+        .hero-tag.cat {
+            color: var(--accent-2); border-color: rgba(108, 110, 36, 0.3);
+            background: rgba(108, 110, 36, 0.08);
+        }
+        .hero-tag.pattern {
+            color: #7a5a30; border-color: rgba(122, 90, 48, 0.3);
+            background: rgba(122, 90, 48, 0.08);
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           ANIMATIONS
+           ═══════════════════════════════════════════════════════ */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .reveal {
+            opacity: 0; transform: translateY(40px);
+            transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+        }
+        .reveal.visible {
+            opacity: 1; transform: translateY(0);
+        }
+        /* ═══════════════════════════════════════════════════════
+           GLASS CARD
+           ═══════════════════════════════════════════════════════ */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 36px;
+            margin-bottom: 32px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            border-color: rgba(135, 128, 79, 0.3);
+            box-shadow: var(--shadow-glow);
+        }
+        .card-header {
+            display: flex; align-items: center; gap: 14px;
+            margin-bottom: 22px;
+        }
+        .card-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            display: grid; place-items: center;
+            font-size: 1.25rem; flex-shrink: 0;
+        }
+        .card-title {
+            font-size: 1.35rem; font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+        }
+        .card p, .card li {
+            color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8;
+        }
+        .card ul { list-style: none; padding: 0; }
+        .card ul li {
+            padding: 6px 0; padding-left: 22px; position: relative;
+        }
+        .card ul li::before {
+            content: '▸'; position: absolute; left: 0;
+            color: var(--accent-1); font-weight: 700;
+        }
+        .card strong { color: var(--text-primary); }
+        /* ═══════════════════════════════════════════════════════
+           SECTION DIVIDER
+           ═══════════════════════════════════════════════════════ */
+        .section-label {
+            display: flex; align-items: center; gap: 14px;
+            margin: 50px 0 24px; font-size: 0.72rem;
+            text-transform: uppercase; letter-spacing: 3px;
+            font-weight: 700; color: var(--text-muted);
+        }
+        .section-label::after {
+            content: ''; flex: 1; height: 1px;
+            background: linear-gradient(90deg, var(--glass-border), transparent);
+        }
+        /* ═══════════════════════════════════════════════════════
+           INTERACTIVE GAME BOARD
+           ═══════════════════════════════════════════════════════ */
+        .game-board {
+            text-align: center;
+        }
+        .game-nums {
+            display: flex; justify-content: center; gap: 14px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .game-num {
+            width: 64px; height: 64px; border-radius: 14px;
+            display: grid; place-items: center;
+            font-size: 1.4rem; font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--glass);
+            border: 2px solid var(--glass-border);
+            color: var(--text-primary);
+            transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+            position: relative;
+        }
+        .game-num.picked-1 {
+            background: rgba(135, 128, 79, 0.18);
+            border-color: var(--accent-1);
+            color: var(--accent-1);
+            transform: scale(1.1);
+            box-shadow: 0 0 25px rgba(135, 128, 79, 0.25);
+        }
+        .game-num.picked-2 {
+            background: rgba(108, 110, 36, 0.18);
+            border-color: var(--accent-2);
+            color: var(--accent-2);
+            transform: scale(1.1);
+            box-shadow: 0 0 25px rgba(108, 110, 36, 0.25);
+        }
+        .game-num.faded {
+            opacity: 0.25; transform: scale(0.85);
+        }
+        .game-num.highlight-left {
+            border-color: var(--accent-2);
+            box-shadow: 0 0 20px rgba(108, 110, 36, 0.2);
+        }
+        .game-num.highlight-right {
+            border-color: var(--orange);
+            box-shadow: 0 0 20px rgba(168, 112, 48, 0.2);
+        }
+        .game-scores {
+            display: flex; justify-content: center; gap: 40px;
+            margin-top: 20px;
+        }
+        .game-score {
+            text-align: center;
+        }
+        .game-score .label {
+            font-size: 0.75rem; text-transform: uppercase;
+            letter-spacing: 1.5px; font-weight: 600;
+            color: var(--text-muted); margin-bottom: 4px;
+        }
+        .game-score .value {
+            font-size: 2rem; font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .game-score.p1 .value { color: var(--accent-1); }
+        .game-score.p2 .value { color: var(--accent-2); }
+        .game-controls {
+            display: flex; justify-content: center; gap: 12px;
+            margin-top: 24px; flex-wrap: wrap;
+        }
+        .game-btn {
+            padding: 10px 24px; border-radius: 10px; border: none;
+            font-family: 'Inter', sans-serif; font-weight: 600;
+            font-size: 0.85rem; cursor: pointer;
+            transition: all 0.25s;
+        }
+        .game-btn.primary {
+            background: var(--gradient-hero); color: #fff;
+            box-shadow: 0 4px 20px rgba(135, 128, 79, 0.25);
+        }
+        .game-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(135, 128, 79, 0.4);
+        }
+        .game-btn.secondary {
+            background: var(--glass); color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+        .game-btn.secondary:hover {
+            border-color: var(--accent-1);
+        }
+        .game-result {
+            margin-top: 16px; font-weight: 700; font-size: 1rem;
+            min-height: 28px;
+        }
+        .game-result .winner { color: var(--green); }
+        .game-result .loser { color: var(--accent-4); }
+        .game-step-info {
+            margin-top: 12px; font-size: 0.85rem;
+            color: var(--text-secondary); min-height: 24px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           APPROACH STEPS — TIMELINE
+           ═══════════════════════════════════════════════════════ */
+        .timeline {
+            position: relative; padding-left: 36px;
+        }
+        .timeline::before {
+            content: ''; position: absolute; left: 14px; top: 0; bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--accent-1), var(--accent-2), var(--accent-3));
+            border-radius: 2px;
+        }
+        .timeline-item {
+            position: relative; margin-bottom: 28px;
+        }
+        .timeline-dot {
+            position: absolute; left: -29px; top: 4px;
+            width: 14px; height: 14px; border-radius: 50%;
+            border: 3px solid var(--accent-1);
+            background: var(--bg-primary);
+        }
+        .timeline-item:nth-child(2) .timeline-dot { border-color: var(--accent-2); }
+        .timeline-item:nth-child(3) .timeline-dot { border-color: var(--accent-3); }
+        .timeline-item:nth-child(4) .timeline-dot { border-color: var(--neutral-2); }
+        .timeline-item h4 {
+            font-size: 1rem; font-weight: 700; margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+        .timeline-item p {
+            color: var(--text-secondary); font-size: 0.9rem; line-height: 1.75;
+        }
+        /* ═══════════════════════════════════════════════════════
+           INLINE HIGHLIGHT
+           ═══════════════════════════════════════════════════════ */
+        .hl {
+            padding: 2px 8px; border-radius: 5px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82em; font-weight: 600;
+        }
+        .hl-purple { background: rgba(135, 128, 79, 0.12); color: #6b6538; }
+        .hl-pink { background: rgba(192, 176, 188, 0.2); color: #7a5a6a; }
+        .hl-cyan { background: rgba(108, 110, 36, 0.12); color: #5a5c1a; }
+        .hl-green { background: rgba(90, 122, 52, 0.12); color: #4a6828; }
+        .hl-yellow { background: rgba(158, 138, 46, 0.12); color: #7a6a1e; }
+        .hl-orange { background: rgba(168, 112, 48, 0.12); color: #8a5a20; }
+
+        /* ═══════════════════════════════════════════════════════
+           CODE BLOCK
+           ═══════════════════════════════════════════════════════ */
+        .code-container {
+            position: relative; border-radius: var(--radius);
+            overflow: hidden;
+            background: #2a2820;
+            border: 1px solid rgba(135, 128, 79, 0.2);
+        }
+        .code-topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(135, 128, 79, 0.15);
+        }
+        .code-dots {
+            display: flex; gap: 7px;
+        }
+        .code-dots span {
+            width: 12px; height: 12px; border-radius: 50%;
+        }
+        .code-dots span:nth-child(1) { background: #9a4a2a; }
+        .code-dots span:nth-child(2) { background: #9e8a2e; }
+        .code-dots span:nth-child(3) { background: #5a7a34; }
+        .code-lang {
+            font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 1.5px; color: #8a8474;
+        }
+        .code-body {
+            padding: 24px; overflow-x: auto;
+        }
+        .code-body pre {
+            margin: 0; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem; line-height: 1.85;
+            color: #c8c2a8;
+        }
+        /* Syntax colors — earthy tones */
+        .syn-kw { color: #C3B293; }       /* keywords — tan */
+        .syn-type { color: #a8b86a; }     /* types — sage */
+        .syn-fn { color: #d4b86a; }       /* function names — gold */
+        .syn-num { color: #c09070; }      /* numbers — terracotta */
+        .syn-str { color: #8aaa5a; }      /* strings — olive-green */
+        .syn-cmt { color: #5a5646; font-style: italic; }  /* comments */
+        .syn-op { color: #9a9480; }       /* operators */
+        .syn-pp { color: #b8906a; }       /* preprocessor */
+        .syn-bool { color: #c0884a; }     /* booleans */
+
+        /* ═══════════════════════════════════════════════════════
+           COMPLEXITY PILLS
+           ═══════════════════════════════════════════════════════ */
+        .complexity-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+        }
+        .complexity-pill {
+            padding: 22px; border-radius: var(--radius-sm);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+        .complexity-pill:hover { border-color: rgba(135, 128, 79, 0.35); }
+        .complexity-pill .label {
+            font-size: 0.72rem; text-transform: uppercase;
+            letter-spacing: 2px; font-weight: 600; color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .complexity-pill .big {
+            font-size: 1.5rem; font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .complexity-pill .note {
+            font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           RECURSION TREE (visual diagram)
+           ═══════════════════════════════════════════════════════ */
+        .tree-container {
+            overflow-x: auto; padding: 10px 0;
+        }
+        .tree-svg {
+            display: block; margin: 0 auto;
+        }
+        /* ═══════════════════════════════════════════════════════
+           KEY INSIGHT CALLOUT
+           ═══════════════════════════════════════════════════════ */
+        .callout {
+            display: flex; gap: 16px;
+            padding: 22px 24px; border-radius: var(--radius-sm);
+            border-left: 4px solid;
+            margin: 20px 0;
+        }
+        .callout.insight {
+            background: rgba(135, 128, 79, 0.06);
+            border-color: var(--accent-1);
+        }
+        .callout.warning {
+            background: rgba(158, 138, 46, 0.06);
+            border-color: var(--yellow);
+        }
+        .callout .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+        .callout .callout-text { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7; }
+        .callout .callout-text strong { color: var(--text-primary); }
+
+        /* ═══════════════════════════════════════════════════════
+           FOOTER
+           ═══════════════════════════════════════════════════════ */
+        .footer {
+            text-align: center; padding: 60px 0 40px;
+            color: var(--text-muted); font-size: 0.8rem;
+        }
+        .footer .heart { color: var(--accent-4); }
+        .footer a {
+            color: var(--accent-1); text-decoration: none;
+        }
+        .footer a:hover { text-decoration: underline; }
+
+        /* ═══════════════════════════════════════════════════════
+           RESPONSIVE
+           ═══════════════════════════════════════════════════════ */
+        @media (max-width: 640px) {
+            .card { padding: 24px; }
+            .complexity-grid { grid-template-columns: 1fr; }
+            .game-num { width: 52px; height: 52px; font-size: 1.1rem; }
+            .game-scores { gap: 24px; }
+            .navbar-inner { padding: 0 16px; }
+            .container { padding: 0 16px; }
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           MINIMAX VISUAL TABLE
+           ═══════════════════════════════════════════════════════ */
+        .visual-table {
+            width: 100%; border-collapse: separate; border-spacing: 0;
+            border-radius: var(--radius-sm); overflow: hidden;
+            margin: 16px 0;
+        }
+        .visual-table th {
+            background: rgba(135, 128, 79, 0.1);
+            color: var(--accent-1);
+            font-size: 0.78rem; text-transform: uppercase;
+            letter-spacing: 1px; font-weight: 700;
+            padding: 12px 16px; text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .visual-table td {
+            padding: 12px 16px; font-size: 0.88rem;
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(135, 128, 79, 0.06);
+        }
+        .visual-table tr:last-child td { border-bottom: none; }
+        .visual-table tr:hover td {
+            background: rgba(135, 128, 79, 0.04);
+        }
+        .visual-table code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82em; color: #5a5c1a;
+            background: rgba(108, 110, 36, 0.08);
+            padding: 2px 7px; border-radius: 4px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           PATTERN BADGE
+           ═══════════════════════════════════════════════════════ */
+        .pattern-badges {
+            display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0;
+        }
+        .pattern-badge {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 18px; border-radius: 10px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            font-size: 0.85rem; font-weight: 600;
+            color: var(--text-primary);
+            transition: all 0.3s;
+        }
+        .pattern-badge:hover {
+            border-color: var(--accent-1);
+            transform: translateY(-2px);
+        }
+        .pattern-badge .emoji { font-size: 1.1rem; }
+
+        /* ═══════════════════════════════════════════════════════
+           SCROLLBAR
+           ═══════════════════════════════════════════════════════ */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(135, 128, 79, 0.3); border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(135, 128, 79, 0.5); }
+    </style>
+
+</head>
+<body>
+    <!-- Animated background orbs -->
+    <div class="bg-mesh">
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+    </div>
+
+    <!-- ─── Navigation ─── -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar-inner">
+            <a href="#" class="nav-brand">
+                <div class="logo">A²</div>
+                Algorithm Atlas
+            </a>
+            <span class="nav-date">📅 02 Aug 2026</span>
+        </div>
+    </nav>
+
+    <!-- ─── Hero ─── -->
+    <div class="container">
+        <section class="hero">
+            <div class="hero-badge">
+                <span class="dot"></span>
+                Problem of the Day
+            </div>
+            <h1>
+                <span class="gradient-text">Stone Game</span><br>
+                LeetCode #877
+            </h1>
+            <p class="hero-subtitle">
+                Alice and Bob play a game with piles of stones. Alice always goes first.<br>
+                Can she <strong>always</strong> win? Let's prove it with <strong>Game Theory + Memoization</strong>.
+            </p>
+            <div class="hero-tags">
+                <span class="hero-tag diff">⚡ Medium</span>
+                <span class="hero-tag cat">🎯 Dynamic Programming</span>
+                <span class="hero-tag cat">🧠 Game Theory</span>
+                <span class="hero-tag pattern">🔄 Recursion</span>
+                <span class="hero-tag pattern">🎮 Minimax</span>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 1 : Problem Understanding
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal">01 — The Problem</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(135,128,79,0.12); color:var(--accent-1);">📖</div>
+                <div class="card-title">What's the Problem?</div>
+            </div>
+            <p>
+                Alice and Bob play a game with an <strong>even number</strong> of stone piles arranged in a row.
+                Each pile has a positive integer number of stones <span class="hl hl-cyan">piles[i]</span>.
+                The total number of stones across all piles is <strong>odd</strong>, so there are no ties.
+            </p>
+            <br>
+            <p>
+                Players take turns, with <strong>Alice going first</strong>. Each turn, a player picks
+                <span class="hl hl-green">the first</span> or <span class="hl hl-orange">the last</span> pile
+                from the remaining row. The player with the most stones wins.
+                Return <span class="hl hl-green">true</span> if Alice wins,
+                <span class="hl hl-pink">false</span> otherwise.
+            </p>
+
+            <div class="callout insight" style="margin-top:20px;">
+                <div class="callout-icon">💡</div>
+                <div class="callout-text">
+                    <strong>Key insight:</strong> The array has an <strong>even</strong> length and <strong>odd</strong> total.
+                    This means Alice can always choose to take all even-indexed or all odd-indexed piles!
+                    She just picks whichever set has the larger sum — she <strong>always wins</strong>.
+                    But we'll still solve it with Minimax to learn the general technique.
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 2 : Interactive Demo
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal">02 — Try It Yourself</div>
+
+        <div class="card reveal" id="game-card">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(90,122,52,0.12); color:var(--green);">🎮</div>
+                <div class="card-title">Interactive Game Simulation</div>
+            </div>
+            <p style="margin-bottom:14px;">Watch the optimal strategy unfold step by step. Hit <strong>Play Step</strong> to see each move.</p>
+
+            <div class="game-board">
+                <div class="game-nums" id="game-nums"></div>
+                <div class="game-scores">
+                    <div class="game-score p1">
+                        <div class="label">Alice</div>
+                        <div class="value" id="p1-score">0</div>
+                    </div>
+                    <div class="game-score p2">
+                        <div class="label">Bob</div>
+                        <div class="value" id="p2-score">0</div>
+                    </div>
+                </div>
+                <div class="game-step-info" id="step-info"></div>
+                <div class="game-result" id="game-result"></div>
+                <div class="game-controls">
+                    <button class="game-btn primary" id="btn-play" onclick="playStep()">▶ Play Step</button>
+                    <button class="game-btn secondary" onclick="resetGame()">↻ Reset</button>
+                    <button class="game-btn secondary" onclick="changeExample()">⟳ Next Example</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 3 : Intuition
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal">03 — Intuition</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(108,110,36,0.12); color:var(--accent-2);">🧠</div>
+                <div class="card-title">Why Minimax + Memoization?</div>
+            </div>
+            <p>Think of it like a chess match — when it's <strong>your turn</strong>, you pick the
+                <span class="hl hl-purple">maximum</span> score you can get.
+                When it's the <strong>opponent's turn</strong>, they'll try to minimize <em>your</em>
+                future score, so from your perspective the outcome is the
+                <span class="hl hl-pink">minimum</span>.</p>
+            <br>
+            <p>The recursion models this perfectly:</p>
+            <ul style="margin-top:10px;">
+                <li><strong>Pick left (<span class="hl hl-cyan">piles[i]</span>):</strong> You gain that value, but then the opponent plays optimally from the remaining subarray. The opponent picks the best for themselves, leaving you the <em>min</em> of two branches.</li>
+                <li><strong>Pick right (<span class="hl hl-orange">piles[j]</span>):</strong> Same logic — you gain that value, opponent minimizes your remaining gain.</li>
+                <li><strong>You take the <span class="hl hl-purple">max</span></strong> of both choices because you play optimally too!</li>
+                <li><strong>Memoization with <span class="hl hl-yellow">t[i][j]</span>:</strong> Since many subproblems repeat, we cache results in a 2D array to avoid recomputation.</li>
+            </ul>
+
+            <div class="callout warning" style="margin-top:20px;">
+                <div class="callout-icon">⚠️</div>
+                <div class="callout-text">
+                    <strong>Why <code style="font-family:'JetBrains Mono';font-size:0.85em;color:#5a5c1a;background:rgba(108,110,36,0.1);padding:2px 6px;border-radius:4px;">min()</code> inside and <code style="font-family:'JetBrains Mono';font-size:0.85em;color:#5a5c1a;background:rgba(108,110,36,0.1);padding:2px 6px;border-radius:4px;">max()</code> outside?</strong><br>
+                    After you pick, the opponent picks next (they maximize for themselves = minimize for you). So from <em>your</em> perspective, you get the minimum of the two remaining options — then you choose whichever starting pick gives you the maximum overall.
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 4 : Approach Steps
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal">04 — Approach</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(108,110,36,0.12); color:var(--accent-2);">🗺️</div>
+                <div class="card-title">Step-by-Step Approach</div>
+            </div>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>1. Define the recursive function <span class="hl hl-purple">solve(i, j)</span></h4>
+                    <p>It returns the <strong>maximum score</strong> the current player (Alice) can collect from the subarray <span class="hl hl-cyan">piles[i..j]</span>.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>2. Base cases</h4>
+                    <p>If <span class="hl hl-yellow">i &gt; j</span> → no piles left → return 0.<br>
+                       If <span class="hl hl-yellow">i == j</span> → only one pile → return <span class="hl hl-cyan">piles[i]</span>.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>3. Explore both choices with memoization</h4>
+                    <p><strong>Pick left:</strong> gain <span class="hl hl-cyan">piles[i]</span> + <span class="hl hl-pink">min</span>(solve(i+2,j), solve(i+1,j-1))<br>
+                       <strong>Pick right:</strong> gain <span class="hl hl-orange">piles[j]</span> + <span class="hl hl-pink">min</span>(solve(i+1,j-1), solve(i,j-2))<br>
+                       Store the result in <span class="hl hl-yellow">t[i][j]</span> before returning.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>4. Compare Alice's score to Bob's</h4>
+                    <p>If <span class="hl hl-green">Alice &gt; total − Alice</span>, Alice wins!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 5 : Recursion Tree
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal">05 — Recursion Tree</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(192,176,188,0.2); color:var(--pink);">🌳</div>
+                <div class="card-title">How Recursion Unfolds</div>
+            </div>
+            <p style="margin-bottom:16px;">For <span class="hl hl-cyan">piles = [5, 3, 4, 5]</span>, here's the recursion tree. Each node shows <span class="hl hl-purple">solve(i, j)</span> and the value returned:</p>
+
+            <div class="tree-container">
+                <svg class="tree-svg" viewBox="0 0 700 380" width="100%" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Level 0 -->
+                    <line x1="350" y1="55" x2="180" y2="135" stroke="rgba(135,128,79,0.4)" stroke-width="2"/>
+                    <line x1="350" y1="55" x2="520" y2="135" stroke="rgba(108,110,36,0.4)" stroke-width="2"/>
+                    <rect x="280" y="18" width="140" height="44" rx="12" fill="rgba(135,128,79,0.12)" stroke="rgba(135,128,79,0.45)" stroke-width="1.5"/>
+                    <text x="350" y="46" text-anchor="middle" fill="#87804F" font-family="JetBrains Mono" font-size="13" font-weight="700">solve(0, 3) → 9</text>
+
+                    <!-- Level 1 left -->
+                    <line x1="180" y1="175" x2="90" y2="255" stroke="rgba(108,110,36,0.3)" stroke-width="1.5"/>
+                    <line x1="180" y1="175" x2="270" y2="255" stroke="rgba(168,112,48,0.3)" stroke-width="1.5"/>
+                    <rect x="105" y="130" width="150" height="50" rx="12" fill="rgba(108,110,36,0.08)" stroke="rgba(108,110,36,0.35)" stroke-width="1.5"/>
+                    <text x="180" y="152" text-anchor="middle" fill="#6C6E24" font-family="JetBrains Mono" font-size="11" font-weight="600">pick_i: piles[0]=5</text>
+                    <text x="180" y="170" text-anchor="middle" fill="#8a8474" font-family="JetBrains Mono" font-size="10">5 + min(s(2,3), s(1,2))</text>
+
+                    <!-- Level 1 right -->
+                    <line x1="520" y1="175" x2="430" y2="255" stroke="rgba(108,110,36,0.3)" stroke-width="1.5"/>
+                    <line x1="520" y1="175" x2="610" y2="255" stroke="rgba(168,112,48,0.3)" stroke-width="1.5"/>
+                    <rect x="445" y="130" width="150" height="50" rx="12" fill="rgba(168,112,48,0.08)" stroke="rgba(168,112,48,0.35)" stroke-width="1.5"/>
+                    <text x="520" y="152" text-anchor="middle" fill="#a87030" font-family="JetBrains Mono" font-size="11" font-weight="600">pick_j: piles[3]=5</text>
+                    <text x="520" y="170" text-anchor="middle" fill="#8a8474" font-family="JetBrains Mono" font-size="10">5 + min(s(0,1), s(1,2))</text>
+
+                    <!-- Level 2 nodes -->
+                    <rect x="32" y="250" width="116" height="38" rx="10" fill="rgba(90,122,52,0.08)" stroke="rgba(90,122,52,0.3)" stroke-width="1.5"/>
+                    <text x="90" y="274" text-anchor="middle" fill="#5a7a34" font-family="JetBrains Mono" font-size="11" font-weight="600">s(2,3) → 5</text>
+
+                    <rect x="212" y="250" width="116" height="38" rx="10" fill="rgba(90,122,52,0.08)" stroke="rgba(90,122,52,0.3)" stroke-width="1.5"/>
+                    <text x="270" y="274" text-anchor="middle" fill="#5a7a34" font-family="JetBrains Mono" font-size="11" font-weight="600">s(1,2) → 4</text>
+
+                    <rect x="372" y="250" width="116" height="38" rx="10" fill="rgba(90,122,52,0.08)" stroke="rgba(90,122,52,0.3)" stroke-width="1.5"/>
+                    <text x="430" y="274" text-anchor="middle" fill="#5a7a34" font-family="JetBrains Mono" font-size="11" font-weight="600">s(0,1) → 5</text>
+
+                    <rect x="552" y="250" width="116" height="38" rx="10" fill="rgba(90,122,52,0.08)" stroke="rgba(90,122,52,0.3)" stroke-width="1.5"/>
+                    <text x="610" y="274" text-anchor="middle" fill="#5a7a34" font-family="JetBrains Mono" font-size="11" font-weight="600">s(1,2) → 4</text>
+
+                    <!-- Result annotations -->
+                    <rect x="80" y="310" width="220" height="34" rx="8" fill="rgba(135,128,79,0.06)" stroke="rgba(135,128,79,0.18)" stroke-width="1"/>
+                    <text x="190" y="332" text-anchor="middle" fill="#87804F" font-family="JetBrains Mono" font-size="10">pick_i = 5 + min(5,4) = 9</text>
+
+                    <rect x="400" y="310" width="220" height="34" rx="8" fill="rgba(168,112,48,0.06)" stroke="rgba(168,112,48,0.18)" stroke-width="1"/>
+                    <text x="510" y="332" text-anchor="middle" fill="#a87030" font-family="JetBrains Mono" font-size="10">pick_j = 5 + min(5,4) = 9</text>
+
+                    <!-- Final -->
+                    <rect x="215" y="355" width="270" height="28" rx="8" fill="rgba(90,122,52,0.08)" stroke="rgba(90,122,52,0.25)" stroke-width="1"/>
+                    <text x="350" y="374" text-anchor="middle" fill="#5a7a34" font-family="JetBrains Mono" font-size="11" font-weight="700">max(9, 9) = 9  →  Alice wins ✔</text>
+                </svg>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 6 : Methods & Functions
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal">06 — Methods & Functions</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(158,138,46,0.12); color:var(--yellow);">⚙️</div>
+                <div class="card-title">Key Functions Explained</div>
+            </div>
+
+            <table class="visual-table">
+                <thead>
+                    <tr>
+                        <th>Function</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>solve(i, j, piles)</code></td>
+                        <td>Recursively finds the <strong>max score Alice can get</strong> from subarray <code>piles[i..j]</code>. Uses memoization table <code>t[i][j]</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><code>stoneGame(piles)</code></td>
+                        <td>Driver function — computes total sum, calls <code>solve()</code> for Alice's best score, then checks if <code>Alice &gt; Bob</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><code>memset(t, -1, ...)</code></td>
+                        <td>Initializes the memoization table with <code>-1</code> to indicate <strong>uncomputed states</strong>.</td>
+                    </tr>
+                    <tr>
+                        <td><code>min(a, b)</code></td>
+                        <td>Used to simulate the <strong>opponent's optimal play</strong> — they leave you the worst option.</td>
+                    </tr>
+                    <tr>
+                        <td><code>max(a, b)</code></td>
+                        <td>Used by the current player to choose the <strong>best of two picks</strong> (left vs right).</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 7 : Patterns
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal">07 — Patterns Used</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(122,138,106,0.12); color:var(--blue);">🧩</div>
+                <div class="card-title">Design Patterns</div>
+            </div>
+            <div class="pattern-badges">
+                <div class="pattern-badge"><span class="emoji">🎮</span> Minimax Game Theory</div>
+                <div class="pattern-badge"><span class="emoji">🔄</span> Recursion + Memoization</div>
+                <div class="pattern-badge"><span class="emoji">📦</span> Interval DP (i, j)</div>
+                <div class="pattern-badge"><span class="emoji">🧪</span> Optimal Substructure</div>
+                <div class="pattern-badge"><span class="emoji">✂️</span> Two-End Picking</div>
+            </div>
+            <ul style="margin-top:16px;">
+                <li><strong>Minimax:</strong> You maximize your gain; the opponent minimizes it. Classic two-player game pattern.</li>
+                <li><strong>Memoization:</strong> The 2D table <span class="hl hl-yellow">t[i][j]</span> caches results to avoid exponential recomputation.</li>
+                <li><strong>Interval DP (i, j):</strong> The subproblem is defined by a contiguous subarray from index <span class="hl hl-cyan">i</span> to <span class="hl hl-orange">j</span>. This shrinks as picks happen.</li>
+                <li><strong>Two-End Picking:</strong> Players can only pick from the <em>left</em> or <em>right</em> end — this constrains the search space elegantly.</li>
+                <li><strong>Optimal Substructure:</strong> The optimal solution for <span class="hl hl-purple">solve(i,j)</span> depends on optimal solutions of smaller subproblems.</li>
+            </ul>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 8 : Code
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal">08 — Full Code</div>
+
+        <div class="card reveal" style="padding:0; overflow:hidden;">
+            <div class="code-container">
+                <div class="code-topbar">
+                    <div class="code-dots"><span></span><span></span><span></span></div>
+                    <span class="code-lang">C++ • solution.cpp</span>
+                </div>
+                <div class="code-body">
+<pre><span class="syn-cmt">// leetcode problem 877 Stone Game</span>
+<span class="syn-cmt">// https://leetcode.com/problems/stone-game/</span>
+<span class="syn-pp">#include</span> <span class="syn-str">&lt;iostream&gt;</span>
+<span class="syn-pp">#include</span> <span class="syn-str">&lt;vector&gt;</span>
+<span class="syn-pp">#include</span> <span class="syn-str">&lt;algorithm&gt;</span>
+<span class="syn-pp">#include</span> <span class="syn-str">&lt;cstring&gt;</span>
+<span class="syn-kw">using namespace</span> std;
+
+<span class="syn-kw">class</span> <span class="syn-type">Solution</span> {
+<span class="syn-kw">public</span>:
+    <span class="syn-type">int</span> t[<span class="syn-num">501</span>][<span class="syn-num">501</span>];              <span class="syn-cmt">// memoization table</span>
+    <span class="syn-type">int</span> <span class="syn-fn">solve</span>(<span class="syn-type">int</span> i, <span class="syn-type">int</span> j, <span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt;&amp; piles) {
+        <span class="syn-kw">if</span>(i <span class="syn-op">&gt;</span> j) {                 <span class="syn-cmt">// no piles left</span>
+            <span class="syn-kw">return</span> <span class="syn-num">0</span>;
+        }
+        <span class="syn-kw">if</span>(i <span class="syn-op">==</span> j) {                <span class="syn-cmt">// only one pile</span>
+            <span class="syn-kw">return</span> piles[i];
+        }
+        <span class="syn-kw">if</span>(t[i][j] <span class="syn-op">!=</span> <span class="syn-num">-1</span>) {          <span class="syn-cmt">// already computed</span>
+            <span class="syn-kw">return</span> t[i][j];
+        }
+        <span class="syn-cmt">// Pick left: piles[i], opponent plays optimally</span>
+        <span class="syn-type">int</span> take_i <span class="syn-op">=</span> piles[i] <span class="syn-op">+</span> <span class="syn-fn">min</span>(<span class="syn-fn">solve</span>(i<span class="syn-op">+</span><span class="syn-num">2</span>,j,piles), <span class="syn-fn">solve</span>(i<span class="syn-op">+</span><span class="syn-num">1</span>,j<span class="syn-op">-</span><span class="syn-num">1</span>,piles));
+        <span class="syn-cmt">// Pick right: piles[j], opponent plays optimally</span>
+        <span class="syn-type">int</span> take_j <span class="syn-op">=</span> piles[j] <span class="syn-op">+</span> <span class="syn-fn">min</span>(<span class="syn-fn">solve</span>(i<span class="syn-op">+</span><span class="syn-num">1</span>,j<span class="syn-op">-</span><span class="syn-num">1</span>,piles), <span class="syn-fn">solve</span>(i,j<span class="syn-op">-</span><span class="syn-num">2</span>,piles));
+
+        <span class="syn-kw">return</span> t[i][j] <span class="syn-op">=</span> <span class="syn-fn">max</span>(take_i, take_j);   <span class="syn-cmt">// best of both picks</span>
+    }
+
+    <span class="syn-type">bool</span> <span class="syn-fn">stoneGame</span>(<span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt;&amp; piles) {
+        <span class="syn-type">int</span> n <span class="syn-op">=</span> piles.<span class="syn-fn">size</span>();
+        <span class="syn-type">int</span> total <span class="syn-op">=</span> <span class="syn-num">0</span>;
+        <span class="syn-kw">for</span>(<span class="syn-type">int</span> i <span class="syn-op">=</span> <span class="syn-num">0</span>; i <span class="syn-op">&lt;</span> n; i++) {
+            total <span class="syn-op">+=</span> piles[i];
+        }
+        <span class="syn-fn">memset</span>(t, <span class="syn-num">-1</span>, <span class="syn-kw">sizeof</span>(t));  <span class="syn-cmt">// init memo table</span>
+
+        <span class="syn-type">int</span> Alice <span class="syn-op">=</span> <span class="syn-fn">solve</span>(<span class="syn-num">0</span>, n<span class="syn-op">-</span><span class="syn-num">1</span>, piles);
+        <span class="syn-type">int</span> Bob <span class="syn-op">=</span> total <span class="syn-op">-</span> Alice;
+
+        <span class="syn-kw">return</span> Alice <span class="syn-op">&gt;</span> Bob;           <span class="syn-cmt">// Alice wins?</span>
+    }
+};
+
+<span class="syn-type">int</span> <span class="syn-fn">main</span>() {
+    <span class="syn-type">Solution</span> s;
+    <span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt; piles <span class="syn-op">=</span> {<span class="syn-num">5</span>, <span class="syn-num">3</span>, <span class="syn-num">4</span>, <span class="syn-num">5</span>};
+    cout <span class="syn-op">&lt;&lt;</span> s.<span class="syn-fn">stoneGame</span>(piles) <span class="syn-op">&lt;&lt;</span> endl;  <span class="syn-cmt">// Output: 1 (true)</span>
+    <span class="syn-kw">return</span> <span class="syn-num">0</span>;
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 9 : Line-by-Line
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal">09 — Code Walkthrough</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(192,176,188,0.15); color:var(--pink);">🔍</div>
+                <div class="card-title">Line-by-Line Breakdown</div>
+            </div>
+
+            <table class="visual-table">
+                <thead>
+                    <tr>
+                        <th style="width:35%">Code</th>
+                        <th>What it does</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>int t[501][501]</code></td>
+                        <td><strong>Memoization table</strong> — stores computed results for subproblems. Initialized to <code>-1</code> to indicate unvisited states.</td>
+                    </tr>
+                    <tr>
+                        <td><code>if(i > j) return 0</code></td>
+                        <td>No piles left in the subarray — nothing to pick, score is <strong>0</strong>.</td>
+                    </tr>
+                    <tr>
+                        <td><code>if(i == j) return piles[i]</code></td>
+                        <td>Only <strong>one pile</strong> left — you must pick it.</td>
+                    </tr>
+                    <tr>
+                        <td><code>if(t[i][j] != -1)</code></td>
+                        <td>Check if this subproblem was <strong>already solved</strong>. If yes, return cached result — this is the memoization check.</td>
+                    </tr>
+                    <tr>
+                        <td><code>take_i = piles[i] + min(...)</code></td>
+                        <td>Pick the <strong>left</strong> pile. After you pick, the opponent picks optimally — leaving you the <em>minimum</em> of two futures.</td>
+                    </tr>
+                    <tr>
+                        <td><code>solve(i+2, j)</code></td>
+                        <td>After you picked <code>i</code> and opponent picked <code>i+1</code> (both from left).</td>
+                    </tr>
+                    <tr>
+                        <td><code>solve(i+1, j-1)</code></td>
+                        <td>After you picked <code>i</code> (left) and opponent picked <code>j</code> (right).</td>
+                    </tr>
+                    <tr>
+                        <td><code>take_j = piles[j] + min(...)</code></td>
+                        <td>Pick the <strong>right</strong> pile. Same logic — opponent minimizes your future.</td>
+                    </tr>
+                    <tr>
+                        <td><code>return t[i][j] = max(...)</code></td>
+                        <td>Store the result in memo table and return. You pick whichever side gives you the <strong>better score</strong>.</td>
+                    </tr>
+                    <tr>
+                        <td><code>Alice > Bob</code></td>
+                        <td>Final check: if Alice's best score beats Bob's, <strong>Alice wins</strong>!</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 10 : Complexity
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal">10 — Complexity Analysis</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(168,112,48,0.12); color:var(--orange);">📊</div>
+                <div class="card-title">Time & Space Complexity</div>
+            </div>
+
+            <div class="complexity-grid">
+                <div class="complexity-pill">
+                    <div class="label">Time</div>
+                    <div class="big" style="color:var(--accent-1);">O(n²)</div>
+                    <div class="note">n² unique (i, j) subproblems.<br>Each solved once with memoization.</div>
+                </div>
+                <div class="complexity-pill">
+                    <div class="label">Space</div>
+                    <div class="big" style="color:var(--accent-2);">O(n²)</div>
+                    <div class="note">2D memoization table t[n][n]<br>+ O(n) recursion stack.</div>
+                </div>
+            </div>
+
+            <div class="callout insight" style="margin-top:20px;">
+                <div class="callout-icon">🚀</div>
+                <div class="callout-text">
+                    <strong>Fun fact:</strong> For this specific problem, you can just
+                    <code style="font-family:'JetBrains Mono';font-size:0.85em;color:#5a5c1a;background:rgba(108,110,36,0.1);padding:2px 6px;border-radius:4px;">return true;</code>
+                    because Alice can always choose the parity (even/odd indexed piles) that gives her the larger sum.
+                    But the Minimax approach is the <strong>general technique</strong> that works for all game theory problems!
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 11 : Key Takeaways
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal">11 — Key Takeaways</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(90,122,52,0.12); color:var(--green);">✅</div>
+                <div class="card-title">Remember These</div>
+            </div>
+            <ul>
+                <li><strong>Minimax</strong> = you maximize, opponent minimizes. Classic game theory.</li>
+                <li>The <span class="hl hl-pink">min()</span> inside represents the opponent being smart — they'll pick the worse option <em>for you</em>.</li>
+                <li><strong>Memoization</strong> with <span class="hl hl-yellow">t[i][j]</span> drops time from O(2ⁿ) to <span class="hl hl-green">O(n²)</span>.</li>
+                <li>Subproblem is defined by an <strong>interval [i, j]</strong> — shrinks from both ends.</li>
+                <li>Alice's total is computed by <span class="hl hl-purple">solve()</span>; Bob gets <span class="hl hl-orange">total − Alice</span>.</li>
+                <li>For Stone Game specifically: Alice <strong>always wins</strong> (even/odd parity argument) — but the technique generalizes!</li>
+                <li>This pattern appears in many game theory problems: Predict the Winner, Coins in a Line, etc.</li>
+            </ul>
+        </div>
+
+        <!-- ─── Footer ─── -->
+        <footer class="footer">
+            <p>Made with <span class="heart">♥</span> by <a href="#">Algorithm Atlas</a></p>
+            <p style="margin-top:6px;">LeetCode Problem of the Day — 02 August 2026</p>
+        </footer>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         JAVASCRIPT
+         ═══════════════════════════════════════════════════════ -->
+    <script>
+        // ─── Navbar scroll effect ───
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            navbar.classList.toggle('scrolled', window.scrollY > 20);
+        });
+
+        // ─── Reveal on scroll ───
+        const reveals = document.querySelectorAll('.reveal');
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach((e, i) => {
+                if (e.isIntersecting) {
+                    setTimeout(() => e.target.classList.add('visible'), i * 80);
+                    revealObserver.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        reveals.forEach(r => revealObserver.observe(r));
+
+        // ─── Interactive Game Simulation ───
+        const examples = [
+            { nums: [5, 3, 4, 5],        name: "Example 1" },
+            { nums: [3, 7, 2, 3],        name: "Example 2" },
+            { nums: [2, 4, 6, 8],        name: "Example 3" },
+        ];
+        let currentExample = 0;
+        let gameState = null;
+
+        // Minimax solver with move recording
+        function solveFull(nums) {
+            const n = nums.length;
+            const memo = {};
+            function rec(i, j) {
+                if (i > j) return 0;
+                if (i === j) return nums[i];
+                const key = i + ',' + j;
+                if (memo[key] !== undefined) return memo[key];
+                const pickI = nums[i] + Math.min(rec(i+2, j), rec(i+1, j-1));
+                const pickJ = nums[j] + Math.min(rec(i, j-2), rec(i+1, j-1));
+                memo[key] = Math.max(pickI, pickJ);
+                return memo[key];
+            }
+
+            // Record optimal moves
+            const moves = [];
+            let left = 0, right = n - 1;
+            let turn = 1; // 1 = Alice, 2 = Bob
+            while (left <= right) {
+                const val = rec(left, right);
+                // Determine which pick the current player makes
+                let pickLeft, pickRight;
+                if (left === right) {
+                    moves.push({ player: turn, index: left, value: nums[left], side: 'only' });
+                    break;
+                }
+                pickLeft = nums[left] + Math.min(
+                    left+2 <= right ? rec(left+2, right) : 0,
+                    left+1 <= right-1 ? rec(left+1, right-1) : 0
+                );
+                pickRight = nums[right] + Math.min(
+                    left <= right-2 ? rec(left, right-2) : 0,
+                    left+1 <= right-1 ? rec(left+1, right-1) : 0
+                );
+
+                if (turn === 1) {
+                    // Alice maximizes
+                    if (pickLeft >= pickRight) {
+                        moves.push({ player: 1, index: left, value: nums[left], side: 'left' });
+                        left++;
+                    } else {
+                        moves.push({ player: 1, index: right, value: nums[right], side: 'right' });
+                        right--;
+                    }
+                } else {
+                    // Bob also maximizes for themselves
+                    if (pickLeft >= pickRight) {
+                        moves.push({ player: 2, index: left, value: nums[left], side: 'left' });
+                        left++;
+                    } else {
+                        moves.push({ player: 2, index: right, value: nums[right], side: 'right' });
+                        right--;
+                    }
+                }
+                turn = turn === 1 ? 2 : 1;
+            }
+            return moves;
+        }
+
+        function initGame() {
+            const ex = examples[currentExample];
+            const numsContainer = document.getElementById('game-nums');
+            numsContainer.innerHTML = '';
+            ex.nums.forEach((num, idx) => {
+                const div = document.createElement('div');
+                div.className = 'game-num';
+                div.id = 'gn-' + idx;
+                div.textContent = num;
+                numsContainer.appendChild(div);
+            });
+            document.getElementById('p1-score').textContent = '0';
+            document.getElementById('p2-score').textContent = '0';
+            document.getElementById('game-result').innerHTML = '';
+            document.getElementById('step-info').textContent = `Array: [${ex.nums.join(', ')}] — ${ex.name}`;
+            document.getElementById('btn-play').disabled = false;
+
+            gameState = {
+                moves: solveFull([...ex.nums]),
+                step: 0,
+                scores: { 1: 0, 2: 0 },
+                nums: [...ex.nums],
+            };
+
+            // Highlight available picks
+            highlightEnds(ex.nums);
+        }
+
+        function highlightEnds(nums) {
+            document.querySelectorAll('.game-num').forEach(el => {
+                el.classList.remove('highlight-left', 'highlight-right');
+            });
+            if (gameState && gameState.step < gameState.moves.length) {
+                const remaining = [];
+                document.querySelectorAll('.game-num').forEach((el, i) => {
+                    if (!el.classList.contains('faded')) remaining.push(i);
+                });
+                if (remaining.length > 0) {
+                    document.getElementById('gn-' + remaining[0]).classList.add('highlight-left');
+                    if (remaining.length > 1)
+                        document.getElementById('gn-' + remaining[remaining.length - 1]).classList.add('highlight-right');
+                }
+            }
+        }
+
+        function playStep() {
+            if (!gameState || gameState.step >= gameState.moves.length) return;
+            const move = gameState.moves[gameState.step];
+            const el = document.getElementById('gn-' + move.index);
+
+            // Remove highlights
+            document.querySelectorAll('.game-num').forEach(e => {
+                e.classList.remove('highlight-left', 'highlight-right');
+            });
+
+            // Animate pick
+            el.classList.add(move.player === 1 ? 'picked-1' : 'picked-2');
+            setTimeout(() => {
+                el.classList.remove('picked-1', 'picked-2');
+                el.classList.add('faded');
+            }, 600);
+
+            gameState.scores[move.player] += move.value;
+            gameState.step++;
+
+            setTimeout(() => {
+                document.getElementById('p1-score').textContent = gameState.scores[1];
+                document.getElementById('p2-score').textContent = gameState.scores[2];
+
+                const playerName = move.player === 1 ? 'Alice' : 'Bob';
+                const sideText = move.side === 'left' ? '← left' : move.side === 'right' ? 'right →' : 'last element';
+                document.getElementById('step-info').innerHTML =
+                    `<strong>${playerName}</strong> picks <strong>${move.value}</strong> from ${sideText}`;
+
+                if (gameState.step >= gameState.moves.length) {
+                    const s1 = gameState.scores[1], s2 = gameState.scores[2];
+                    const resultEl = document.getElementById('game-result');
+                    if (s1 > s2) {
+                        resultEl.innerHTML = `<span class="winner">🏆 Alice wins! (${s1} > ${s2}) → returns true</span>`;
+                    } else {
+                        resultEl.innerHTML = `<span class="loser">Bob wins! (${s2} > ${s1}) → returns false</span>`;
+                    }
+                    document.getElementById('btn-play').disabled = true;
+                } else {
+                    highlightEnds();
+                }
+            }, 300);
+        }
+
+        function resetGame() {
+            initGame();
+        }
+
+        function changeExample() {
+            currentExample = (currentExample + 1) % examples.length;
+            initGame();
+        }
+
+        // Init on load
+        initGame();
+    </script>
+</body>
+</html>
