@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeetCode 3731 — Find Missing Elements | Algorithm Atlas</title>
+    <meta name="description" content="Interactive visual explanation of LeetCode Problem 3731: Find Missing Elements using sorting and gap detection.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════════════════════
+           ROOT & RESET — "Study Hard" Palette
+           ═══════════════════════════════════════════════════════ */
+        *, *::before, *::after {
+            margin: 0; padding: 0; box-sizing: border-box;
+        }
+        :root {
+            --bg-primary: #f5f2e8;
+            --bg-secondary: #ece8d8;
+            --bg-card: rgba(255, 252, 243, 0.75);
+            --glass: rgba(135, 128, 79, 0.06);
+            --glass-border: rgba(135, 128, 79, 0.18);
+            --text-primary: #303030;
+            --text-secondary: #5a5646;
+            --text-muted: #8a8474;
+            --accent-1: #87804F;
+            --accent-2: #6C6E24;
+            --accent-3: #C3B293;
+            --accent-4: #9a4a2a;
+            --green: #5a7a34;
+            --yellow: #9e8a2e;
+            --cyan: #6C6E24;
+            --orange: #a87030;
+            --blue: #7a8a6a;
+            --pink: #8a6a70;
+            --neutral-1: #DFD8B1;
+            --neutral-2: #C0B0BC;
+            --gradient-hero: linear-gradient(135deg, #87804F 0%, #6C6E24 50%, #C3B293 100%);
+            --gradient-warm: linear-gradient(135deg, #C3B293, #87804F, #DFD8B1);
+            --gradient-cool: linear-gradient(135deg, #6C6E24, #87804F, #C3B293);
+            --shadow-glow: 0 0 60px rgba(135, 128, 79, 0.12);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           ANIMATED BACKGROUND — Mesh orbs + particles
+           ═══════════════════════════════════════════════════════ */
+        .bg-mesh {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            overflow: hidden;
+        }
+        .bg-mesh .orb {
+            position: absolute; border-radius: 50%; filter: blur(120px);
+            animation: orbFloat 20s ease-in-out infinite;
+        }
+        .bg-mesh .orb:nth-child(1) {
+            width: 600px; height: 600px; top: -10%; left: -5%;
+            background: rgba(135, 128, 79, 0.12);
+            animation-duration: 25s;
+        }
+        .bg-mesh .orb:nth-child(2) {
+            width: 500px; height: 500px; top: 40%; right: -10%;
+            background: rgba(108, 110, 36, 0.10);
+            animation-duration: 30s; animation-delay: -5s;
+        }
+        .bg-mesh .orb:nth-child(3) {
+            width: 400px; height: 400px; bottom: -5%; left: 30%;
+            background: rgba(195, 178, 147, 0.12);
+            animation-duration: 22s; animation-delay: -10s;
+        }
+        .bg-mesh .orb:nth-child(4) {
+            width: 300px; height: 300px; top: 20%; left: 50%;
+            background: rgba(192, 176, 188, 0.08);
+            animation-duration: 28s; animation-delay: -15s;
+        }
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            25% { transform: translate(60px,-40px) scale(1.1); }
+            50% { transform: translate(-30px,60px) scale(0.95); }
+            75% { transform: translate(40px,30px) scale(1.05); }
+        }
+
+        /* Floating particles */
+        .particle {
+            position: fixed; pointer-events: none; z-index: 0;
+            border-radius: 50%;
+            background: rgba(135, 128, 79, 0.15);
+            animation: particleDrift linear infinite;
+        }
+        .particle:nth-child(odd) { background: rgba(108, 110, 36, 0.12); }
+        .particle:nth-child(3n) { background: rgba(195, 178, 147, 0.18); }
+        .particle:nth-child(5n) { background: rgba(192, 176, 188, 0.14); }
+        @keyframes particleDrift {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           LAYOUT
+           ═══════════════════════════════════════════════════════ */
+        .container {
+            position: relative; z-index: 1;
+            max-width: 900px; margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           NAVIGATION
+           ═══════════════════════════════════════════════════════ */
+        .navbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            backdrop-filter: blur(20px) saturate(1.8);
+            -webkit-backdrop-filter: blur(20px) saturate(1.8);
+            background: rgba(245, 242, 232, 0.85);
+            border-bottom: 1px solid var(--glass-border);
+            transition: box-shadow 0.3s, background 0.3s;
+        }
+        .navbar.scrolled {
+            box-shadow: 0 4px 30px rgba(48,48,48,0.08);
+            background: rgba(245, 242, 232, 0.95);
+        }
+        .navbar-inner {
+            max-width: 900px; margin: 0 auto; padding: 0 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 64px;
+        }
+        .nav-brand {
+            display: flex; align-items: center; gap: 10px;
+            font-weight: 700; font-size: 1.05rem;
+            text-decoration: none; color: var(--text-primary);
+            transition: transform 0.2s;
+        }
+        .nav-brand:hover { transform: scale(1.02); }
+        .nav-brand .logo {
+            width: 32px; height: 32px; border-radius: 8px;
+            background: var(--gradient-hero);
+            display: grid; place-items: center;
+            font-size: 0.85rem; font-weight: 800;
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(135, 128, 79, 0.25);
+        }
+        .nav-links {
+            display: flex; align-items: center; gap: 16px;
+        }
+        .nav-date {
+            font-size: 0.82rem; color: var(--text-secondary);
+            font-weight: 500;
+            padding: 6px 14px; border-radius: 20px;
+            background: var(--glass); border: 1px solid var(--glass-border);
+        }
+        .nav-difficulty {
+            font-size: 0.72rem; font-weight: 700;
+            padding: 4px 12px; border-radius: 20px;
+            background: rgba(90, 122, 52, 0.1);
+            color: var(--green);
+            border: 1px solid rgba(90, 122, 52, 0.25);
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           HERO SECTION
+           ═══════════════════════════════════════════════════════ */
+        .hero {
+            padding: 120px 0 60px;
+            text-align: center;
+            position: relative;
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 7px 18px; border-radius: 50px;
+            background: rgba(135, 128, 79, 0.10);
+            border: 1px solid rgba(135, 128, 79, 0.25);
+            font-size: 0.78rem; font-weight: 600;
+            color: var(--accent-1);
+            text-transform: uppercase; letter-spacing: 1.5px;
+            margin-bottom: 24px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+        .hero-badge .dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--accent-2);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%,100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+        .hero h1 {
+            font-size: clamp(2.2rem, 5vw, 3.4rem);
+            font-weight: 900; line-height: 1.15;
+            letter-spacing: -1.5px;
+            color: var(--text-primary);
+            animation: fadeInUp 0.8s ease-out 0.1s both;
+        }
+        .hero h1 .gradient-text {
+            background: var(--gradient-hero);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero h1 .leetcode-num {
+            display: block;
+            font-size: 0.45em;
+            letter-spacing: 2px;
+            -webkit-text-fill-color: var(--text-muted);
+            background: none;
+            margin-top: 6px;
+        }
+        .hero-subtitle {
+            margin-top: 18px;
+            font-size: 1.1rem; color: var(--text-secondary);
+            max-width: 620px; margin-left: auto; margin-right: auto;
+            line-height: 1.7;
+            animation: fadeInUp 0.8s ease-out 0.25s both;
+        }
+        .hero-tags {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+            margin-top: 28px;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+        .hero-tag {
+            padding: 6px 16px; border-radius: 20px; font-size: 0.78rem;
+            font-weight: 600; border: 1px solid;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .hero-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .hero-tag.diff-easy {
+            color: var(--green); border-color: rgba(90, 122, 52, 0.3);
+            background: rgba(90, 122, 52, 0.08);
+        }
+        .hero-tag.cat {
+            color: var(--accent-2); border-color: rgba(108, 110, 36, 0.3);
+            background: rgba(108, 110, 36, 0.08);
+        }
+        .hero-tag.pattern {
+            color: #7a5a30; border-color: rgba(122, 90, 48, 0.3);
+            background: rgba(122, 90, 48, 0.08);
+        }
+
+        /* Hero animated number line */
+        .hero-numberline {
+            display: flex; justify-content: center; align-items: center; gap: 4px;
+            margin-top: 36px;
+            animation: fadeInUp 0.8s ease-out 0.55s both;
+        }
+        .hero-numcell {
+            width: 40px; height: 40px; border-radius: 10px;
+            display: grid; place-items: center;
+            font-size: 0.85rem; font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            animation: cellBounce 2.5s ease-in-out infinite;
+            border: 2px solid;
+        }
+        .hero-numcell.present {
+            background: rgba(108,110,36,0.1); border-color: rgba(108,110,36,0.3);
+            color: var(--accent-2);
+        }
+        .hero-numcell.missing {
+            background: rgba(154,74,42,0.06); border-color: rgba(154,74,42,0.2);
+            color: var(--accent-4);
+            border-style: dashed;
+            opacity: 0.7;
+        }
+        .hero-numcell:nth-child(1) { animation-delay: 0s; }
+        .hero-numcell:nth-child(2) { animation-delay: 0.1s; }
+        .hero-numcell:nth-child(3) { animation-delay: 0.2s; }
+        .hero-numcell:nth-child(4) { animation-delay: 0.3s; }
+        .hero-numcell:nth-child(5) { animation-delay: 0.4s; }
+        .hero-numcell:nth-child(6) { animation-delay: 0.5s; }
+        .hero-numcell:nth-child(7) { animation-delay: 0.6s; }
+        @keyframes cellBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .hero-arrow {
+            font-size: 1.2rem; color: var(--text-muted);
+            margin: 0 2px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           ANIMATIONS
+           ═══════════════════════════════════════════════════════ */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        .reveal {
+            opacity: 0; transform: translateY(40px);
+            transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+        }
+        .reveal.visible {
+            opacity: 1; transform: translateY(0);
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           GLASS CARD — Enhanced
+           ═══════════════════════════════════════════════════════ */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 36px;
+            margin-bottom: 32px;
+            transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(135,128,79,0.03), transparent);
+            transition: left 0.6s ease;
+        }
+        .card:hover::before { left: 100%; }
+        .card:hover {
+            border-color: rgba(135, 128, 79, 0.3);
+            box-shadow: var(--shadow-glow);
+            transform: translateY(-2px);
+        }
+        .card-header {
+            display: flex; align-items: center; gap: 14px;
+            margin-bottom: 22px;
+        }
+        .card-icon {
+            width: 48px; height: 48px; border-radius: 14px;
+            display: grid; place-items: center;
+            font-size: 1.3rem; flex-shrink: 0;
+            transition: transform 0.3s;
+        }
+        .card:hover .card-icon {
+            transform: scale(1.1) rotate(-3deg);
+        }
+        .card-title {
+            font-size: 1.35rem; font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+        }
+        .card p, .card li {
+            color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8;
+        }
+        .card ul { list-style: none; padding: 0; }
+        .card ul li {
+            padding: 6px 0; padding-left: 22px; position: relative;
+        }
+        .card ul li::before {
+            content: '▸'; position: absolute; left: 0;
+            color: var(--accent-1); font-weight: 700;
+        }
+        .card strong { color: var(--text-primary); }
+
+        /* ═══════════════════════════════════════════════════════
+           SECTION DIVIDER
+           ═══════════════════════════════════════════════════════ */
+        .section-label {
+            display: flex; align-items: center; gap: 14px;
+            margin: 50px 0 24px; font-size: 0.72rem;
+            text-transform: uppercase; letter-spacing: 3px;
+            font-weight: 700; color: var(--text-muted);
+        }
+        .section-label .sec-num {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; border-radius: 8px;
+            background: var(--gradient-hero);
+            color: #fff; font-size: 0.7rem; font-weight: 800;
+            flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(135, 128, 79, 0.2);
+        }
+        .section-label::after {
+            content: ''; flex: 1; height: 1px;
+            background: linear-gradient(90deg, var(--glass-border), transparent);
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           INTERACTIVE VISUALIZER
+           ═══════════════════════════════════════════════════════ */
+        .viz-board {
+            text-align: center;
+        }
+        .viz-row {
+            display: flex; justify-content: center; gap: 8px;
+            margin: 16px 0;
+            flex-wrap: wrap;
+        }
+        .viz-cell {
+            width: 56px; height: 56px; border-radius: 12px;
+            display: grid; place-items: center;
+            font-size: 1.15rem; font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--glass);
+            border: 2px solid var(--glass-border);
+            color: var(--text-primary);
+            transition: all 0.5s cubic-bezier(0.34,1.56,0.64,1);
+            position: relative;
+        }
+        .viz-cell .cell-label {
+            position: absolute; top: -8px; right: -8px;
+            font-size: 0.5rem; font-weight: 700;
+            background: var(--bg-secondary); color: var(--text-muted);
+            width: 18px; height: 18px; border-radius: 50%;
+            display: grid; place-items: center;
+            border: 1px solid var(--glass-border);
+        }
+        .viz-cell.sorted {
+            background: rgba(108, 110, 36, 0.12);
+            border-color: rgba(108, 110, 36, 0.35);
+            color: var(--accent-2);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(108, 110, 36, 0.12);
+        }
+        .viz-cell.highlight-gap {
+            animation: gapPulse 1s ease-in-out infinite;
+        }
+        @keyframes gapPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(135, 128, 79, 0.1); }
+            50% { box-shadow: 0 0 24px rgba(135, 128, 79, 0.25); }
+        }
+        .viz-cell.missing-found {
+            background: rgba(154, 74, 42, 0.1);
+            border-color: rgba(154, 74, 42, 0.35);
+            border-style: dashed;
+            color: var(--accent-4);
+            animation: missingPop 0.5s ease-out;
+        }
+        @keyframes missingPop {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.15); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .viz-cell.faded {
+            opacity: 0.3; transform: scale(0.85);
+        }
+        .viz-cell.swapping {
+            animation: swapBounce 0.4s ease-in-out;
+            background: rgba(158, 138, 46, 0.15);
+            border-color: rgba(158, 138, 46, 0.4);
+            color: var(--yellow);
+        }
+        @keyframes swapBounce {
+            0% { transform: translateY(0); }
+            40% { transform: translateY(-14px); }
+            100% { transform: translateY(0); }
+        }
+        .viz-arrow-row {
+            display: flex; justify-content: center; gap: 8px;
+            margin: 6px 0 14px;
+            min-height: 24px;
+        }
+        .viz-arrow {
+            width: 56px; text-align: center;
+            font-size: 1rem; color: var(--accent-2);
+            font-weight: 800;
+        }
+        .viz-result-row {
+            display: flex; justify-content: center; gap: 8px;
+            margin: 14px 0;
+            flex-wrap: wrap;
+        }
+        .viz-result-cell {
+            width: 48px; height: 48px; border-radius: 10px;
+            display: grid; place-items: center;
+            font-size: 1rem; font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(154, 74, 42, 0.08);
+            border: 2px dashed rgba(154, 74, 42, 0.3);
+            color: var(--accent-4);
+            animation: missingPop 0.5s ease-out both;
+        }
+        .viz-controls {
+            display: flex; justify-content: center; gap: 12px;
+            margin-top: 24px; flex-wrap: wrap;
+        }
+        .viz-btn {
+            padding: 10px 24px; border-radius: 10px; border: none;
+            font-family: 'Inter', sans-serif; font-weight: 600;
+            font-size: 0.85rem; cursor: pointer;
+            transition: all 0.25s;
+        }
+        .viz-btn.primary {
+            background: var(--gradient-hero); color: #fff;
+            box-shadow: 0 4px 20px rgba(135, 128, 79, 0.25);
+        }
+        .viz-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(135, 128, 79, 0.4);
+        }
+        .viz-btn.primary:disabled {
+            opacity: 0.5; cursor: not-allowed;
+            transform: none; box-shadow: none;
+        }
+        .viz-btn.secondary {
+            background: var(--glass); color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+        .viz-btn.secondary:hover {
+            border-color: var(--accent-1);
+            transform: translateY(-1px);
+        }
+        .viz-step-info {
+            margin-top: 14px; font-size: 0.88rem;
+            color: var(--text-secondary); min-height: 30px;
+            padding: 8px 16px; border-radius: 8px;
+            background: rgba(135,128,79,0.04);
+            display: inline-block;
+        }
+        .viz-result-text {
+            margin-top: 16px; font-weight: 700; font-size: 1.05rem;
+            min-height: 32px;
+            color: var(--green);
+        }
+
+        /* Phase indicator */
+        .phase-indicator {
+            display: flex; justify-content: center; gap: 10px;
+            margin-bottom: 20px;
+        }
+        .phase-pill {
+            padding: 6px 16px; border-radius: 20px;
+            font-size: 0.72rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+            background: var(--glass); border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+        .phase-pill.active {
+            background: var(--gradient-hero);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 3px 12px rgba(135, 128, 79, 0.25);
+        }
+        .phase-pill.done {
+            background: rgba(90, 122, 52, 0.1);
+            border-color: rgba(90, 122, 52, 0.3);
+            color: var(--green);
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           TIMELINE
+           ═══════════════════════════════════════════════════════ */
+        .timeline {
+            position: relative; padding-left: 40px;
+        }
+        .timeline::before {
+            content: ''; position: absolute; left: 16px; top: 0; bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--accent-1), var(--accent-2), var(--accent-3), var(--neutral-2));
+            border-radius: 2px;
+        }
+        .timeline-item {
+            position: relative; margin-bottom: 32px;
+            padding-left: 4px;
+        }
+        .timeline-dot {
+            position: absolute; left: -31px; top: 4px;
+            width: 16px; height: 16px; border-radius: 50%;
+            border: 3px solid var(--accent-1);
+            background: var(--bg-primary);
+            transition: all 0.3s;
+        }
+        .timeline-item:hover .timeline-dot {
+            transform: scale(1.3);
+            box-shadow: 0 0 12px rgba(135,128,79,0.3);
+        }
+        .timeline-item:nth-child(2) .timeline-dot { border-color: var(--accent-2); }
+        .timeline-item:nth-child(3) .timeline-dot { border-color: var(--accent-3); }
+        .timeline-item:nth-child(4) .timeline-dot { border-color: var(--neutral-2); }
+        .timeline-item h4 {
+            font-size: 1.02rem; font-weight: 700; margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+        .timeline-item p {
+            color: var(--text-secondary); font-size: 0.9rem; line-height: 1.75;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           INLINE HIGHLIGHT
+           ═══════════════════════════════════════════════════════ */
+        .hl {
+            padding: 2px 8px; border-radius: 5px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82em; font-weight: 600;
+        }
+        .hl-purple { background: rgba(135, 128, 79, 0.12); color: #6b6538; }
+        .hl-pink { background: rgba(192, 176, 188, 0.2); color: #7a5a6a; }
+        .hl-cyan { background: rgba(108, 110, 36, 0.12); color: #5a5c1a; }
+        .hl-green { background: rgba(90, 122, 52, 0.12); color: #4a6828; }
+        .hl-yellow { background: rgba(158, 138, 46, 0.12); color: #7a6a1e; }
+        .hl-orange { background: rgba(168, 112, 48, 0.12); color: #8a5a20; }
+        .hl-red { background: rgba(154, 74, 42, 0.1); color: #9a4a2a; }
+
+        /* ═══════════════════════════════════════════════════════
+           CODE BLOCK
+           ═══════════════════════════════════════════════════════ */
+        .code-container {
+            position: relative; border-radius: var(--radius);
+            overflow: hidden;
+            background: #2a2820;
+            border: 1px solid rgba(135, 128, 79, 0.2);
+        }
+        .code-topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(135, 128, 79, 0.15);
+        }
+        .code-dots {
+            display: flex; gap: 7px;
+        }
+        .code-dots span {
+            width: 12px; height: 12px; border-radius: 50%;
+            transition: transform 0.2s;
+        }
+        .code-dots span:hover { transform: scale(1.3); }
+        .code-dots span:nth-child(1) { background: #9a4a2a; }
+        .code-dots span:nth-child(2) { background: #9e8a2e; }
+        .code-dots span:nth-child(3) { background: #5a7a34; }
+        .code-lang {
+            font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 1.5px; color: #8a8474;
+        }
+        .code-body {
+            padding: 24px; overflow-x: auto;
+        }
+        .code-body pre {
+            margin: 0; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem; line-height: 1.85;
+            color: #c8c2a8;
+        }
+        .syn-kw { color: #C3B293; }
+        .syn-type { color: #a8b86a; }
+        .syn-fn { color: #d4b86a; }
+        .syn-num { color: #c09070; }
+        .syn-str { color: #8aaa5a; }
+        .syn-cmt { color: #5a5646; font-style: italic; }
+        .syn-op { color: #9a9480; }
+        .syn-pp { color: #b8906a; }
+
+        /* ═══════════════════════════════════════════════════════
+           COMPLEXITY PILLS
+           ═══════════════════════════════════════════════════════ */
+        .complexity-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+        }
+        .complexity-pill {
+            padding: 24px; border-radius: var(--radius-sm);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .complexity-pill:hover {
+            border-color: rgba(135, 128, 79, 0.35);
+            transform: translateY(-2px);
+        }
+        .complexity-pill .label {
+            font-size: 0.72rem; text-transform: uppercase;
+            letter-spacing: 2px; font-weight: 600; color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .complexity-pill .big {
+            font-size: 1.6rem; font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .complexity-pill .note {
+            font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           CALLOUT
+           ═══════════════════════════════════════════════════════ */
+        .callout {
+            display: flex; gap: 16px;
+            padding: 22px 24px; border-radius: var(--radius-sm);
+            border-left: 4px solid;
+            margin: 20px 0;
+            transition: transform 0.2s;
+        }
+        .callout:hover { transform: translateX(4px); }
+        .callout.insight {
+            background: rgba(135, 128, 79, 0.06);
+            border-color: var(--accent-1);
+        }
+        .callout.warning {
+            background: rgba(158, 138, 46, 0.06);
+            border-color: var(--yellow);
+        }
+        .callout .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+        .callout .callout-text { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7; }
+        .callout .callout-text strong { color: var(--text-primary); }
+
+        /* ═══════════════════════════════════════════════════════
+           VISUAL TABLE
+           ═══════════════════════════════════════════════════════ */
+        .visual-table {
+            width: 100%; border-collapse: separate; border-spacing: 0;
+            border-radius: var(--radius-sm); overflow: hidden;
+            margin: 16px 0;
+        }
+        .visual-table th {
+            background: rgba(135, 128, 79, 0.1);
+            color: var(--accent-1);
+            font-size: 0.78rem; text-transform: uppercase;
+            letter-spacing: 1px; font-weight: 700;
+            padding: 12px 16px; text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .visual-table td {
+            padding: 12px 16px; font-size: 0.88rem;
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(135, 128, 79, 0.06);
+            transition: background 0.2s;
+        }
+        .visual-table tr:last-child td { border-bottom: none; }
+        .visual-table tr:hover td {
+            background: rgba(135, 128, 79, 0.04);
+        }
+        .visual-table code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82em; color: #5a5c1a;
+            background: rgba(108, 110, 36, 0.08);
+            padding: 2px 7px; border-radius: 4px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           PATTERN BADGES
+           ═══════════════════════════════════════════════════════ */
+        .pattern-badges {
+            display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0;
+        }
+        .pattern-badge {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 18px; border-radius: 10px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            font-size: 0.85rem; font-weight: 600;
+            color: var(--text-primary);
+            transition: all 0.3s;
+        }
+        .pattern-badge:hover {
+            border-color: var(--accent-1);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(135,128,79,0.1);
+        }
+        .pattern-badge .emoji { font-size: 1.1rem; }
+
+        /* ═══════════════════════════════════════════════════════
+           WALKTHROUGH FLOW VISUAL
+           ═══════════════════════════════════════════════════════ */
+        .flow-visual {
+            display: flex; flex-direction: column; gap: 14px;
+            margin: 20px 0;
+        }
+        .flow-step {
+            display: flex; align-items: center; gap: 14px;
+            padding: 16px 20px; border-radius: var(--radius-sm);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s;
+        }
+        .flow-step:hover {
+            transform: translateX(6px);
+            border-color: rgba(135,128,79,0.3);
+            box-shadow: 0 4px 16px rgba(135,128,79,0.08);
+        }
+        .flow-step .flow-icon {
+            width: 40px; height: 40px; border-radius: 10px;
+            display: grid; place-items: center;
+            font-size: 1.1rem; flex-shrink: 0;
+            background: var(--gradient-hero); color: #fff;
+            font-weight: 800;
+            box-shadow: 0 2px 10px rgba(135,128,79,0.2);
+        }
+        .flow-step .flow-text {
+            font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;
+        }
+        .flow-step .flow-text strong { color: var(--text-primary); }
+        .flow-connector {
+            width: 2px; height: 12px; margin-left: 36px;
+            background: linear-gradient(180deg, var(--glass-border), transparent);
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           FOOTER
+           ═══════════════════════════════════════════════════════ */
+        .footer {
+            text-align: center; padding: 60px 0 40px;
+            color: var(--text-muted); font-size: 0.8rem;
+        }
+        .footer .heart { color: var(--accent-4); }
+        .footer a {
+            color: var(--accent-1); text-decoration: none;
+        }
+        .footer a:hover { text-decoration: underline; }
+
+        /* ═══════════════════════════════════════════════════════
+           RESPONSIVE
+           ═══════════════════════════════════════════════════════ */
+        @media (max-width: 640px) {
+            .card { padding: 24px; }
+            .complexity-grid { grid-template-columns: 1fr; }
+            .viz-cell { width: 46px; height: 46px; font-size: 0.95rem; }
+            .viz-result-cell { width: 40px; height: 40px; font-size: 0.85rem; }
+            .navbar-inner { padding: 0 16px; }
+            .container { padding: 0 16px; }
+            .nav-difficulty { display: none; }
+            .hero-numberline { gap: 2px; }
+            .hero-numcell { width: 34px; height: 34px; font-size: 0.75rem; }
+            .flow-step { flex-direction: column; text-align: center; }
+            .phase-indicator { flex-wrap: wrap; }
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           SCROLLBAR
+           ═══════════════════════════════════════════════════════ */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(135, 128, 79, 0.3); border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(135, 128, 79, 0.5); }
+    </style>
+</head>
+<body>
+    <!-- Animated background orbs -->
+    <div class="bg-mesh">
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+    </div>
+    <div id="particles"></div>
+
+    <!-- ─── Navigation ─── -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar-inner">
+            <a href="#" class="nav-brand">
+                <div class="logo">A²</div>
+                Algorithm Atlas
+            </a>
+            <div class="nav-links">
+                <span class="nav-difficulty">Easy</span>
+                <span class="nav-date">📅 04 Aug 2026</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ─── Hero ─── -->
+    <div class="container">
+        <section class="hero">
+            <div class="hero-badge">
+                <span class="dot"></span>
+                Problem of the Day
+            </div>
+            <h1>
+                <span class="gradient-text">Find Missing Elements</span>
+                <span class="leetcode-num">LeetCode #3731</span>
+            </h1>
+            <p class="hero-subtitle">
+                Given an unsorted array, find all the <strong>missing integers</strong> between<br>
+                the minimum and maximum values. Sort first, then scan the gaps.
+            </p>
+            <div class="hero-tags">
+                <span class="hero-tag diff-easy">✅ Easy</span>
+                <span class="hero-tag cat">📐 Array</span>
+                <span class="hero-tag cat">🔢 Sorting</span>
+                <span class="hero-tag pattern">🔍 Gap Detection</span>
+                <span class="hero-tag pattern">📊 Linear Scan</span>
+            </div>
+            <div class="hero-numberline">
+                <div class="hero-numcell present">1</div>
+                <div class="hero-numcell present">2</div>
+                <div class="hero-numcell missing">3</div>
+                <div class="hero-numcell present">4</div>
+                <div class="hero-numcell missing">5</div>
+                <div class="hero-numcell missing">6</div>
+                <div class="hero-numcell present">7</div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 1 : Problem Understanding
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">01</span> The Problem</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(135,128,79,0.12); color:var(--accent-1);">📖</div>
+                <div class="card-title">What's the Problem?</div>
+            </div>
+            <p>
+                You're given an array of integers <span class="hl hl-cyan">nums</span>. Find all the integers
+                that are <strong>missing</strong> from the <strong>continuous range</strong> between the
+                minimum and maximum values.
+            </p>
+            <br>
+            <p>
+                For example, given <span class="hl hl-cyan">[4, 2, 1, 7]</span>, the range is [1, 7] and
+                the missing numbers are <span class="hl hl-red">3, 5, 6</span>.
+            </p>
+
+            <div class="callout insight" style="margin-top:20px;">
+                <div class="callout-icon">💡</div>
+                <div class="callout-text">
+                    <strong>Key idea:</strong> If we <strong>sort</strong> the array first, then missing
+                    numbers become visible as <strong>gaps</strong> between consecutive elements. Just walk
+                    through the sorted array and collect any integers that should exist but don't!
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 2 : Interactive Demo
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">02</span> Try It Yourself</div>
+
+        <div class="card reveal" id="viz-card">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(90,122,52,0.12); color:var(--green);">🎮</div>
+                <div class="card-title">Interactive Visualizer</div>
+            </div>
+            <p style="margin-bottom:14px;">Watch the algorithm sort the array, then scan for gaps. Hit <strong>Play Step</strong> to see each phase.</p>
+
+            <div class="viz-board">
+                <div class="phase-indicator" id="phase-indicator">
+                    <span class="phase-pill active" id="phase-1">① Unsorted</span>
+                    <span class="phase-pill" id="phase-2">② Sort</span>
+                    <span class="phase-pill" id="phase-3">③ Find Gaps</span>
+                    <span class="phase-pill" id="phase-4">④ Result</span>
+                </div>
+
+                <div class="viz-row" id="viz-nums"></div>
+                <div class="viz-arrow-row" id="viz-arrows"></div>
+                <div class="viz-result-row" id="viz-result"></div>
+
+                <div class="viz-step-info" id="viz-info">Press Play to start</div>
+                <div class="viz-result-text" id="viz-final"></div>
+
+                <div class="viz-controls">
+                    <button class="viz-btn primary" id="btn-play" onclick="playStep()">▶ Play Step</button>
+                    <button class="viz-btn secondary" onclick="resetViz()">↻ Reset</button>
+                    <button class="viz-btn secondary" onclick="changeExample()">⟳ Next Example</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 3 : Intuition
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">03</span> Intuition</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(108,110,36,0.12); color:var(--accent-2);">🧠</div>
+                <div class="card-title">Why Sort + Scan?</div>
+            </div>
+            <p>Think of it as building a number line:</p>
+            <ul style="margin-top:10px;">
+                <li><strong>Unsorted:</strong> Numbers are scattered — you can't easily tell what's missing.</li>
+                <li><strong>After sorting:</strong> Numbers line up in order. Now, if <span class="hl hl-cyan">nums[i-1] = 3</span> and <span class="hl hl-cyan">nums[i] = 7</span>, then <span class="hl hl-red">4, 5, 6</span> are clearly missing!</li>
+                <li><strong>The gap:</strong> For each pair of consecutive elements, fill in all integers between <span class="hl hl-yellow">nums[i-1]+1</span> and <span class="hl hl-yellow">nums[i]-1</span>.</li>
+            </ul>
+
+            <div class="callout warning" style="margin-top:20px;">
+                <div class="callout-icon">🔑</div>
+                <div class="callout-text">
+                    <strong>Edge case:</strong> If no numbers are missing (like <span class="hl hl-cyan">[1,2,3,4,5]</span>),
+                    consecutive elements differ by exactly 1 — no gaps, so the result is empty!
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 4 : Approach
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">04</span> Approach</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(168,112,48,0.12); color:var(--orange);">🗺️</div>
+                <div class="card-title">Step-by-Step Approach</div>
+            </div>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>1. Sort the array</h4>
+                    <p>Call <span class="hl hl-purple">sort(nums.begin(), nums.end())</span>. This arranges numbers in ascending order so gaps become visible.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>2. Scan consecutive pairs</h4>
+                    <p>Loop from <span class="hl hl-cyan">i = 1</span> to <span class="hl hl-cyan">n-1</span>. For each pair <span class="hl hl-yellow">(nums[i-1], nums[i])</span>, check if there's a gap.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>3. Fill the gaps</h4>
+                    <p>For each gap, iterate <span class="hl hl-orange">j</span> from <span class="hl hl-yellow">nums[i-1]+1</span> to <span class="hl hl-yellow">nums[i]-1</span> and push each <span class="hl hl-red">j</span> into the result.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>4. Return the result</h4>
+                    <p>The result vector contains all missing integers, already in <span class="hl hl-green">sorted order</span> (since we processed gaps left-to-right).</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 5 : Visual Flow
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">05</span> Visual Flow</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(192,176,188,0.15); color:var(--pink);">🔄</div>
+                <div class="card-title">Algorithm in Action</div>
+            </div>
+            <p style="margin-bottom:16px;">For <span class="hl hl-cyan">nums = [4, 2, 1, 7]</span>:</p>
+
+            <div class="flow-visual">
+                <div class="flow-step">
+                    <div class="flow-icon">①</div>
+                    <div class="flow-text"><strong>Input:</strong> [4, 2, 1, 7] — unsorted, can't see gaps</div>
+                </div>
+                <div class="flow-connector"></div>
+                <div class="flow-step">
+                    <div class="flow-icon">②</div>
+                    <div class="flow-text"><strong>Sort:</strong> [1, 2, 4, 7] — now in ascending order</div>
+                </div>
+                <div class="flow-connector"></div>
+                <div class="flow-step">
+                    <div class="flow-icon">③</div>
+                    <div class="flow-text"><strong>Pair (2, 4):</strong> gap! → push <span class="hl hl-red">3</span></div>
+                </div>
+                <div class="flow-connector"></div>
+                <div class="flow-step">
+                    <div class="flow-icon">④</div>
+                    <div class="flow-text"><strong>Pair (4, 7):</strong> gap! → push <span class="hl hl-red">5, 6</span></div>
+                </div>
+                <div class="flow-connector"></div>
+                <div class="flow-step">
+                    <div class="flow-icon">✓</div>
+                    <div class="flow-text"><strong>Result:</strong> [3, 5, 6] — all missing integers found!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 6 : Methods & Functions
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">06</span> Methods & Functions</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(158,138,46,0.12); color:var(--yellow);">⚙️</div>
+                <div class="card-title">Key Functions Explained</div>
+            </div>
+
+            <table class="visual-table">
+                <thead>
+                    <tr>
+                        <th>Function</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>findMissing(nums)</code></td>
+                        <td>Main function — sorts the array, scans for gaps between consecutive elements, and collects all missing integers.</td>
+                    </tr>
+                    <tr>
+                        <td><code>sort(begin, end)</code></td>
+                        <td>Sorts the array in <strong>ascending order</strong> using <code>O(n log n)</code> introsort from the STL.</td>
+                    </tr>
+                    <tr>
+                        <td><code>ans.push_back(j)</code></td>
+                        <td>Appends each missing integer <code>j</code> to the result vector.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 7 : Patterns
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">07</span> Patterns Used</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(122,138,106,0.12); color:var(--blue);">🧩</div>
+                <div class="card-title">Design Patterns</div>
+            </div>
+            <div class="pattern-badges">
+                <div class="pattern-badge"><span class="emoji">🔢</span> Sort First</div>
+                <div class="pattern-badge"><span class="emoji">🔍</span> Gap Detection</div>
+                <div class="pattern-badge"><span class="emoji">📏</span> Linear Scan</div>
+                <div class="pattern-badge"><span class="emoji">📊</span> Consecutive Pair Analysis</div>
+            </div>
+            <ul style="margin-top:16px;">
+                <li><strong>Sort First:</strong> A classic technique — sorting reveals structure in unsorted data. Many array problems become trivial after sorting.</li>
+                <li><strong>Gap Detection:</strong> After sorting, any gap between <span class="hl hl-cyan">nums[i-1]</span> and <span class="hl hl-cyan">nums[i]</span> greater than 1 indicates missing values.</li>
+                <li><strong>Consecutive Pair Analysis:</strong> Comparing adjacent elements is a fundamental pattern — used in duplicate detection, gap finding, and range problems.</li>
+                <li><strong>Linear Scan:</strong> A single pass through the sorted array suffices — simple and efficient.</li>
+            </ul>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 8 : Code
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">08</span> Full Code</div>
+
+        <div class="card reveal" style="padding:0; overflow:hidden;">
+            <div class="code-container">
+                <div class="code-topbar">
+                    <div class="code-dots"><span></span><span></span><span></span></div>
+                    <span class="code-lang">C++ • solution.cpp</span>
+                </div>
+                <div class="code-body">
+<pre><span class="syn-cmt">// leetcode problem 3731 find missing elements</span>
+<span class="syn-cmt">// https://leetcode.com/problems/find-missing-elements/</span>
+
+<span class="syn-pp">#include</span> <span class="syn-str">&lt;iostream&gt;</span>
+<span class="syn-pp">#include</span> <span class="syn-str">&lt;vector&gt;</span>
+<span class="syn-pp">#include</span> <span class="syn-str">&lt;algorithm&gt;</span>
+<span class="syn-kw">using namespace</span> std;
+
+<span class="syn-kw">class</span> <span class="syn-type">Solution</span> {
+<span class="syn-kw">public</span>:
+    <span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt; <span class="syn-fn">findMissing</span>(<span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt;&amp; nums) {
+        <span class="syn-fn">sort</span>(nums.<span class="syn-fn">begin</span>(), nums.<span class="syn-fn">end</span>());  <span class="syn-cmt">// Step 1: sort</span>
+        <span class="syn-type">int</span> n <span class="syn-op">=</span> nums.<span class="syn-fn">size</span>();
+        <span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt; ans;
+
+        <span class="syn-kw">for</span>(<span class="syn-type">int</span> i <span class="syn-op">=</span> <span class="syn-num">1</span>; i <span class="syn-op">&lt;</span> n; i++) {              <span class="syn-cmt">// Step 2: scan pairs</span>
+            <span class="syn-kw">for</span>(<span class="syn-type">int</span> j <span class="syn-op">=</span> nums[i<span class="syn-op">-</span><span class="syn-num">1</span>] <span class="syn-op">+</span> <span class="syn-num">1</span>; j <span class="syn-op">&lt;</span> nums[i]; j++) {  <span class="syn-cmt">// Step 3: fill gaps</span>
+                ans.<span class="syn-fn">push_back</span>(j);
+            }
+        }
+        <span class="syn-kw">return</span> ans;                            <span class="syn-cmt">// Step 4: done!</span>
+    }
+};
+
+<span class="syn-type">int</span> <span class="syn-fn">main</span>() {
+    <span class="syn-type">Solution</span> solution;
+
+    <span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt; nums <span class="syn-op">=</span> {<span class="syn-num">4</span>, <span class="syn-num">2</span>, <span class="syn-num">1</span>, <span class="syn-num">7</span>};
+    <span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt; missing <span class="syn-op">=</span> solution.<span class="syn-fn">findMissing</span>(nums);
+    cout <span class="syn-op">&lt;&lt;</span> <span class="syn-str">"Missing: "</span>;
+    <span class="syn-kw">for</span>(<span class="syn-type">int</span> num : missing) cout <span class="syn-op">&lt;&lt;</span> num <span class="syn-op">&lt;&lt;</span> <span class="syn-str">" "</span>;
+    cout <span class="syn-op">&lt;&lt;</span> endl;   <span class="syn-cmt">// Output: 3 5 6</span>
+
+    <span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt; nums2 <span class="syn-op">=</span> {<span class="syn-num">1</span>, <span class="syn-num">9</span>};
+    <span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt; missing2 <span class="syn-op">=</span> solution.<span class="syn-fn">findMissing</span>(nums2);
+    cout <span class="syn-op">&lt;&lt;</span> <span class="syn-str">"Missing: "</span>;
+    <span class="syn-kw">for</span>(<span class="syn-type">int</span> num : missing2) cout <span class="syn-op">&lt;&lt;</span> num <span class="syn-op">&lt;&lt;</span> <span class="syn-str">" "</span>;
+    cout <span class="syn-op">&lt;&lt;</span> endl;   <span class="syn-cmt">// Output: 2 3 4 5 6 7 8</span>
+
+    <span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt; nums3 <span class="syn-op">=</span> {<span class="syn-num">1</span>, <span class="syn-num">2</span>, <span class="syn-num">3</span>, <span class="syn-num">4</span>, <span class="syn-num">5</span>};
+    <span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt; missing3 <span class="syn-op">=</span> solution.<span class="syn-fn">findMissing</span>(nums3);
+    cout <span class="syn-op">&lt;&lt;</span> <span class="syn-str">"Missing: "</span>;
+    <span class="syn-kw">for</span>(<span class="syn-type">int</span> num : missing3) cout <span class="syn-op">&lt;&lt;</span> num <span class="syn-op">&lt;&lt;</span> <span class="syn-str">" "</span>;
+    cout <span class="syn-op">&lt;&lt;</span> endl;   <span class="syn-cmt">// Output: (empty — no gaps!)</span>
+
+    <span class="syn-kw">return</span> <span class="syn-num">0</span>;
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 9 : Code Walkthrough
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">09</span> Code Walkthrough</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(192,176,188,0.15); color:var(--pink);">🔍</div>
+                <div class="card-title">Line-by-Line Breakdown</div>
+            </div>
+
+            <table class="visual-table">
+                <thead>
+                    <tr>
+                        <th style="width:40%">Code</th>
+                        <th>What it does</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>sort(nums.begin(), nums.end())</code></td>
+                        <td><strong>Sorts the array</strong> in ascending order. This is crucial — it makes gaps between consecutive elements visible.</td>
+                    </tr>
+                    <tr>
+                        <td><code>for(int i = 1; i < n; i++)</code></td>
+                        <td>Iterate over each pair of <strong>consecutive elements</strong> <code>(nums[i-1], nums[i])</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><code>for(int j = nums[i-1]+1; j < nums[i]; j++)</code></td>
+                        <td>Inner loop that fills in all integers <strong>between</strong> two consecutive elements. If no gap exists, this loop doesn't execute.</td>
+                    </tr>
+                    <tr>
+                        <td><code>ans.push_back(j)</code></td>
+                        <td>Each missing integer <code>j</code> is added to the <strong>result vector</strong>.</td>
+                    </tr>
+                    <tr>
+                        <td><code>return ans</code></td>
+                        <td>Return all missing integers. They're <strong>already sorted</strong> since we processed gaps left-to-right.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 10 : Complexity
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">10</span> Complexity Analysis</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(168,112,48,0.12); color:var(--orange);">📊</div>
+                <div class="card-title">Time & Space Complexity</div>
+            </div>
+
+            <div class="complexity-grid">
+                <div class="complexity-pill">
+                    <div class="label">Time</div>
+                    <div class="big" style="color:var(--accent-1);">O(n log n + m)</div>
+                    <div class="note">Sorting takes O(n log n).<br>Scanning takes O(n + m) where<br>m = total missing numbers.</div>
+                </div>
+                <div class="complexity-pill">
+                    <div class="label">Space</div>
+                    <div class="big" style="color:var(--accent-2);">O(m)</div>
+                    <div class="note">Result vector stores m<br>missing integers.</div>
+                </div>
+            </div>
+
+            <div class="callout insight" style="margin-top:20px;">
+                <div class="callout-icon">🚀</div>
+                <div class="callout-text">
+                    <strong>Can we do better?</strong> The sort dominates at O(n log n). If the range is small,
+                    you could use a <strong>boolean array / hash set</strong> to mark present numbers and find
+                    missing ones in O(n + range) time. But for most cases, the sort approach is clean and efficient!
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 11 : Key Takeaways
+             ═══════════════════════════════════════════════════ -->
+        <div class="section-label reveal"><span class="sec-num">11</span> Key Takeaways</div>
+
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(90,122,52,0.12); color:var(--green);">✅</div>
+                <div class="card-title">Remember These</div>
+            </div>
+            <ul>
+                <li><strong>Sort first</strong> — a powerful technique that transforms chaotic data into structured, scannable data.</li>
+                <li>After sorting, <strong>gaps</strong> between consecutive elements reveal missing numbers instantly.</li>
+                <li>The inner loop <span class="hl hl-orange">j = nums[i-1]+1</span> to <span class="hl hl-orange">nums[i]-1</span> only runs when there's actually a gap — very efficient.</li>
+                <li>Results come out <strong>already sorted</strong> — no extra sort needed!</li>
+                <li>Watch out for <strong>edge cases:</strong> consecutive array (no gaps), only 2 elements with a large gap, single element.</li>
+                <li>This "sort + scan" pattern appears in many problems: missing ranges, summary ranges, merge intervals, etc.</li>
+            </ul>
+        </div>
+
+        <!-- ─── Footer ─── -->
+        <footer class="footer">
+            <p>Made with <span class="heart">♥</span> by <a href="#">Algorithm Atlas</a></p>
+            <p style="margin-top:6px;">LeetCode Problem of the Day — 04 August 2026</p>
+        </footer>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         JAVASCRIPT
+         ═══════════════════════════════════════════════════════ -->
+    <script>
+        // ─── Floating Particles ───
+        (function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 12; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const size = 3 + Math.random() * 5;
+                p.style.width = size + 'px';
+                p.style.height = size + 'px';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDuration = (18 + Math.random() * 25) + 's';
+                p.style.animationDelay = -(Math.random() * 30) + 's';
+                container.appendChild(p);
+            }
+        })();
+
+        // ─── Navbar scroll effect ───
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            navbar.classList.toggle('scrolled', window.scrollY > 20);
+        });
+
+        // ─── Reveal on scroll ───
+        const reveals = document.querySelectorAll('.reveal');
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach((e, i) => {
+                if (e.isIntersecting) {
+                    setTimeout(() => e.target.classList.add('visible'), i * 80);
+                    revealObserver.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        reveals.forEach(r => revealObserver.observe(r));
+
+        // ─── Interactive Visualizer ───
+        const examples = [
+            { nums: [4, 2, 1, 7],       name: "Example 1 — [4,2,1,7]" },
+            { nums: [1, 9],             name: "Example 2 — [1,9]" },
+            { nums: [1, 2, 3, 4, 5],   name: "Example 3 — No gaps" },
+            { nums: [3, 8, 1, 5],       name: "Example 4 — [3,8,1,5]" },
+        ];
+        let currentExample = 0;
+        let vizState = null;
+
+        /*
+         * Animation steps:
+         * Phase 1: Show unsorted array
+         * Phase 2: Sort animation (one step)
+         * Phase 3: One step per gap scan (highlight pair, show missing)
+         * Phase 4: Final result
+         */
+        function buildSteps(nums) {
+            const sorted = [...nums].sort((a, b) => a - b);
+            const steps = [];
+
+            // Step 0: show unsorted
+            steps.push({ type: 'unsorted', nums: [...nums], info: `Unsorted array: [${nums.join(', ')}]` });
+
+            // Step 1: sort
+            steps.push({ type: 'sort', sorted: [...sorted], info: `After sorting: [${sorted.join(', ')}]` });
+
+            // Steps 2..n: scan each pair
+            const allMissing = [];
+            for (let i = 1; i < sorted.length; i++) {
+                const gapNums = [];
+                for (let j = sorted[i-1] + 1; j < sorted[i]; j++) {
+                    gapNums.push(j);
+                }
+                allMissing.push(...gapNums);
+                steps.push({
+                    type: 'scan',
+                    pairIdx: [i-1, i],
+                    pairVals: [sorted[i-1], sorted[i]],
+                    gap: gapNums,
+                    allMissingSoFar: [...allMissing],
+                    info: gapNums.length > 0
+                        ? `Pair (${sorted[i-1]}, ${sorted[i]}) → gap: [${gapNums.join(', ')}]`
+                        : `Pair (${sorted[i-1]}, ${sorted[i]}) → no gap`
+                });
+            }
+
+            // Final step
+            steps.push({
+                type: 'done',
+                missing: [...allMissing],
+                info: allMissing.length > 0
+                    ? `Missing elements: [${allMissing.join(', ')}]`
+                    : 'No missing elements — all consecutive!'
+            });
+
+            return steps;
+        }
+
+        function setPhase(phase) {
+            for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById('phase-' + i);
+                el.classList.remove('active', 'done');
+                if (i < phase) el.classList.add('done');
+                if (i === phase) el.classList.add('active');
+            }
+        }
+
+        function renderCells(nums, sorted) {
+            const container = document.getElementById('viz-nums');
+            container.innerHTML = '';
+            const arr = sorted || nums;
+            arr.forEach((num, idx) => {
+                const div = document.createElement('div');
+                div.className = 'viz-cell' + (sorted ? ' sorted' : '');
+                div.id = 'vc-' + idx;
+                div.innerHTML = `${num}<span class="cell-label">${idx}</span>`;
+                container.appendChild(div);
+            });
+        }
+
+        function initViz() {
+            const ex = examples[currentExample];
+            vizState = {
+                steps: buildSteps(ex.nums),
+                step: 0,
+                nums: [...ex.nums],
+            };
+            renderCells(ex.nums, null);
+            document.getElementById('viz-arrows').innerHTML = '';
+            document.getElementById('viz-result').innerHTML = '';
+            document.getElementById('viz-info').textContent = `${ex.name} — Press Play`;
+            document.getElementById('viz-final').textContent = '';
+            document.getElementById('btn-play').disabled = false;
+            setPhase(1);
+        }
+
+        function playStep() {
+            if (!vizState || vizState.step >= vizState.steps.length) return;
+            const step = vizState.steps[vizState.step];
+
+            if (step.type === 'unsorted') {
+                setPhase(1);
+                document.getElementById('viz-info').innerHTML = step.info;
+            }
+            else if (step.type === 'sort') {
+                setPhase(2);
+                // Animate: add swapping class then re-render sorted
+                document.querySelectorAll('.viz-cell').forEach(el => el.classList.add('swapping'));
+                setTimeout(() => {
+                    renderCells(null, step.sorted);
+                }, 400);
+                document.getElementById('viz-info').innerHTML = step.info;
+            }
+            else if (step.type === 'scan') {
+                setPhase(3);
+                // Remove old highlights
+                document.querySelectorAll('.viz-cell').forEach(el => {
+                    el.classList.remove('highlight-gap');
+                });
+                // Highlight current pair
+                step.pairIdx.forEach(idx => {
+                    const el = document.getElementById('vc-' + idx);
+                    if (el) el.classList.add('highlight-gap');
+                });
+                // Show missing numbers found so far
+                const resultContainer = document.getElementById('viz-result');
+                resultContainer.innerHTML = '';
+                step.allMissingSoFar.forEach((num, i) => {
+                    const div = document.createElement('div');
+                    div.className = 'viz-result-cell';
+                    div.textContent = num;
+                    div.style.animationDelay = (i * 0.08) + 's';
+                    resultContainer.appendChild(div);
+                });
+                // Show arrows
+                const arrowContainer = document.getElementById('viz-arrows');
+                const sorted = vizState.steps[1].sorted;
+                arrowContainer.innerHTML = '';
+                sorted.forEach((_, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'viz-arrow';
+                    if (step.pairIdx.includes(idx)) {
+                        div.textContent = step.pairIdx[0] === idx ? '↗' : '↙';
+                    }
+                    arrowContainer.appendChild(div);
+                });
+                document.getElementById('viz-info').innerHTML = step.info;
+            }
+            else if (step.type === 'done') {
+                setPhase(4);
+                document.querySelectorAll('.viz-cell').forEach(el => {
+                    el.classList.remove('highlight-gap');
+                });
+                document.getElementById('viz-arrows').innerHTML = '';
+                document.getElementById('viz-info').innerHTML = step.info;
+                document.getElementById('viz-final').innerHTML = step.missing.length > 0
+                    ? `✅ Found ${step.missing.length} missing element${step.missing.length > 1 ? 's' : ''}: [${step.missing.join(', ')}]`
+                    : '✅ No missing elements — array is already consecutive!';
+                document.getElementById('btn-play').disabled = true;
+            }
+
+            vizState.step++;
+        }
+
+        function resetViz() {
+            initViz();
+        }
+
+        function changeExample() {
+            currentExample = (currentExample + 1) % examples.length;
+            initViz();
+        }
+
+        // Init on load
+        initViz();
+    </script>
+</body>
+</html>
