@@ -1,3 +1,6 @@
+//leetcode problem 1406 stone game-iii
+// https://leetcode.com/problems/stone-game-iii/
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
