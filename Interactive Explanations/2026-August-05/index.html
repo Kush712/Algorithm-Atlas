@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeetCode 3310 — Remove Methods From Project | Algorithm Atlas</title>
+    <meta name="description" content="Interactive visual explanation of LeetCode Problem 3310: Remove Methods From Project using BFS graph traversal and in-degree analysis.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════════════════════
+           ROOT & RESET — "Petra" Rose-Red Palette
+           #4285F4 blue · #5C2018 dark brown · #BC4639 terracotta
+           #D4A59A dusty rose · #F3E0DC blush
+           ═══════════════════════════════════════════════════════ */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #faf6f4;
+            --bg-secondary: #f3ece9;
+            --bg-card: rgba(255, 250, 248, 0.78);
+            --glass: rgba(188, 70, 57, 0.05);
+            --glass-border: rgba(188, 70, 57, 0.14);
+            --text-primary: #3a2420;
+            --text-secondary: #6b4a42;
+            --text-muted: #9a7e76;
+            --accent-1: #BC4639;       /* Terracotta */
+            --accent-2: #5C2018;       /* Dark brown */
+            --accent-3: #D4A59A;       /* Dusty rose */
+            --accent-4: #4285F4;       /* Blue */
+            --green: #4a8a52;
+            --yellow: #b8892a;
+            --cyan: #4285F4;
+            --orange: #c07040;
+            --blue: #4285F4;
+            --pink: #BC4639;
+            --neutral-1: #F3E0DC;      /* Blush */
+            --neutral-2: #D4A59A;      /* Dusty rose */
+            --gradient-hero: linear-gradient(135deg, #BC4639 0%, #5C2018 50%, #D4A59A 100%);
+            --gradient-warm: linear-gradient(135deg, #D4A59A, #BC4639, #F3E0DC);
+            --gradient-cool: linear-gradient(135deg, #4285F4, #5C2018, #BC4639);
+            --gradient-accent: linear-gradient(135deg, #BC4639, #4285F4);
+            --shadow-glow: 0 0 60px rgba(188, 70, 57, 0.10);
+            --shadow-card: 0 8px 32px rgba(92, 32, 24, 0.06);
+            --radius: 18px;
+            --radius-sm: 12px;
+            --radius-xs: 6px;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           ANIMATED BACKGROUND — Sandstone mesh + grid
+           ═══════════════════════════════════════════════════════ */
+        .bg-mesh {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            overflow: hidden;
+        }
+        .bg-mesh::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(188,70,57,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(188,70,57,0.025) 1px, transparent 1px);
+            background-size: 55px 55px;
+            animation: gridDrift 35s linear infinite;
+        }
+        @keyframes gridDrift {
+            0% { transform: translate(0,0); }
+            100% { transform: translate(55px,55px); }
+        }
+        .bg-mesh .orb {
+            position: absolute; border-radius: 50%; filter: blur(120px);
+            animation: orbFloat 20s ease-in-out infinite;
+        }
+        .bg-mesh .orb:nth-child(1) {
+            width: 650px; height: 650px; top: -12%; left: -8%;
+            background: rgba(188, 70, 57, 0.09);
+            animation-duration: 25s;
+        }
+        .bg-mesh .orb:nth-child(2) {
+            width: 500px; height: 500px; top: 35%; right: -10%;
+            background: rgba(66, 133, 244, 0.07);
+            animation-duration: 30s; animation-delay: -5s;
+        }
+        .bg-mesh .orb:nth-child(3) {
+            width: 450px; height: 450px; bottom: -8%; left: 25%;
+            background: rgba(212, 165, 154, 0.12);
+            animation-duration: 22s; animation-delay: -10s;
+        }
+        .bg-mesh .orb:nth-child(4) {
+            width: 350px; height: 350px; top: 15%; left: 55%;
+            background: rgba(92, 32, 24, 0.06);
+            animation-duration: 28s; animation-delay: -15s;
+        }
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            25% { transform: translate(60px,-40px) scale(1.1); }
+            50% { transform: translate(-30px,60px) scale(0.95); }
+            75% { transform: translate(40px,30px) scale(1.05); }
+        }
+
+        /* Floating particles */
+        .particle {
+            position: fixed; pointer-events: none; z-index: 0;
+            border-radius: 50%;
+            animation: particleDrift linear infinite;
+        }
+        .particle:nth-child(odd) { background: rgba(188, 70, 57, 0.12); }
+        .particle:nth-child(even) { background: rgba(212, 165, 154, 0.18); }
+        .particle:nth-child(3n) { background: rgba(66, 133, 244, 0.10); }
+        .particle:nth-child(5n) { background: rgba(92, 32, 24, 0.10); border-radius: 3px; }
+        @keyframes particleDrift {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            8% { opacity: 1; }
+            92% { opacity: 1; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           LAYOUT
+           ═══════════════════════════════════════════════════════ */
+        .container {
+            position: relative; z-index: 1;
+            max-width: 900px; margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           NAVIGATION — with progress bar
+           ═══════════════════════════════════════════════════════ */
+        .navbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            backdrop-filter: blur(20px) saturate(1.8);
+            -webkit-backdrop-filter: blur(20px) saturate(1.8);
+            background: rgba(250, 246, 244, 0.88);
+            border-bottom: 1px solid var(--glass-border);
+            transition: box-shadow 0.3s, background 0.3s;
+        }
+        .navbar.scrolled {
+            box-shadow: 0 4px 30px rgba(92,32,24,0.06);
+            background: rgba(250, 246, 244, 0.95);
+        }
+        .nav-progress {
+            position: absolute; bottom: 0; left: 0; height: 2px;
+            background: var(--gradient-hero);
+            transition: width 0.15s ease-out;
+            width: 0%;
+        }
+        .navbar-inner {
+            max-width: 900px; margin: 0 auto; padding: 0 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 64px;
+        }
+        .nav-brand {
+            display: flex; align-items: center; gap: 10px;
+            font-weight: 700; font-size: 1.05rem;
+            text-decoration: none; color: var(--text-primary);
+            transition: transform 0.2s;
+        }
+        .nav-brand:hover { transform: scale(1.03); }
+        .nav-brand .logo {
+            width: 34px; height: 34px; border-radius: 9px;
+            background: var(--gradient-hero);
+            display: grid; place-items: center;
+            font-size: 0.85rem; font-weight: 800;
+            color: #fff;
+            box-shadow: 0 3px 14px rgba(188, 70, 57, 0.3);
+        }
+        .nav-links { display: flex; align-items: center; gap: 14px; }
+        .nav-date {
+            font-size: 0.82rem; color: var(--text-secondary);
+            font-weight: 500;
+            padding: 6px 14px; border-radius: 20px;
+            background: var(--glass); border: 1px solid var(--glass-border);
+        }
+        .nav-difficulty {
+            font-size: 0.72rem; font-weight: 700;
+            padding: 4px 12px; border-radius: 20px;
+            background: rgba(188, 70, 57, 0.08);
+            color: var(--accent-1);
+            border: 1px solid rgba(188, 70, 57, 0.2);
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           HERO SECTION
+           ═══════════════════════════════════════════════════════ */
+        .hero {
+            padding: 130px 0 60px;
+            text-align: center;
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 20px; border-radius: 50px;
+            background: rgba(188, 70, 57, 0.08);
+            border: 1px solid rgba(188, 70, 57, 0.2);
+            font-size: 0.78rem; font-weight: 600;
+            color: var(--accent-1);
+            text-transform: uppercase; letter-spacing: 1.5px;
+            margin-bottom: 26px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+        .hero-badge .dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--accent-4);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%,100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+        .hero h1 {
+            font-size: clamp(2.4rem, 5.5vw, 3.4rem);
+            font-weight: 900; line-height: 1.12;
+            letter-spacing: -2px;
+            color: var(--text-primary);
+            animation: fadeInUp 0.8s ease-out 0.1s both;
+        }
+        .hero h1 .gradient-text {
+            background: var(--gradient-hero);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero h1 .leetcode-num {
+            display: block; font-size: 0.42em;
+            letter-spacing: 3px;
+            -webkit-text-fill-color: var(--text-muted);
+            background: none; margin-top: 8px; font-weight: 700;
+        }
+        .hero-subtitle {
+            margin-top: 20px;
+            font-size: 1.1rem; color: var(--text-secondary);
+            max-width: 640px; margin-left: auto; margin-right: auto;
+            line-height: 1.75;
+            animation: fadeInUp 0.8s ease-out 0.25s both;
+        }
+        .hero-tags {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+            margin-top: 28px;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+        .hero-tag {
+            padding: 6px 16px; border-radius: 20px; font-size: 0.78rem;
+            font-weight: 600; border: 1px solid;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .hero-tag:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        .hero-tag.diff {
+            color: var(--accent-1); border-color: rgba(188, 70, 57, 0.3);
+            background: rgba(188, 70, 57, 0.06);
+        }
+        .hero-tag.cat {
+            color: var(--accent-4); border-color: rgba(66, 133, 244, 0.3);
+            background: rgba(66, 133, 244, 0.06);
+        }
+        .hero-tag.pattern {
+            color: var(--accent-2); border-color: rgba(92, 32, 24, 0.2);
+            background: rgba(92, 32, 24, 0.05);
+        }
+
+        /* Hero graph preview — animated nodes */
+        .hero-graph {
+            display: flex; justify-content: center; align-items: center;
+            margin-top: 40px;
+            animation: fadeInUp 0.8s ease-out 0.55s both;
+        }
+        .hero-graph svg { width: 320px; height: 100px; }
+        .hero-node {
+            animation: nodeFloat 2.5s ease-in-out infinite;
+        }
+        .hero-node:nth-child(2) { animation-delay: 0.3s; }
+        .hero-node:nth-child(3) { animation-delay: 0.6s; }
+        .hero-node:nth-child(4) { animation-delay: 0.9s; }
+        .hero-node:nth-child(5) { animation-delay: 1.2s; }
+        @keyframes nodeFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           ANIMATIONS
+           ═══════════════════════════════════════════════════════ */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .reveal {
+            opacity: 0; transform: translateY(40px);
+            transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1);
+        }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        /* ═══════════════════════════════════════════════════════
+           GLASS CARD
+           ═══════════════════════════════════════════════════════ */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 38px;
+            margin-bottom: 32px;
+            transition: border-color 0.3s, box-shadow 0.4s, transform 0.3s;
+            position: relative; overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(188,70,57,0.03), transparent);
+            transition: left 0.7s ease;
+        }
+        .card:hover::before { left: 100%; }
+        .card:hover {
+            border-color: rgba(188, 70, 57, 0.22);
+            box-shadow: var(--shadow-card), var(--shadow-glow);
+            transform: translateY(-3px);
+        }
+        .card-header {
+            display: flex; align-items: center; gap: 14px;
+            margin-bottom: 22px;
+        }
+        .card-icon {
+            width: 50px; height: 50px; border-radius: 14px;
+            display: grid; place-items: center;
+            font-size: 1.35rem; flex-shrink: 0;
+            transition: transform 0.3s;
+        }
+        .card:hover .card-icon { transform: scale(1.12) rotate(-4deg); }
+        .card-title {
+            font-size: 1.4rem; font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+        }
+        .card p, .card li { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8; }
+        .card ul { list-style: none; padding: 0; }
+        .card ul li { padding: 6px 0; padding-left: 24px; position: relative; }
+        .card ul li::before {
+            content: '▸'; position: absolute; left: 0;
+            color: var(--accent-1); font-weight: 700;
+        }
+        .card strong { color: var(--text-primary); }
+
+        /* ═══════════════════════════════════════════════════════
+           SECTION DIVIDER
+           ═══════════════════════════════════════════════════════ */
+        .section-label {
+            display: flex; align-items: center; gap: 14px;
+            margin: 55px 0 26px; font-size: 0.72rem;
+            text-transform: uppercase; letter-spacing: 3px;
+            font-weight: 700; color: var(--text-muted);
+        }
+        .section-label .sec-num {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; border-radius: 9px;
+            background: var(--gradient-hero);
+            color: #fff; font-size: 0.72rem; font-weight: 800;
+            flex-shrink: 0;
+            box-shadow: 0 3px 12px rgba(188, 70, 57, 0.22);
+        }
+        .section-label::after {
+            content: ''; flex: 1; height: 1px;
+            background: linear-gradient(90deg, var(--glass-border), transparent);
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           INTERACTIVE GRAPH VISUALIZER
+           ═══════════════════════════════════════════════════════ */
+        .graph-viz { text-align: center; }
+        .graph-svg-container {
+            overflow-x: auto; padding: 10px;
+        }
+        .graph-svg-container svg {
+            display: block; margin: 0 auto;
+        }
+        .graph-node-circle {
+            transition: all 0.5s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .graph-node-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700; font-size: 14px;
+            transition: fill 0.3s;
+        }
+        .node-safe { fill: rgba(66,133,244,0.12); stroke: #4285F4; }
+        .node-safe-text { fill: #4285F4; }
+        .node-sus { fill: rgba(188,70,57,0.15); stroke: #BC4639; }
+        .node-sus-text { fill: #BC4639; }
+        .node-bug { fill: rgba(92,32,24,0.2); stroke: #5C2018; stroke-width: 3; }
+        .node-bug-text { fill: #5C2018; }
+        .node-default { fill: rgba(212,165,154,0.15); stroke: #D4A59A; }
+        .node-default-text { fill: #9a7e76; }
+        .node-checking { animation: nodeCheck 0.6s ease-in-out; }
+        @keyframes nodeCheck {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .edge-default { stroke: #D4A59A; stroke-width: 1.5; }
+        .edge-infected { stroke: #BC4639; stroke-width: 2.5; stroke-dasharray: 6,3; animation: edgePulse 1s ease-in-out; }
+        @keyframes edgePulse {
+            0% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: -18; }
+        }
+
+        /* Viz controls */
+        .viz-controls {
+            display: flex; justify-content: center; gap: 12px;
+            margin-top: 24px; flex-wrap: wrap;
+        }
+        .viz-btn {
+            padding: 11px 26px; border-radius: 11px; border: none;
+            font-family: 'Inter', sans-serif; font-weight: 600;
+            font-size: 0.85rem; cursor: pointer;
+            transition: all 0.25s;
+        }
+        .viz-btn.primary {
+            background: var(--gradient-hero); color: #fff;
+            box-shadow: 0 4px 20px rgba(188, 70, 57, 0.25);
+        }
+        .viz-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(188, 70, 57, 0.4); }
+        .viz-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .viz-btn.secondary {
+            background: var(--glass); color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+        .viz-btn.secondary:hover { border-color: var(--accent-1); transform: translateY(-1px); }
+        .viz-step-info {
+            margin-top: 16px; font-size: 0.88rem;
+            color: var(--text-secondary); min-height: 30px;
+            padding: 10px 20px; border-radius: 8px;
+            background: rgba(188,70,57,0.04);
+            display: inline-block;
+        }
+        .viz-result-text {
+            margin-top: 16px; font-weight: 700; font-size: 1.05rem;
+            min-height: 32px;
+        }
+
+        /* Phase indicator */
+        .phase-indicator {
+            display: flex; justify-content: center; gap: 10px;
+            margin-bottom: 20px; flex-wrap: wrap;
+        }
+        .phase-pill {
+            padding: 6px 16px; border-radius: 20px;
+            font-size: 0.72rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+            background: var(--glass); border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+        .phase-pill.active {
+            background: var(--gradient-hero); border-color: transparent;
+            color: #fff; box-shadow: 0 3px 12px rgba(188,70,57,0.2);
+        }
+        .phase-pill.done {
+            background: rgba(74,138,82,0.1);
+            border-color: rgba(74,138,82,0.3);
+            color: var(--green);
+        }
+
+        /* Legend */
+        .graph-legend {
+            display: flex; justify-content: center; gap: 20px;
+            margin: 14px 0; flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 0.75rem; font-weight: 600;
+            color: var(--text-muted);
+        }
+        .legend-dot {
+            width: 12px; height: 12px; border-radius: 4px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           TIMELINE
+           ═══════════════════════════════════════════════════════ */
+        .timeline { position: relative; padding-left: 42px; }
+        .timeline::before {
+            content: ''; position: absolute; left: 17px; top: 0; bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--accent-1), var(--accent-4), var(--accent-3), var(--neutral-1));
+            border-radius: 2px;
+        }
+        .timeline-item { position: relative; margin-bottom: 32px; padding-left: 4px; }
+        .timeline-dot {
+            position: absolute; left: -32px; top: 4px;
+            width: 16px; height: 16px; border-radius: 50%;
+            border: 3px solid var(--accent-1);
+            background: var(--bg-primary);
+            transition: all 0.3s;
+        }
+        .timeline-item:hover .timeline-dot { transform: scale(1.35); box-shadow: 0 0 14px rgba(188,70,57,0.25); }
+        .timeline-item:nth-child(2) .timeline-dot { border-color: var(--accent-4); }
+        .timeline-item:nth-child(3) .timeline-dot { border-color: var(--accent-3); }
+        .timeline-item:nth-child(4) .timeline-dot { border-color: var(--neutral-2); }
+        .timeline-item:nth-child(5) .timeline-dot { border-color: var(--accent-2); }
+        .timeline-item h4 { font-size: 1.02rem; font-weight: 700; margin-bottom: 6px; color: var(--text-primary); }
+        .timeline-item p { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.75; }
+
+        /* ═══════════════════════════════════════════════════════
+           INLINE HIGHLIGHT
+           ═══════════════════════════════════════════════════════ */
+        .hl { padding: 2px 8px; border-radius: 5px; font-family: 'JetBrains Mono', monospace; font-size: 0.82em; font-weight: 600; }
+        .hl-red { background: rgba(188, 70, 57, 0.1); color: #BC4639; }
+        .hl-brown { background: rgba(92, 32, 24, 0.08); color: #5C2018; }
+        .hl-blue { background: rgba(66, 133, 244, 0.1); color: #3b72d4; }
+        .hl-rose { background: rgba(212, 165, 154, 0.2); color: #8a5a4a; }
+        .hl-green { background: rgba(74,138,82,0.1); color: #3a7a42; }
+        .hl-blush { background: rgba(243, 224, 220, 0.4); color: #7a5a50; }
+        .hl-orange { background: rgba(192, 112, 64, 0.1); color: #a06030; }
+
+        /* ═══════════════════════════════════════════════════════
+           CODE BLOCK
+           ═══════════════════════════════════════════════════════ */
+        .code-container {
+            position: relative; border-radius: var(--radius);
+            overflow: hidden;
+            background: #2c1a16;
+            border: 1px solid rgba(188, 70, 57, 0.18);
+        }
+        .code-topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(188, 70, 57, 0.12);
+        }
+        .code-dots { display: flex; gap: 7px; }
+        .code-dots span { width: 12px; height: 12px; border-radius: 50%; transition: transform 0.2s; }
+        .code-dots span:hover { transform: scale(1.3); }
+        .code-dots span:nth-child(1) { background: #BC4639; }
+        .code-dots span:nth-child(2) { background: #b8892a; }
+        .code-dots span:nth-child(3) { background: #4a8a52; }
+        .code-lang { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #9a7e76; }
+        .code-body { padding: 24px; overflow-x: auto; }
+        .code-body pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.85; color: #d4b8b0; }
+        /* Syntax — Petra tones */
+        .syn-kw { color: #e8a090; }
+        .syn-type { color: #7ab8f0; }
+        .syn-fn { color: #e8c880; }
+        .syn-num { color: #d09080; }
+        .syn-str { color: #8aba7a; }
+        .syn-cmt { color: #6a504a; font-style: italic; }
+        .syn-op { color: #a08878; }
+        .syn-pp { color: #d4a080; }
+        .syn-bool { color: #c09870; }
+
+        /* ═══════════════════════════════════════════════════════
+           COMPLEXITY PILLS
+           ═══════════════════════════════════════════════════════ */
+        .complexity-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .complexity-pill {
+            padding: 24px; border-radius: var(--radius-sm);
+            background: var(--glass); border: 1px solid var(--glass-border);
+            text-align: center; transition: all 0.3s;
+        }
+        .complexity-pill:hover { border-color: rgba(188, 70, 57, 0.3); transform: translateY(-2px); }
+        .complexity-pill .label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+        .complexity-pill .big { font-size: 1.6rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; }
+        .complexity-pill .note { font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px; }
+
+        /* ═══════════════════════════════════════════════════════
+           CALLOUT
+           ═══════════════════════════════════════════════════════ */
+        .callout {
+            display: flex; gap: 16px;
+            padding: 22px 24px; border-radius: var(--radius-sm);
+            border-left: 4px solid; margin: 20px 0;
+            transition: transform 0.2s;
+        }
+        .callout:hover { transform: translateX(4px); }
+        .callout.insight { background: rgba(66, 133, 244, 0.05); border-color: var(--accent-4); }
+        .callout.warning { background: rgba(188, 70, 57, 0.05); border-color: var(--accent-1); }
+        .callout .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+        .callout .callout-text { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7; }
+        .callout .callout-text strong { color: var(--text-primary); }
+
+        /* ═══════════════════════════════════════════════════════
+           VISUAL TABLE
+           ═══════════════════════════════════════════════════════ */
+        .visual-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: var(--radius-sm); overflow: hidden; margin: 16px 0; }
+        .visual-table th { background: rgba(188, 70, 57, 0.08); color: var(--accent-1); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--glass-border); }
+        .visual-table td { padding: 12px 16px; font-size: 0.88rem; color: var(--text-secondary); border-bottom: 1px solid rgba(188, 70, 57, 0.05); transition: background 0.2s; }
+        .visual-table tr:last-child td { border-bottom: none; }
+        .visual-table tr:hover td { background: rgba(188, 70, 57, 0.03); }
+        .visual-table code { font-family: 'JetBrains Mono', monospace; font-size: 0.82em; color: #3b72d4; background: rgba(66, 133, 244, 0.06); padding: 2px 7px; border-radius: 4px; }
+
+        /* ═══════════════════════════════════════════════════════
+           PATTERN BADGES
+           ═══════════════════════════════════════════════════════ */
+        .pattern-badges { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+        .pattern-badge {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 18px; border-radius: 10px;
+            background: var(--glass); border: 1px solid var(--glass-border);
+            font-size: 0.85rem; font-weight: 600; color: var(--text-primary);
+            transition: all 0.3s;
+        }
+        .pattern-badge:hover { border-color: var(--accent-1); transform: translateY(-3px); box-shadow: 0 6px 18px rgba(188,70,57,0.08); }
+        .pattern-badge .emoji { font-size: 1.1rem; }
+
+        /* ═══════════════════════════════════════════════════════
+           FOOTER
+           ═══════════════════════════════════════════════════════ */
+        .footer { text-align: center; padding: 60px 0 40px; color: var(--text-muted); font-size: 0.8rem; }
+        .footer .heart { color: var(--accent-1); }
+        .footer a { color: var(--accent-4); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(188, 70, 57, 0.25); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(188, 70, 57, 0.45); }
+
+        @media (max-width: 640px) {
+            .card { padding: 24px; }
+            .complexity-grid { grid-template-columns: 1fr; }
+            .navbar-inner { padding: 0 16px; }
+            .container { padding: 0 16px; }
+            .nav-difficulty { display: none; }
+            .phase-indicator { gap: 6px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh">
+        <div class="orb"></div><div class="orb"></div><div class="orb"></div><div class="orb"></div>
+    </div>
+    <div id="particles"></div>
+
+    <nav class="navbar" id="navbar">
+        <div class="nav-progress" id="nav-progress"></div>
+        <div class="navbar-inner">
+            <a href="#" class="nav-brand">
+                <div class="logo">A²</div>
+                Algorithm Atlas
+            </a>
+            <div class="nav-links">
+                <span class="nav-difficulty">Medium</span>
+                <span class="nav-date">📅 05 Aug 2026</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <section class="hero">
+            <div class="hero-badge">
+                <span class="dot"></span>
+                Problem of the Day
+            </div>
+            <h1>
+                <span class="gradient-text">Remove Methods<br>From Project</span>
+                <span class="leetcode-num">LeetCode #3310</span>
+            </h1>
+            <p class="hero-subtitle">
+                A project has <strong>n</strong> methods. One is the <strong>bug source</strong>.<br>
+                Use <strong>BFS</strong> to find all suspicious methods — then decide: can we safely remove them?
+            </p>
+            <div class="hero-tags">
+                <span class="hero-tag diff">⚡ Medium</span>
+                <span class="hero-tag cat">🌐 Graph</span>
+                <span class="hero-tag cat">🔍 BFS</span>
+                <span class="hero-tag pattern">📊 In-Degree</span>
+                <span class="hero-tag pattern">🦠 Infection Spread</span>
+            </div>
+            <!-- Hero animated mini graph -->
+            <div class="hero-graph">
+                <svg viewBox="0 0 320 100" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="50" y1="50" x2="120" y2="30" stroke="#D4A59A" stroke-width="1.5"/>
+                    <line x1="120" y1="30" x2="190" y2="50" stroke="#BC4639" stroke-width="2" stroke-dasharray="5,3"/>
+                    <line x1="190" y1="50" x2="260" y2="30" stroke="#BC4639" stroke-width="2" stroke-dasharray="5,3"/>
+                    <line x1="190" y1="50" x2="260" y2="70" stroke="#BC4639" stroke-width="2" stroke-dasharray="5,3"/>
+                    <g class="hero-node"><circle cx="50" cy="50" r="16" fill="rgba(66,133,244,0.12)" stroke="#4285F4" stroke-width="2"/><text x="50" y="55" text-anchor="middle" fill="#4285F4" font-family="JetBrains Mono" font-size="12" font-weight="700">0</text></g>
+                    <g class="hero-node"><circle cx="120" cy="30" r="16" fill="rgba(66,133,244,0.12)" stroke="#4285F4" stroke-width="2"/><text x="120" y="35" text-anchor="middle" fill="#4285F4" font-family="JetBrains Mono" font-size="12" font-weight="700">1</text></g>
+                    <g class="hero-node"><circle cx="190" cy="50" r="16" fill="rgba(92,32,24,0.2)" stroke="#5C2018" stroke-width="3"/><text x="190" y="55" text-anchor="middle" fill="#5C2018" font-family="JetBrains Mono" font-size="12" font-weight="700">2</text></g>
+                    <g class="hero-node"><circle cx="260" cy="30" r="16" fill="rgba(188,70,57,0.15)" stroke="#BC4639" stroke-width="2"/><text x="260" y="35" text-anchor="middle" fill="#BC4639" font-family="JetBrains Mono" font-size="12" font-weight="700">3</text></g>
+                    <g class="hero-node"><circle cx="260" cy="70" r="16" fill="rgba(188,70,57,0.15)" stroke="#BC4639" stroke-width="2"/><text x="260" y="75" text-anchor="middle" fill="#BC4639" font-family="JetBrains Mono" font-size="12" font-weight="700">4</text></g>
+                </svg>
+            </div>
+        </section>
+
+        <!-- SECTION 1 -->
+        <div class="section-label reveal"><span class="sec-num">01</span> The Problem</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(188,70,57,0.1); color:var(--accent-1);">📖</div>
+                <div class="card-title">What's the Problem?</div>
+            </div>
+            <p>You have <span class="hl hl-blue">n</span> methods in a project, connected by <strong>invocation edges</strong> — method <span class="hl hl-blue">u</span> calls method <span class="hl hl-blue">v</span>. One method <span class="hl hl-red">k</span> is identified as the <strong>bug source</strong>. All methods reachable from <span class="hl hl-red">k</span> are <strong>suspicious</strong>.</p>
+            <br>
+            <p>But there's a catch: you can only remove the suspicious methods if <strong>no non-suspicious method calls a suspicious method</strong>. If any external dependency exists, you must keep everything!</p>
+            <div class="callout warning" style="margin-top:20px;">
+                <div class="callout-icon">🦠</div>
+                <div class="callout-text">
+                    <strong>The key challenge:</strong> After BFS marks all suspicious methods, check if any suspicious method still has <strong>in-degree > 0</strong> from a non-suspicious caller. If so, removal would break the project — return all methods instead.
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2 -->
+        <div class="section-label reveal"><span class="sec-num">02</span> Try It Yourself</div>
+        <div class="card reveal" id="viz-card">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(74,138,82,0.1); color:var(--green);">🎮</div>
+                <div class="card-title">Interactive Graph Visualizer</div>
+            </div>
+            <p style="margin-bottom:14px;">Watch BFS spread from the <strong>bug source</strong>, then check if suspicious methods can be safely removed.</p>
+            <div class="graph-viz">
+                <div class="phase-indicator" id="phase-indicator">
+                    <span class="phase-pill active" id="phase-1">① Build Graph</span>
+                    <span class="phase-pill" id="phase-2">② BFS Spread</span>
+                    <span class="phase-pill" id="phase-3">③ Check Deps</span>
+                    <span class="phase-pill" id="phase-4">④ Result</span>
+                </div>
+                <div class="graph-legend">
+                    <div class="legend-item"><div class="legend-dot" style="background:#4285F4;"></div> Safe</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:#5C2018;"></div> Bug Source</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:#BC4639;"></div> Suspicious</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:#D4A59A;"></div> Unvisited</div>
+                </div>
+                <div class="graph-svg-container" id="graph-container"></div>
+                <div class="viz-step-info" id="viz-info">Press Play to start</div>
+                <div class="viz-result-text" id="viz-final"></div>
+                <div class="viz-controls">
+                    <button class="viz-btn primary" id="btn-play" onclick="playStep()">▶ Play Step</button>
+                    <button class="viz-btn secondary" onclick="resetViz()">↻ Reset</button>
+                    <button class="viz-btn secondary" onclick="changeExample()">⟳ Next Example</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3 -->
+        <div class="section-label reveal"><span class="sec-num">03</span> Intuition</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(66,133,244,0.1); color:var(--accent-4);">🧠</div>
+                <div class="card-title">Two-Phase Strategy</div>
+            </div>
+            <p>Think of it like contact tracing for a virus:</p>
+            <ul style="margin-top:10px;">
+                <li><strong>Phase 1 — BFS from bug source:</strong> Mark all reachable methods as <span class="hl hl-red">suspicious</span>. While doing this, <strong>decrement in-degree</strong> of neighbors (since suspicious→suspicious edges don't count as external deps).</li>
+                <li><strong>Phase 2 — Check in-degrees:</strong> If any suspicious method still has <span class="hl hl-orange">inDegree > 0</span>, it means a <em>non-suspicious</em> method calls it — removal would break the call chain!</li>
+                <li><strong>Decision:</strong> If any dependency exists → <span class="hl hl-red">can't remove</span> → return all methods. Otherwise → <span class="hl hl-green">safely remove</span> suspicious methods.</li>
+            </ul>
+            <div class="callout insight" style="margin-top:20px;">
+                <div class="callout-icon">💡</div>
+                <div class="callout-text">
+                    <strong>Why decrement in-degree during BFS?</strong> When we traverse edge <code style="font-family:'JetBrains Mono';font-size:0.85em;color:#3b72d4;background:rgba(66,133,244,0.06);padding:2px 6px;border-radius:4px;">sus → ngbr</code>, we do <code style="font-family:'JetBrains Mono';font-size:0.85em;color:#3b72d4;background:rgba(66,133,244,0.06);padding:2px 6px;border-radius:4px;">inDegree[ngbr]--</code>. This removes the "internal" edges. After BFS, if a suspicious node still has inDegree > 0, the remaining edges must come from <strong>outside</strong> the suspicious set.
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4 -->
+        <div class="section-label reveal"><span class="sec-num">04</span> Approach</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(92,32,24,0.08); color:var(--accent-2);">🗺️</div>
+                <div class="card-title">Step-by-Step Approach</div>
+            </div>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>1. Build adjacency list + in-degrees</h4>
+                    <p>Construct the directed graph from <span class="hl hl-blue">invocations</span>. Track <span class="hl hl-orange">inDegree[v]</span> for every node.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>2. BFS from bug source <span class="hl hl-red">k</span></h4>
+                    <p>Push <span class="hl hl-red">k</span> to queue, mark as suspicious. For each neighbor, <strong>decrement in-degree</strong> and mark suspicious if not already.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>3. Check: can we remove?</h4>
+                    <p>Scan all nodes. If any <span class="hl hl-red">sus[i] == true</span> and <span class="hl hl-orange">inDegree[i] > 0</span> → a non-suspicious node depends on it → <strong>can't remove</strong>.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>4. Build result</h4>
+                    <p>If can't remove → return <span class="hl hl-blue">[0, 1, 2, ..., n-1]</span>. Otherwise → return only <span class="hl hl-green">non-suspicious</span> method IDs.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 5 -->
+        <div class="section-label reveal"><span class="sec-num">05</span> Methods & Functions</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(184,137,42,0.1); color:var(--yellow);">⚙️</div>
+                <div class="card-title">Key Functions Explained</div>
+            </div>
+            <table class="visual-table">
+                <thead><tr><th>Function / Variable</th><th>Purpose</th></tr></thead>
+                <tbody>
+                    <tr><td><code>remainingMethods(n, k, inv)</code></td><td>Main driver — builds graph, runs BFS, checks deps, returns remaining methods.</td></tr>
+                    <tr><td><code>adj[u]</code></td><td>Adjacency list — <code>adj[u]</code> stores all methods that <code>u</code> invokes.</td></tr>
+                    <tr><td><code>inDegree[v]</code></td><td>Number of edges pointing <strong>into</strong> node <code>v</code>. Decremented during BFS.</td></tr>
+                    <tr><td><code>sus[i]</code></td><td>Boolean flag — <code>true</code> if method <code>i</code> is suspicious (reachable from bug).</td></tr>
+                    <tr><td><code>canNotRemove</code></td><td>Set <code>true</code> if any suspicious method has <code>inDegree > 0</code> after BFS.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 6 -->
+        <div class="section-label reveal"><span class="sec-num">06</span> Patterns Used</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(66,133,244,0.08); color:var(--accent-4);">🧩</div>
+                <div class="card-title">Design Patterns</div>
+            </div>
+            <div class="pattern-badges">
+                <div class="pattern-badge"><span class="emoji">🌐</span> BFS Graph Traversal</div>
+                <div class="pattern-badge"><span class="emoji">📊</span> In-Degree Analysis</div>
+                <div class="pattern-badge"><span class="emoji">🦠</span> Infection/Reachability</div>
+                <div class="pattern-badge"><span class="emoji">✂️</span> Safe Removal Check</div>
+                <div class="pattern-badge"><span class="emoji">🗺️</span> Adjacency List</div>
+            </div>
+            <ul style="margin-top:16px;">
+                <li><strong>BFS Reachability:</strong> Classic BFS from a source — marks all reachable nodes. Like "flood fill" on a graph.</li>
+                <li><strong>In-Degree Trick:</strong> By decrementing in-degree during BFS, we cleverly separate internal edges from external dependencies.</li>
+                <li><strong>Safe Removal Check:</strong> If removing a subgraph would break external callers, the operation is unsafe — a real-world software engineering concept!</li>
+            </ul>
+        </div>
+
+        <!-- SECTION 7 -->
+        <div class="section-label reveal"><span class="sec-num">07</span> Full Code</div>
+        <div class="card reveal" style="padding:0; overflow:hidden;">
+            <div class="code-container">
+                <div class="code-topbar">
+                    <div class="code-dots"><span></span><span></span><span></span></div>
+                    <span class="code-lang">C++ • solution.cpp</span>
+                </div>
+                <div class="code-body">
+<pre><span class="syn-cmt">// leetcode problem 3310 Remove Methods From Project</span>
+<span class="syn-cmt">// https://leetcode.com/problems/remove-methods-from-project/</span>
+
+<span class="syn-pp">#include</span> <span class="syn-str">&lt;iostream&gt;</span>
+<span class="syn-pp">#include</span> <span class="syn-str">&lt;vector&gt;</span>
+<span class="syn-pp">#include</span> <span class="syn-str">&lt;queue&gt;</span>
+<span class="syn-pp">#include</span> <span class="syn-str">&lt;algorithm&gt;</span>
+<span class="syn-kw">using namespace</span> std;
+
+<span class="syn-kw">class</span> <span class="syn-type">Solution</span> {
+<span class="syn-kw">public</span>:
+    <span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt; <span class="syn-fn">remainingMethods</span>(<span class="syn-type">int</span> n, <span class="syn-type">int</span> k,
+            <span class="syn-type">vector</span>&lt;<span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt;&gt;&amp; invocations) {
+
+        <span class="syn-type">vector</span>&lt;<span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt;&gt; adj(n);         <span class="syn-cmt">// adjacency list</span>
+        <span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt; inDegree(n, <span class="syn-num">0</span>);          <span class="syn-cmt">// in-degree count</span>
+        <span class="syn-type">vector</span>&lt;<span class="syn-type">bool</span>&gt; sus(n, <span class="syn-bool">false</span>);          <span class="syn-cmt">// suspicious flag</span>
+
+        <span class="syn-kw">for</span>(<span class="syn-kw">auto</span> &amp;edge : invocations) {
+            <span class="syn-type">int</span> u <span class="syn-op">=</span> edge[<span class="syn-num">0</span>], v <span class="syn-op">=</span> edge[<span class="syn-num">1</span>];
+            adj[u].<span class="syn-fn">push_back</span>(v);
+            inDegree[v]<span class="syn-op">++</span>;
+        }
+
+        <span class="syn-cmt">// BFS from bug source k</span>
+        <span class="syn-type">queue</span>&lt;<span class="syn-type">int</span>&gt; que;
+        que.<span class="syn-fn">push</span>(k);
+        sus[k] <span class="syn-op">=</span> <span class="syn-bool">true</span>;
+
+        <span class="syn-kw">while</span>(<span class="syn-op">!</span>que.<span class="syn-fn">empty</span>()) {
+            <span class="syn-type">int</span> curr <span class="syn-op">=</span> que.<span class="syn-fn">front</span>();
+            que.<span class="syn-fn">pop</span>();
+            <span class="syn-kw">for</span>(<span class="syn-type">int</span> &amp;ngbr : adj[curr]) {
+                inDegree[ngbr]<span class="syn-op">--</span>;            <span class="syn-cmt">// remove internal edge</span>
+                <span class="syn-kw">if</span>(<span class="syn-op">!</span>sus[ngbr]) {
+                    que.<span class="syn-fn">push</span>(ngbr);
+                    sus[ngbr] <span class="syn-op">=</span> <span class="syn-bool">true</span>;
+                }
+            }
+        }
+
+        <span class="syn-cmt">// Check: can we safely remove?</span>
+        <span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt; result;
+        <span class="syn-type">bool</span> canNotRemove <span class="syn-op">=</span> <span class="syn-bool">false</span>;
+        <span class="syn-kw">for</span>(<span class="syn-type">int</span> i <span class="syn-op">=</span> <span class="syn-num">0</span>; i <span class="syn-op">&lt;</span> n; i++) {
+            <span class="syn-kw">if</span>(sus[i] <span class="syn-op">&amp;&amp;</span> inDegree[i] <span class="syn-op">&gt;</span> <span class="syn-num">0</span>) {
+                canNotRemove <span class="syn-op">=</span> <span class="syn-bool">true</span>;          <span class="syn-cmt">// external dep!</span>
+                <span class="syn-kw">break</span>;
+            }
+            <span class="syn-kw">if</span>(<span class="syn-op">!</span>sus[i]) {
+                result.<span class="syn-fn">push_back</span>(i);
+            }
+        }
+
+        <span class="syn-kw">if</span>(canNotRemove) {                     <span class="syn-cmt">// can't remove</span>
+            <span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt; vec(n);
+            <span class="syn-kw">for</span>(<span class="syn-type">int</span> i <span class="syn-op">=</span> <span class="syn-num">0</span>; i <span class="syn-op">&lt;</span> n; i++) vec[i] <span class="syn-op">=</span> i;
+            <span class="syn-kw">return</span> vec;
+        }
+        <span class="syn-kw">return</span> result;                         <span class="syn-cmt">// safe methods</span>
+    }
+};</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 8 -->
+        <div class="section-label reveal"><span class="sec-num">08</span> Code Walkthrough</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(212,165,154,0.2); color:var(--accent-2);">🔍</div>
+                <div class="card-title">Line-by-Line Breakdown</div>
+            </div>
+            <table class="visual-table">
+                <thead><tr><th style="width:40%">Code</th><th>What it does</th></tr></thead>
+                <tbody>
+                    <tr><td><code>adj[u].push_back(v)</code></td><td>Build directed graph edge: method <code>u</code> invokes method <code>v</code>.</td></tr>
+                    <tr><td><code>inDegree[v]++</code></td><td>Track how many methods <strong>call</strong> method <code>v</code>.</td></tr>
+                    <tr><td><code>que.push(k); sus[k] = true</code></td><td>Start BFS from the <strong>bug source</strong> — mark it as suspicious.</td></tr>
+                    <tr><td><code>inDegree[ngbr]--</code></td><td>Remove the <strong>internal edge</strong>. After BFS, only external edges remain.</td></tr>
+                    <tr><td><code>sus[i] && inDegree[i] > 0</code></td><td>If a suspicious method still has callers → an <strong>external dependency</strong> exists.</td></tr>
+                    <tr><td><code>canNotRemove = true</code></td><td>Flag set → we must <strong>keep all methods</strong>.</td></tr>
+                    <tr><td><code>return vec / result</code></td><td>Return all methods (unsafe) or only non-suspicious methods (safe).</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 9 -->
+        <div class="section-label reveal"><span class="sec-num">09</span> Complexity Analysis</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(192,112,64,0.1); color:var(--orange);">📊</div>
+                <div class="card-title">Time & Space Complexity</div>
+            </div>
+            <div class="complexity-grid">
+                <div class="complexity-pill">
+                    <div class="label">Time</div>
+                    <div class="big" style="color:var(--accent-1);">O(n + e)</div>
+                    <div class="note">BFS visits each node &amp; edge once.<br>Final scan is O(n).</div>
+                </div>
+                <div class="complexity-pill">
+                    <div class="label">Space</div>
+                    <div class="big" style="color:var(--accent-4);">O(n + e)</div>
+                    <div class="note">Adjacency list + in-degree array<br>+ BFS queue + sus array.</div>
+                </div>
+            </div>
+            <div class="callout insight" style="margin-top:20px;">
+                <div class="callout-icon">🚀</div>
+                <div class="callout-text">
+                    <strong>This is optimal!</strong> We must look at every node and edge at least once. BFS gives us exactly <strong>O(n + e)</strong> — no wasted work. The in-degree trick avoids a second traversal.
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 10 -->
+        <div class="section-label reveal"><span class="sec-num">10</span> Key Takeaways</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(74,138,82,0.1); color:var(--green);">✅</div>
+                <div class="card-title">Remember These</div>
+            </div>
+            <ul>
+                <li><strong>BFS reachability</strong> is perfect for "infection spread" / "connected component" problems.</li>
+                <li>The <span class="hl hl-orange">in-degree decrement</span> during BFS is the key trick — it separates internal vs external edges.</li>
+                <li>If <strong>any</strong> suspicious method has remaining in-degree → external dependency → <span class="hl hl-red">can't remove</span>.</li>
+                <li>This models a real-world scenario: removing buggy modules from a codebase without breaking callers.</li>
+                <li>Time complexity is <span class="hl hl-green">O(n + e)</span> — linear in graph size, which is optimal.</li>
+                <li>The pattern "BFS + in-degree check" appears in topological sort, dependency resolution, and package managers.</li>
+            </ul>
+        </div>
+
+        <footer class="footer">
+            <p>Made with <span class="heart">♥</span> by <a href="#">Algorithm Atlas</a></p>
+            <p style="margin-top:6px;">LeetCode Problem of the Day — 05 August 2026</p>
+        </footer>
+    </div>
+
+    <script>
+        // ─── Floating Particles ───
+        (function() {
+            const c = document.getElementById('particles');
+            for (let i = 0; i < 14; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const s = 3 + Math.random() * 6;
+                p.style.width = s + 'px'; p.style.height = s + 'px';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDuration = (16 + Math.random() * 22) + 's';
+                p.style.animationDelay = -(Math.random() * 30) + 's';
+                c.appendChild(p);
+            }
+        })();
+
+        // ─── Navbar scroll + progress ───
+        const navbar = document.getElementById('navbar');
+        const progress = document.getElementById('nav-progress');
+        window.addEventListener('scroll', () => {
+            navbar.classList.toggle('scrolled', window.scrollY > 20);
+            const h = document.documentElement.scrollHeight - window.innerHeight;
+            progress.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%';
+        });
+
+        // ─── Reveal on scroll ───
+        const reveals = document.querySelectorAll('.reveal');
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach((e, i) => {
+                if (e.isIntersecting) { setTimeout(() => e.target.classList.add('visible'), i * 80); obs.unobserve(e.target); }
+            });
+        }, { threshold: 0.1 });
+        reveals.forEach(r => obs.observe(r));
+
+        // ─── Interactive Graph Visualizer ───
+        const examples = [
+            { n: 5, k: 2, edges: [[0,1],[1,2],[2,3],[3,4]], name: "Ex 1 — chain, bug at 2", nodePos: [{x:60,y:80},{x:160,y:40},{x:260,y:80},{x:360,y:40},{x:460,y:80}] },
+            { n: 5, k: 0, edges: [[1,2],[0,2],[0,1],[3,4]], name: "Ex 2 — bug at 0, external dep", nodePos: [{x:160,y:40},{x:60,y:120},{x:260,y:120},{x:360,y:40},{x:460,y:120}] },
+            { n: 4, k: 1, edges: [[0,1],[1,2],[1,3]], name: "Ex 3 — tree from 0, bug at 1", nodePos: [{x:60,y:80},{x:180,y:80},{x:300,y:40},{x:300,y:120}] },
+        ];
+        let currentExample = 0;
+        let vizState = null;
+
+        function setPhase(phase) {
+            for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById('phase-' + i);
+                el.classList.remove('active', 'done');
+                if (i < phase) el.classList.add('done');
+                if (i === phase) el.classList.add('active');
+            }
+        }
+
+        function buildGraphSVG(ex, nodeStates, edgeStates) {
+            const W = 520, H = 160;
+            let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" xmlns="http://www.w3.org/2000/svg" style="max-width:520px;">`;
+            // Edges
+            ex.edges.forEach((e, idx) => {
+                const from = ex.nodePos[e[0]], to = ex.nodePos[e[1]];
+                const cls = edgeStates[idx] || 'edge-default';
+                const mx = (from.x + to.x) / 2, my = (from.y + to.y) / 2;
+                // Arrow
+                const dx = to.x - from.x, dy = to.y - from.y;
+                const len = Math.sqrt(dx*dx + dy*dy);
+                const nx = dx/len, ny = dy/len;
+                const ax = to.x - nx*22, ay = to.y - ny*22;
+                svg += `<line x1="${from.x}" y1="${from.y}" x2="${ax}" y2="${ay}" class="${cls}" marker-end="url(#arrow-${cls})"/>`;
+            });
+            // Arrow markers
+            svg += `<defs>
+                <marker id="arrow-edge-default" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#D4A59A"/></marker>
+                <marker id="arrow-edge-infected" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#BC4639"/></marker>
+            </defs>`;
+            // Nodes
+            for (let i = 0; i < ex.n; i++) {
+                const pos = ex.nodePos[i];
+                const st = nodeStates[i] || 'default';
+                const circClass = st === 'safe' ? 'node-safe' : st === 'sus' ? 'node-sus' : st === 'bug' ? 'node-bug' : 'node-default';
+                const textClass = st === 'safe' ? 'node-safe-text' : st === 'sus' ? 'node-sus-text' : st === 'bug' ? 'node-bug-text' : 'node-default-text';
+                svg += `<circle cx="${pos.x}" cy="${pos.y}" r="20" class="graph-node-circle ${circClass}" stroke-width="2.5"/>`;
+                svg += `<text x="${pos.x}" y="${pos.y + 5}" text-anchor="middle" class="graph-node-text ${textClass}">${i}</text>`;
+            }
+            svg += '</svg>';
+            return svg;
+        }
+
+        function buildSteps(ex) {
+            const steps = [];
+            const nodeStates = {};
+            const edgeStates = {};
+            // Step 0: initial
+            steps.push({ phase: 1, nodeStates: {...nodeStates}, edgeStates: {...edgeStates}, info: `Graph: ${ex.n} nodes, ${ex.edges.length} edges. Bug source = ${ex.k}` });
+            // Step 1: mark bug
+            nodeStates[ex.k] = 'bug';
+            steps.push({ phase: 2, nodeStates: {...nodeStates}, edgeStates: {...edgeStates}, info: `Mark node ${ex.k} as bug source 🦠` });
+
+            // BFS
+            const adj = Array.from({length: ex.n}, () => []);
+            const inDeg = new Array(ex.n).fill(0);
+            const edgeMap = {};
+            ex.edges.forEach((e, idx) => { adj[e[0]].push({to: e[1], idx}); inDeg[e[1]]++; });
+            const sus = new Array(ex.n).fill(false);
+            sus[ex.k] = true;
+            const queue = [ex.k];
+            while (queue.length > 0) {
+                const curr = queue.shift();
+                for (const {to, idx} of adj[curr]) {
+                    inDeg[to]--;
+                    edgeStates[idx] = sus[curr] ? 'edge-infected' : 'edge-default';
+                    if (!sus[to]) {
+                        sus[to] = true;
+                        nodeStates[to] = 'sus';
+                        queue.push(to);
+                        steps.push({ phase: 2, nodeStates: {...nodeStates}, edgeStates: {...edgeStates}, info: `BFS: node ${curr} → node ${to} marked suspicious 🔴 (inDegree[${to}] now ${inDeg[to]})` });
+                    }
+                }
+            }
+            // Mark safe nodes
+            for (let i = 0; i < ex.n; i++) {
+                if (!sus[i]) nodeStates[i] = 'safe';
+            }
+            // Check step
+            let canNotRemove = false;
+            let blockNode = -1;
+            for (let i = 0; i < ex.n; i++) {
+                if (sus[i] && inDeg[i] > 0) { canNotRemove = true; blockNode = i; break; }
+            }
+            steps.push({ phase: 3, nodeStates: {...nodeStates}, edgeStates: {...edgeStates}, info: canNotRemove ? `⚠️ Node ${blockNode} is suspicious but has inDegree=${inDeg[blockNode]} from outside → CAN'T remove!` : `✅ No suspicious node has external callers → safe to remove!` });
+
+            // Final
+            const result = [];
+            if (canNotRemove) { for (let i = 0; i < ex.n; i++) result.push(i); }
+            else { for (let i = 0; i < ex.n; i++) if (!sus[i]) result.push(i); }
+            steps.push({ phase: 4, nodeStates: {...nodeStates}, edgeStates: {...edgeStates}, info: `Result: [${result.join(', ')}]`, result });
+            return steps;
+        }
+
+        function initViz() {
+            const ex = examples[currentExample];
+            vizState = { steps: buildSteps(ex), step: 0, ex };
+            document.getElementById('graph-container').innerHTML = buildGraphSVG(ex, {}, {});
+            document.getElementById('viz-info').textContent = `${ex.name} — Press Play`;
+            document.getElementById('viz-final').textContent = '';
+            document.getElementById('btn-play').disabled = false;
+            setPhase(1);
+        }
+
+        function playStep() {
+            if (!vizState || vizState.step >= vizState.steps.length) return;
+            const step = vizState.steps[vizState.step];
+            setPhase(step.phase);
+            document.getElementById('graph-container').innerHTML = buildGraphSVG(vizState.ex, step.nodeStates, step.edgeStates);
+            document.getElementById('viz-info').innerHTML = step.info;
+            if (step.result) {
+                document.getElementById('viz-final').innerHTML = `<span style="color:${step.result.length < vizState.ex.n ? 'var(--green)' : 'var(--accent-1)'}">Remaining methods: [${step.result.join(', ')}]</span>`;
+            }
+            vizState.step++;
+            if (vizState.step >= vizState.steps.length) document.getElementById('btn-play').disabled = true;
+        }
+
+        function resetViz() { initViz(); }
+        function changeExample() { currentExample = (currentExample + 1) % examples.length; initViz(); }
+
+        initViz();
+    </script>
+</body>
+</html>
