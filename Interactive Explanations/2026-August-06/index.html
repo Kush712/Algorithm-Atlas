@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeetCode 3345 — Smallest Divisible Digit Product I | Algorithm Atlas</title>
+    <meta name="description" content="Interactive visual explanation of LeetCode Problem 3345: Smallest Divisible Digit Product I — find the smallest number ≥ n whose digit product is divisible by t.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════════════════════
+           ROOT & RESET — "Petra" Rose-Red Palette
+           ═══════════════════════════════════════════════════════ */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #faf6f4;
+            --bg-secondary: #f3ece9;
+            --bg-card: rgba(255, 250, 248, 0.78);
+            --glass: rgba(188, 70, 57, 0.05);
+            --glass-border: rgba(188, 70, 57, 0.14);
+            --text-primary: #3a2420;
+            --text-secondary: #6b4a42;
+            --text-muted: #9a7e76;
+            --accent-1: #BC4639;
+            --accent-2: #5C2018;
+            --accent-3: #D4A59A;
+            --accent-4: #4285F4;
+            --green: #4a8a52;
+            --yellow: #b8892a;
+            --cyan: #4285F4;
+            --orange: #c07040;
+            --blue: #4285F4;
+            --pink: #BC4639;
+            --neutral-1: #F3E0DC;
+            --neutral-2: #D4A59A;
+            --gradient-hero: linear-gradient(135deg, #BC4639 0%, #5C2018 50%, #D4A59A 100%);
+            --gradient-warm: linear-gradient(135deg, #D4A59A, #BC4639, #F3E0DC);
+            --gradient-cool: linear-gradient(135deg, #4285F4, #5C2018, #BC4639);
+            --gradient-accent: linear-gradient(135deg, #BC4639, #4285F4);
+            --shadow-glow: 0 0 60px rgba(188, 70, 57, 0.10);
+            --shadow-card: 0 8px 32px rgba(92, 32, 24, 0.06);
+            --radius: 18px;
+            --radius-sm: 12px;
+            --radius-xs: 6px;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           ANIMATED BACKGROUND
+           ═══════════════════════════════════════════════════════ */
+        .bg-mesh {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+        }
+        .bg-mesh::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(188,70,57,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(188,70,57,0.025) 1px, transparent 1px);
+            background-size: 55px 55px;
+            animation: gridDrift 35s linear infinite;
+        }
+        @keyframes gridDrift { 0% { transform: translate(0,0); } 100% { transform: translate(55px,55px); } }
+        .bg-mesh .orb {
+            position: absolute; border-radius: 50%; filter: blur(120px);
+            animation: orbFloat 20s ease-in-out infinite;
+        }
+        .bg-mesh .orb:nth-child(1) { width: 650px; height: 650px; top: -12%; left: -8%; background: rgba(188,70,57,0.09); animation-duration: 25s; }
+        .bg-mesh .orb:nth-child(2) { width: 500px; height: 500px; top: 35%; right: -10%; background: rgba(66,133,244,0.07); animation-duration: 30s; animation-delay: -5s; }
+        .bg-mesh .orb:nth-child(3) { width: 450px; height: 450px; bottom: -8%; left: 25%; background: rgba(212,165,154,0.12); animation-duration: 22s; animation-delay: -10s; }
+        .bg-mesh .orb:nth-child(4) { width: 350px; height: 350px; top: 15%; left: 55%; background: rgba(92,32,24,0.06); animation-duration: 28s; animation-delay: -15s; }
+        @keyframes orbFloat {
+            0%,100% { transform: translate(0,0) scale(1); }
+            25% { transform: translate(60px,-40px) scale(1.1); }
+            50% { transform: translate(-30px,60px) scale(0.95); }
+            75% { transform: translate(40px,30px) scale(1.05); }
+        }
+        .particle {
+            position: fixed; pointer-events: none; z-index: 0;
+            border-radius: 50%; animation: particleDrift linear infinite;
+        }
+        .particle:nth-child(odd) { background: rgba(188,70,57,0.12); }
+        .particle:nth-child(even) { background: rgba(212,165,154,0.18); }
+        .particle:nth-child(3n) { background: rgba(66,133,244,0.10); }
+        .particle:nth-child(5n) { background: rgba(92,32,24,0.10); border-radius: 3px; }
+        @keyframes particleDrift {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            8% { opacity: 1; } 92% { opacity: 1; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        .container { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+        /* ═══════════════════════════════════════════════════════
+           NAVIGATION
+           ═══════════════════════════════════════════════════════ */
+        .navbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            backdrop-filter: blur(20px) saturate(1.8);
+            -webkit-backdrop-filter: blur(20px) saturate(1.8);
+            background: rgba(250,246,244,0.88);
+            border-bottom: 1px solid var(--glass-border);
+            transition: box-shadow 0.3s, background 0.3s;
+        }
+        .navbar.scrolled { box-shadow: 0 4px 30px rgba(92,32,24,0.06); background: rgba(250,246,244,0.95); }
+        .nav-progress { position: absolute; bottom: 0; left: 0; height: 2px; background: var(--gradient-hero); transition: width 0.15s ease-out; width: 0%; }
+        .navbar-inner { max-width: 900px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+        .nav-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; text-decoration: none; color: var(--text-primary); transition: transform 0.2s; }
+        .nav-brand:hover { transform: scale(1.03); }
+        .nav-brand .logo { width: 34px; height: 34px; border-radius: 9px; background: var(--gradient-hero); display: grid; place-items: center; font-size: 0.85rem; font-weight: 800; color: #fff; box-shadow: 0 3px 14px rgba(188,70,57,0.3); }
+        .nav-links { display: flex; align-items: center; gap: 14px; }
+        .nav-date { font-size: 0.82rem; color: var(--text-secondary); font-weight: 500; padding: 6px 14px; border-radius: 20px; background: var(--glass); border: 1px solid var(--glass-border); }
+        .nav-difficulty { font-size: 0.72rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; background: rgba(74,138,82,0.08); color: var(--green); border: 1px solid rgba(74,138,82,0.2); text-transform: uppercase; letter-spacing: 1px; }
+
+        /* ═══════════════════════════════════════════════════════
+           HERO
+           ═══════════════════════════════════════════════════════ */
+        .hero { padding: 130px 0 60px; text-align: center; }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 20px; border-radius: 50px;
+            background: rgba(188,70,57,0.08); border: 1px solid rgba(188,70,57,0.2);
+            font-size: 0.78rem; font-weight: 600; color: var(--accent-1);
+            text-transform: uppercase; letter-spacing: 1.5px;
+            margin-bottom: 26px; animation: fadeInDown 0.8s ease-out;
+        }
+        .hero-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-4); animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
+        .hero h1 { font-size: clamp(2.2rem, 5.5vw, 3.2rem); font-weight: 900; line-height: 1.12; letter-spacing: -2px; color: var(--text-primary); animation: fadeInUp 0.8s ease-out 0.1s both; }
+        .hero h1 .gradient-text { background: var(--gradient-hero); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero h1 .leetcode-num { display: block; font-size: 0.42em; letter-spacing: 3px; -webkit-text-fill-color: var(--text-muted); background: none; margin-top: 8px; font-weight: 700; }
+        .hero-subtitle { margin-top: 20px; font-size: 1.1rem; color: var(--text-secondary); max-width: 640px; margin-left: auto; margin-right: auto; line-height: 1.75; animation: fadeInUp 0.8s ease-out 0.25s both; }
+        .hero-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 28px; animation: fadeInUp 0.8s ease-out 0.4s both; }
+        .hero-tag { padding: 6px 16px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; border: 1px solid; transition: transform 0.2s, box-shadow 0.2s; }
+        .hero-tag:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        .hero-tag.diff { color: var(--green); border-color: rgba(74,138,82,0.3); background: rgba(74,138,82,0.06); }
+        .hero-tag.cat { color: var(--accent-4); border-color: rgba(66,133,244,0.3); background: rgba(66,133,244,0.06); }
+        .hero-tag.pattern { color: var(--accent-2); border-color: rgba(92,32,24,0.2); background: rgba(92,32,24,0.05); }
+
+        /* Hero digit product animation */
+        .hero-digit-demo {
+            margin-top: 38px;
+            animation: fadeInUp 0.8s ease-out 0.55s both;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+        }
+        .hero-num-row {
+            display: flex; align-items: center; gap: 6px;
+        }
+        .hero-digit {
+            width: 44px; height: 44px; border-radius: 11px;
+            display: grid; place-items: center;
+            font-size: 1.1rem; font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            border: 2px solid; animation: digitBounce 2.6s ease-in-out infinite;
+        }
+        .hero-digit.d1 { background: rgba(188,70,57,0.1); border-color: rgba(188,70,57,0.3); color: var(--accent-1); animation-delay: 0s; }
+        .hero-digit.d2 { background: rgba(66,133,244,0.08); border-color: rgba(66,133,244,0.25); color: var(--accent-4); animation-delay: 0.15s; }
+        .hero-digit.d3 { background: rgba(212,165,154,0.15); border-color: rgba(212,165,154,0.35); color: var(--orange); animation-delay: 0.3s; }
+        @keyframes digitBounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        .hero-op { font-size: 1.2rem; font-weight: 800; color: var(--text-muted); margin: 0 2px; }
+        .hero-result-eq {
+            font-size: 0.82rem; font-weight: 700; color: var(--accent-1);
+            padding: 4px 16px; border-radius: 20px;
+            background: rgba(188,70,57,0.06); border: 1px solid rgba(188,70,57,0.15);
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           ANIMATIONS
+           ═══════════════════════════════════════════════════════ */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1); }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        /* ═══════════════════════════════════════════════════════
+           GLASS CARD
+           ═══════════════════════════════════════════════════════ */
+        .card {
+            background: var(--bg-card); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            border: 1px solid var(--glass-border); border-radius: var(--radius);
+            padding: 38px; margin-bottom: 32px;
+            transition: border-color 0.3s, box-shadow 0.4s, transform 0.3s;
+            position: relative; overflow: hidden;
+        }
+        .card::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(188,70,57,0.03), transparent); transition: left 0.7s ease; }
+        .card:hover::before { left: 100%; }
+        .card:hover { border-color: rgba(188,70,57,0.22); box-shadow: var(--shadow-card), var(--shadow-glow); transform: translateY(-3px); }
+        .card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+        .card-icon { width: 50px; height: 50px; border-radius: 14px; display: grid; place-items: center; font-size: 1.35rem; flex-shrink: 0; transition: transform 0.3s; }
+        .card:hover .card-icon { transform: scale(1.12) rotate(-4deg); }
+        .card-title { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px; color: var(--text-primary); }
+        .card p, .card li { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8; }
+        .card ul { list-style: none; padding: 0; }
+        .card ul li { padding: 6px 0; padding-left: 24px; position: relative; }
+        .card ul li::before { content: '▸'; position: absolute; left: 0; color: var(--accent-1); font-weight: 700; }
+        .card strong { color: var(--text-primary); }
+
+        .section-label { display: flex; align-items: center; gap: 14px; margin: 55px 0 26px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; color: var(--text-muted); }
+        .section-label .sec-num { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 9px; background: var(--gradient-hero); color: #fff; font-size: 0.72rem; font-weight: 800; flex-shrink: 0; box-shadow: 0 3px 12px rgba(188,70,57,0.22); }
+        .section-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--glass-border), transparent); }
+
+        /* ═══════════════════════════════════════════════════════
+           INTERACTIVE NUMBER CHECKER
+           ═══════════════════════════════════════════════════════ */
+        .num-checker { text-align: center; }
+        .num-display {
+            display: flex; justify-content: center; gap: 8px; margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .num-digit {
+            width: 58px; height: 62px; border-radius: 14px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--glass); border: 2px solid var(--glass-border);
+            transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+            position: relative;
+        }
+        .num-digit .digit-val { font-size: 1.4rem; font-weight: 800; color: var(--text-primary); }
+        .num-digit .digit-pos { font-size: 0.55rem; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+        .num-digit.current { border-color: var(--accent-4); background: rgba(66,133,244,0.08); box-shadow: 0 0 20px rgba(66,133,244,0.12); }
+        .num-digit.current .digit-val { color: var(--accent-4); }
+        .num-digit.multiplied { border-color: var(--accent-1); background: rgba(188,70,57,0.1); transform: scale(1.08) translateY(-4px); box-shadow: 0 8px 20px rgba(188,70,57,0.15); }
+        .num-digit.multiplied .digit-val { color: var(--accent-1); }
+        .num-digit.pass { border-color: var(--green); background: rgba(74,138,82,0.08); }
+        .num-digit.pass .digit-val { color: var(--green); }
+        .num-digit.fail { border-color: rgba(188,70,57,0.25); opacity: 0.4; transform: scale(0.92); }
+
+        /* Product display */
+        .product-display {
+            display: flex; justify-content: center; align-items: center; gap: 14px;
+            margin: 16px 0; flex-wrap: wrap;
+        }
+        .product-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); }
+        .product-value {
+            font-size: 1.6rem; font-weight: 900; font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-1);
+            padding: 6px 20px; border-radius: 10px;
+            background: rgba(188,70,57,0.06); border: 1px solid rgba(188,70,57,0.15);
+            transition: all 0.3s;
+        }
+        .product-value.success { color: var(--green); background: rgba(74,138,82,0.06); border-color: rgba(74,138,82,0.2); }
+        .divcheck {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 0.85rem; font-weight: 700;
+            padding: 6px 14px; border-radius: 8px;
+        }
+        .divcheck.yes { color: var(--green); background: rgba(74,138,82,0.06); }
+        .divcheck.no { color: var(--accent-1); background: rgba(188,70,57,0.06); }
+
+        /* Number timeline */
+        .num-timeline {
+            display: flex; justify-content: center; gap: 6px; margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .num-timeline-cell {
+            width: 48px; height: 36px; border-radius: 8px;
+            display: grid; place-items: center;
+            font-size: 0.85rem; font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--glass); border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+        .num-timeline-cell.checked { background: rgba(188,70,57,0.06); color: var(--accent-1); border-color: rgba(188,70,57,0.2); }
+        .num-timeline-cell.found { background: rgba(74,138,82,0.1); color: var(--green); border-color: rgba(74,138,82,0.3); box-shadow: 0 0 14px rgba(74,138,82,0.15); transform: scale(1.08); }
+        .num-timeline-cell.skipped { opacity: 0.35; }
+
+        .viz-controls { display: flex; justify-content: center; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+        .viz-btn { padding: 11px 26px; border-radius: 11px; border: none; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.25s; }
+        .viz-btn.primary { background: var(--gradient-hero); color: #fff; box-shadow: 0 4px 20px rgba(188,70,57,0.25); }
+        .viz-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(188,70,57,0.4); }
+        .viz-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .viz-btn.secondary { background: var(--glass); color: var(--text-primary); border: 1px solid var(--glass-border); }
+        .viz-btn.secondary:hover { border-color: var(--accent-1); transform: translateY(-1px); }
+        .viz-step-info { margin-top: 16px; font-size: 0.88rem; color: var(--text-secondary); min-height: 30px; padding: 10px 20px; border-radius: 8px; background: rgba(188,70,57,0.04); display: inline-block; }
+        .viz-result-text { margin-top: 16px; font-weight: 700; font-size: 1.05rem; min-height: 32px; }
+
+        /* ═══════════════════════════════════════════════════════
+           TIMELINE
+           ═══════════════════════════════════════════════════════ */
+        .timeline { position: relative; padding-left: 42px; }
+        .timeline::before { content: ''; position: absolute; left: 17px; top: 0; bottom: 0; width: 2px; background: linear-gradient(180deg, var(--accent-1), var(--accent-4), var(--accent-3), var(--neutral-1)); border-radius: 2px; }
+        .timeline-item { position: relative; margin-bottom: 32px; padding-left: 4px; }
+        .timeline-dot { position: absolute; left: -32px; top: 4px; width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--accent-1); background: var(--bg-primary); transition: all 0.3s; }
+        .timeline-item:hover .timeline-dot { transform: scale(1.35); box-shadow: 0 0 14px rgba(188,70,57,0.25); }
+        .timeline-item:nth-child(2) .timeline-dot { border-color: var(--accent-4); }
+        .timeline-item:nth-child(3) .timeline-dot { border-color: var(--accent-3); }
+        .timeline-item:nth-child(4) .timeline-dot { border-color: var(--neutral-2); }
+        .timeline-item h4 { font-size: 1.02rem; font-weight: 700; margin-bottom: 6px; color: var(--text-primary); }
+        .timeline-item p { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.75; }
+
+        .hl { padding: 2px 8px; border-radius: 5px; font-family: 'JetBrains Mono', monospace; font-size: 0.82em; font-weight: 600; }
+        .hl-red { background: rgba(188,70,57,0.1); color: #BC4639; }
+        .hl-brown { background: rgba(92,32,24,0.08); color: #5C2018; }
+        .hl-blue { background: rgba(66,133,244,0.1); color: #3b72d4; }
+        .hl-rose { background: rgba(212,165,154,0.2); color: #8a5a4a; }
+        .hl-green { background: rgba(74,138,82,0.1); color: #3a7a42; }
+        .hl-orange { background: rgba(192,112,64,0.1); color: #a06030; }
+
+        /* CODE */
+        .code-container { position: relative; border-radius: var(--radius); overflow: hidden; background: #2c1a16; border: 1px solid rgba(188,70,57,0.18); }
+        .code-topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(188,70,57,0.12); }
+        .code-dots { display: flex; gap: 7px; }
+        .code-dots span { width: 12px; height: 12px; border-radius: 50%; transition: transform 0.2s; }
+        .code-dots span:hover { transform: scale(1.3); }
+        .code-dots span:nth-child(1) { background: #BC4639; }
+        .code-dots span:nth-child(2) { background: #b8892a; }
+        .code-dots span:nth-child(3) { background: #4a8a52; }
+        .code-lang { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #9a7e76; }
+        .code-body { padding: 24px; overflow-x: auto; }
+        .code-body pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.85; color: #d4b8b0; }
+        .syn-kw { color: #e8a090; } .syn-type { color: #7ab8f0; } .syn-fn { color: #e8c880; }
+        .syn-num { color: #d09080; } .syn-str { color: #8aba7a; } .syn-cmt { color: #6a504a; font-style: italic; }
+        .syn-op { color: #a08878; } .syn-bool { color: #c09870; }
+
+        .complexity-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .complexity-pill { padding: 24px; border-radius: var(--radius-sm); background: var(--glass); border: 1px solid var(--glass-border); text-align: center; transition: all 0.3s; }
+        .complexity-pill:hover { border-color: rgba(188,70,57,0.3); transform: translateY(-2px); }
+        .complexity-pill .label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+        .complexity-pill .big { font-size: 1.6rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; }
+        .complexity-pill .note { font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px; }
+
+        .callout { display: flex; gap: 16px; padding: 22px 24px; border-radius: var(--radius-sm); border-left: 4px solid; margin: 20px 0; transition: transform 0.2s; }
+        .callout:hover { transform: translateX(4px); }
+        .callout.insight { background: rgba(66,133,244,0.05); border-color: var(--accent-4); }
+        .callout.warning { background: rgba(188,70,57,0.05); border-color: var(--accent-1); }
+        .callout .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+        .callout .callout-text { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7; }
+        .callout .callout-text strong { color: var(--text-primary); }
+
+        .visual-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: var(--radius-sm); overflow: hidden; margin: 16px 0; }
+        .visual-table th { background: rgba(188,70,57,0.08); color: var(--accent-1); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--glass-border); }
+        .visual-table td { padding: 12px 16px; font-size: 0.88rem; color: var(--text-secondary); border-bottom: 1px solid rgba(188,70,57,0.05); transition: background 0.2s; }
+        .visual-table tr:last-child td { border-bottom: none; }
+        .visual-table tr:hover td { background: rgba(188,70,57,0.03); }
+        .visual-table code { font-family: 'JetBrains Mono', monospace; font-size: 0.82em; color: #3b72d4; background: rgba(66,133,244,0.06); padding: 2px 7px; border-radius: 4px; }
+
+        .pattern-badges { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+        .pattern-badge { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; background: var(--glass); border: 1px solid var(--glass-border); font-size: 0.85rem; font-weight: 600; color: var(--text-primary); transition: all 0.3s; }
+        .pattern-badge:hover { border-color: var(--accent-1); transform: translateY(-3px); box-shadow: 0 6px 18px rgba(188,70,57,0.08); }
+        .pattern-badge .emoji { font-size: 1.1rem; }
+
+        .footer { text-align: center; padding: 60px 0 40px; color: var(--text-muted); font-size: 0.8rem; }
+        .footer .heart { color: var(--accent-1); }
+        .footer a { color: var(--accent-4); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(188,70,57,0.25); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(188,70,57,0.45); }
+
+        @media (max-width: 640px) {
+            .card { padding: 24px; } .complexity-grid { grid-template-columns: 1fr; }
+            .navbar-inner { padding: 0 16px; } .container { padding: 0 16px; }
+            .nav-difficulty { display: none; }
+            .num-digit { width: 48px; height: 52px; }
+            .num-digit .digit-val { font-size: 1.1rem; }
+            .hero-digit { width: 38px; height: 38px; font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"><div class="orb"></div><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
+    <div id="particles"></div>
+
+    <nav class="navbar" id="navbar">
+        <div class="nav-progress" id="nav-progress"></div>
+        <div class="navbar-inner">
+            <a href="#" class="nav-brand"><div class="logo">A²</div> Algorithm Atlas</a>
+            <div class="nav-links">
+                <span class="nav-difficulty">Easy</span>
+                <span class="nav-date">📅 06 Aug 2026</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <section class="hero">
+            <div class="hero-badge"><span class="dot"></span> Problem of the Day</div>
+            <h1>
+                <span class="gradient-text">Smallest Divisible<br>Digit Product I</span>
+                <span class="leetcode-num">LeetCode #3345</span>
+            </h1>
+            <p class="hero-subtitle">
+                Given <strong>n</strong> and <strong>t</strong>, find the smallest number ≥ n whose<br>
+                <strong>digit product</strong> is divisible by t. A brute-force gem!
+            </p>
+            <div class="hero-tags">
+                <span class="hero-tag diff">✅ Easy</span>
+                <span class="hero-tag cat">🔢 Math</span>
+                <span class="hero-tag cat">🔄 Simulation</span>
+                <span class="hero-tag pattern">🔍 Digit Extraction</span>
+                <span class="hero-tag pattern">✨ Brute Force</span>
+            </div>
+            <div class="hero-digit-demo">
+                <div class="hero-num-row">
+                    <div class="hero-digit d1">1</div>
+                    <span class="hero-op">×</span>
+                    <div class="hero-digit d2">5</div>
+                    <span class="hero-op">=</span>
+                    <div class="hero-digit d3">5</div>
+                </div>
+                <div class="hero-result-eq">5 % 2 ≠ 0 → try next!</div>
+            </div>
+        </section>
+
+        <!-- SECTION 1 -->
+        <div class="section-label reveal"><span class="sec-num">01</span> The Problem</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(188,70,57,0.1); color:var(--accent-1);">📖</div>
+                <div class="card-title">What's the Problem?</div>
+            </div>
+            <p>Given two integers <span class="hl hl-blue">n</span> and <span class="hl hl-blue">t</span>, find the <strong>smallest integer ≥ n</strong> such that the <strong>product of its digits</strong> is divisible by <span class="hl hl-red">t</span>.</p>
+            <br>
+            <p>For example, with <span class="hl hl-blue">n = 10, t = 2</span>: the digit product of 10 is <span class="hl hl-brown">1×0 = 0</span>, and 0 % 2 == 0, so the answer is <span class="hl hl-green">10</span>.</p>
+            <div class="callout insight" style="margin-top:20px;">
+                <div class="callout-icon">💡</div>
+                <div class="callout-text">
+                    <strong>Key insight:</strong> Since the answer is always close to n (within a small range), simple <strong>brute force</strong> works perfectly. Just check n, n+1, n+2, ... until you find a match!
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2 -->
+        <div class="section-label reveal"><span class="sec-num">02</span> Try It Yourself</div>
+        <div class="card reveal" id="viz-card">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(74,138,82,0.1); color:var(--green);">🎮</div>
+                <div class="card-title">Interactive Number Checker</div>
+            </div>
+            <p style="margin-bottom:14px;">Watch the algorithm check each number starting from <strong>n</strong>. Hit <strong>Play Step</strong> to test the next candidate.</p>
+            <div class="num-checker">
+                <div class="num-timeline" id="num-timeline"></div>
+                <div class="num-display" id="num-display"></div>
+                <div class="product-display" id="product-display">
+                    <span class="product-label">Digit Product</span>
+                    <span class="product-value" id="product-value">—</span>
+                    <span class="divcheck" id="divcheck" style="display:none;"></span>
+                </div>
+                <div class="viz-step-info" id="viz-info">Press Play to start</div>
+                <div class="viz-result-text" id="viz-final"></div>
+                <div class="viz-controls">
+                    <button class="viz-btn primary" id="btn-play" onclick="playStep()">▶ Play Step</button>
+                    <button class="viz-btn secondary" onclick="resetViz()">↻ Reset</button>
+                    <button class="viz-btn secondary" onclick="changeExample()">⟳ Next Example</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3 -->
+        <div class="section-label reveal"><span class="sec-num">03</span> Intuition</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(66,133,244,0.1); color:var(--accent-4);">🧠</div>
+                <div class="card-title">Why Brute Force Works</div>
+            </div>
+            <p>This problem might seem like it needs a clever math trick, but brute force is actually the <strong>right approach</strong>:</p>
+            <ul style="margin-top:10px;">
+                <li><strong>Small search space:</strong> The answer is always within a small range of n. You won't need to check thousands of numbers.</li>
+                <li><strong>Digit product is cheap:</strong> Extracting digits and multiplying them is <span class="hl hl-blue">O(log n)</span> — very fast per number.</li>
+                <li><strong>Any number with digit 0:</strong> Has digit product 0, which is divisible by <em>everything</em>. So the answer is at most the next multiple of 10!</li>
+            </ul>
+            <div class="callout warning" style="margin-top:20px;">
+                <div class="callout-icon">🔑</div>
+                <div class="callout-text">
+                    <strong>Fun fact:</strong> If n has a digit <span class="hl hl-red">0</span>, then <span class="hl hl-brown">product = 0</span>, and <span class="hl hl-green">0 % t == 0</span> for any t. So 10, 20, 30, 100, etc. are always valid answers!
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4 -->
+        <div class="section-label reveal"><span class="sec-num">04</span> Approach</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(92,32,24,0.08); color:var(--accent-2);">🗺️</div>
+                <div class="card-title">Step-by-Step Approach</div>
+            </div>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>1. Start with the current number <span class="hl hl-blue">n</span></h4>
+                    <p>Begin checking from the given number. Our candidate is <span class="hl hl-blue">n</span> itself first.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>2. Extract digits and compute product</h4>
+                    <p>Use <span class="hl hl-red">num % 10</span> to get the last digit, multiply into <span class="hl hl-orange">product</span>, then <span class="hl hl-red">num /= 10</span> to remove it. Repeat until all digits are processed.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>3. Check divisibility</h4>
+                    <p>If <span class="hl hl-green">product % t == 0</span>, we found our answer! Return this number.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>4. If not, increment and repeat</h4>
+                    <p>Increment <span class="hl hl-blue">n++</span> and try again. The loop is guaranteed to terminate.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 5 -->
+        <div class="section-label reveal"><span class="sec-num">05</span> Methods & Functions</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(184,137,42,0.1); color:var(--yellow);">⚙️</div>
+                <div class="card-title">Key Functions Explained</div>
+            </div>
+            <table class="visual-table">
+                <thead><tr><th>Code</th><th>Purpose</th></tr></thead>
+                <tbody>
+                    <tr><td><code>smallestNumber(n, t)</code></td><td>Main function — loops from <code>n</code> upward, checking digit products until one is divisible by <code>t</code>.</td></tr>
+                    <tr><td><code>num % 10</code></td><td><strong>Extracts the last digit</strong> of the current number.</td></tr>
+                    <tr><td><code>product *= dig</code></td><td>Accumulates the <strong>running digit product</strong>.</td></tr>
+                    <tr><td><code>num /= 10</code></td><td><strong>Removes the last digit</strong>, shifting to the next.</td></tr>
+                    <tr><td><code>product % t == 0</code></td><td>Checks if the digit product is <strong>divisible by t</strong>.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 6 -->
+        <div class="section-label reveal"><span class="sec-num">06</span> Patterns Used</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(66,133,244,0.08); color:var(--accent-4);">🧩</div>
+                <div class="card-title">Design Patterns</div>
+            </div>
+            <div class="pattern-badges">
+                <div class="pattern-badge"><span class="emoji">🔢</span> Digit Extraction</div>
+                <div class="pattern-badge"><span class="emoji">🔄</span> Linear Search</div>
+                <div class="pattern-badge"><span class="emoji">✨</span> Brute Force</div>
+                <div class="pattern-badge"><span class="emoji">📐</span> Modular Arithmetic</div>
+            </div>
+            <ul style="margin-top:16px;">
+                <li><strong>Digit Extraction:</strong> The <span class="hl hl-red">% 10</span> / <span class="hl hl-red">/= 10</span> pattern is fundamental for working with individual digits of a number.</li>
+                <li><strong>Linear Search:</strong> Start from n and check every number sequentially — sometimes the simplest approach is the best!</li>
+                <li><strong>Modular Arithmetic:</strong> <span class="hl hl-green">product % t == 0</span> checks divisibility — a core math operation.</li>
+                <li><strong>Brute Force:</strong> When the search space is small enough, don't over-engineer. This runs in practice under 10 iterations.</li>
+            </ul>
+        </div>
+
+        <!-- SECTION 7 -->
+        <div class="section-label reveal"><span class="sec-num">07</span> Full Code</div>
+        <div class="card reveal" style="padding:0; overflow:hidden;">
+            <div class="code-container">
+                <div class="code-topbar">
+                    <div class="code-dots"><span></span><span></span><span></span></div>
+                    <span class="code-lang">C++ • solution.cpp</span>
+                </div>
+                <div class="code-body">
+<pre><span class="syn-kw">class</span> <span class="syn-type">Solution</span> {
+<span class="syn-kw">public</span>:
+    <span class="syn-type">int</span> <span class="syn-fn">smallestNumber</span>(<span class="syn-type">int</span> n, <span class="syn-type">int</span> t) {
+        <span class="syn-kw">while</span>(<span class="syn-bool">true</span>) {
+            <span class="syn-type">int</span> num <span class="syn-op">=</span> n;
+            <span class="syn-type">int</span> product <span class="syn-op">=</span> <span class="syn-num">1</span>;             <span class="syn-cmt">// init product</span>
+
+            <span class="syn-kw">while</span>(num <span class="syn-op">&gt;</span> <span class="syn-num">0</span>) {
+                <span class="syn-type">int</span> dig <span class="syn-op">=</span> num <span class="syn-op">%</span> <span class="syn-num">10</span>;       <span class="syn-cmt">// extract last digit</span>
+                product <span class="syn-op">*=</span> dig;            <span class="syn-cmt">// multiply into product</span>
+                num <span class="syn-op">/=</span> <span class="syn-num">10</span>;                <span class="syn-cmt">// remove last digit</span>
+            }
+
+            <span class="syn-kw">if</span>(product <span class="syn-op">%</span> t <span class="syn-op">==</span> <span class="syn-num">0</span>) {       <span class="syn-cmt">// divisible? done!</span>
+                <span class="syn-kw">return</span> n;
+            }
+            n<span class="syn-op">++</span>;                         <span class="syn-cmt">// try next number</span>
+        }
+    }
+};</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 8 -->
+        <div class="section-label reveal"><span class="sec-num">08</span> Code Walkthrough</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(212,165,154,0.2); color:var(--accent-2);">🔍</div>
+                <div class="card-title">Line-by-Line Breakdown</div>
+            </div>
+            <table class="visual-table">
+                <thead><tr><th style="width:40%">Code</th><th>What it does</th></tr></thead>
+                <tbody>
+                    <tr><td><code>while(true)</code></td><td>Infinite loop — we'll <code>return</code> when we find the answer.</td></tr>
+                    <tr><td><code>int num = n</code></td><td>Copy <code>n</code> so we can destructively extract digits without losing the original.</td></tr>
+                    <tr><td><code>int product = 1</code></td><td>Initialize product to <strong>1</strong> (multiplicative identity).</td></tr>
+                    <tr><td><code>num % 10</code></td><td>Get the <strong>last digit</strong>. E.g., 15 % 10 = 5.</td></tr>
+                    <tr><td><code>product *= dig</code></td><td>Multiply the digit into the running product.</td></tr>
+                    <tr><td><code>num /= 10</code></td><td>Remove the last digit. E.g., 15 / 10 = 1.</td></tr>
+                    <tr><td><code>product % t == 0</code></td><td>Check: is the digit product divisible by <code>t</code>?</td></tr>
+                    <tr><td><code>return n</code></td><td>Found it! Return the current number.</td></tr>
+                    <tr><td><code>n++</code></td><td>Not divisible — try the <strong>next number</strong>.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 9 -->
+        <div class="section-label reveal"><span class="sec-num">09</span> Complexity Analysis</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(192,112,64,0.1); color:var(--orange);">📊</div>
+                <div class="card-title">Time & Space Complexity</div>
+            </div>
+            <div class="complexity-grid">
+                <div class="complexity-pill">
+                    <div class="label">Time</div>
+                    <div class="big" style="color:var(--accent-1);">O(t · d)</div>
+                    <div class="note">At most ~t numbers checked,<br>each taking O(d) for digits<br>where d = log₁₀(n).</div>
+                </div>
+                <div class="complexity-pill">
+                    <div class="label">Space</div>
+                    <div class="big" style="color:var(--accent-4);">O(1)</div>
+                    <div class="note">Only a few integer variables.<br>No extra data structures.</div>
+                </div>
+            </div>
+            <div class="callout insight" style="margin-top:20px;">
+                <div class="callout-icon">🚀</div>
+                <div class="callout-text">
+                    <strong>In practice, it's much faster!</strong> Any number containing digit <strong>0</strong> has product = 0, which is divisible by everything. So the worst case is reaching the next multiple of 10, which is at most 9 steps away. Practically <span class="hl hl-green">O(d)</span>.
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 10 -->
+        <div class="section-label reveal"><span class="sec-num">10</span> Key Takeaways</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(74,138,82,0.1); color:var(--green);">✅</div>
+                <div class="card-title">Remember These</div>
+            </div>
+            <ul>
+                <li><strong>Digit extraction</strong> via <span class="hl hl-red">% 10</span> and <span class="hl hl-red">/= 10</span> is a fundamental pattern — memorize it!</li>
+                <li><strong>Brute force is valid</strong> when the search space is provably small. Don't over-engineer easy problems.</li>
+                <li>Any number with a <span class="hl hl-orange">0 digit</span> has product 0, which is divisible by everything — this guarantees termination.</li>
+                <li>The <span class="hl hl-blue">while(true)</span> + <span class="hl hl-green">return</span> pattern is idiomatic for "search until found" problems.</li>
+                <li>Space complexity is <span class="hl hl-green">O(1)</span> — no arrays, no hash maps, just simple variables.</li>
+                <li>This "digit product" concept appears in LeetCode 3345, 1015 (numbers with repeated digits), and Kaprekar's routine.</li>
+            </ul>
+        </div>
+
+        <footer class="footer">
+            <p>Made with <span class="heart">♥</span> by <a href="#">Algorithm Atlas</a></p>
+            <p style="margin-top:6px;">LeetCode Problem of the Day — 06 August 2026</p>
+        </footer>
+    </div>
+
+    <script>
+        // ─── Particles ───
+        (function() {
+            const c = document.getElementById('particles');
+            for (let i = 0; i < 14; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const s = 3 + Math.random() * 6;
+                p.style.width = s+'px'; p.style.height = s+'px';
+                p.style.left = Math.random()*100+'%';
+                p.style.animationDuration = (16+Math.random()*22)+'s';
+                p.style.animationDelay = -(Math.random()*30)+'s';
+                c.appendChild(p);
+            }
+        })();
+
+        // ─── Navbar ───
+        const navbar = document.getElementById('navbar');
+        const progress = document.getElementById('nav-progress');
+        window.addEventListener('scroll', () => {
+            navbar.classList.toggle('scrolled', window.scrollY > 20);
+            const h = document.documentElement.scrollHeight - window.innerHeight;
+            progress.style.width = (h > 0 ? (window.scrollY/h)*100 : 0) + '%';
+        });
+
+        // ─── Reveal ───
+        const reveals = document.querySelectorAll('.reveal');
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach((e,i) => { if (e.isIntersecting) { setTimeout(() => e.target.classList.add('visible'), i*80); obs.unobserve(e.target); } });
+        }, { threshold: 0.1 });
+        reveals.forEach(r => obs.observe(r));
+
+        // ─── Interactive Number Checker ───
+        const examples = [
+            { n: 10, t: 2, name: "n=10, t=2" },
+            { n: 15, t: 3, name: "n=15, t=3" },
+            { n: 20, t: 5, name: "n=20, t=5" },
+            { n: 25, t: 7, name: "n=25, t=7" },
+        ];
+        let currentExample = 0;
+        let vizState = null;
+
+        function getDigitProduct(n) {
+            let product = 1;
+            let num = n;
+            while (num > 0) { product *= (num % 10); num = Math.floor(num / 10); }
+            return product;
+        }
+
+        function getDigits(n) {
+            const d = [];
+            const s = String(n);
+            for (let i = 0; i < s.length; i++) d.push(parseInt(s[i]));
+            return d;
+        }
+
+        function buildSteps(n, t) {
+            const steps = [];
+            let curr = n;
+            const maxSteps = 20;
+            let found = false;
+            for (let attempt = 0; attempt < maxSteps; attempt++) {
+                const product = getDigitProduct(curr);
+                const digits = getDigits(curr);
+                const divisible = product % t === 0;
+                steps.push({ num: curr, digits, product, t, divisible, attempt });
+                if (divisible) { found = true; break; }
+                curr++;
+            }
+            return steps;
+        }
+
+        function renderTimeline(steps, currentStep) {
+            const container = document.getElementById('num-timeline');
+            container.innerHTML = '';
+            steps.forEach((s, i) => {
+                const div = document.createElement('div');
+                div.className = 'num-timeline-cell';
+                if (i < currentStep) div.classList.add(s.divisible ? 'found' : 'checked');
+                if (i > currentStep) div.classList.add('skipped');
+                if (i === currentStep) div.classList.add('checked');
+                div.textContent = s.num;
+                container.appendChild(div);
+            });
+        }
+
+        function renderDigits(digits, state) {
+            const container = document.getElementById('num-display');
+            container.innerHTML = '';
+            digits.forEach((d, i) => {
+                const div = document.createElement('div');
+                div.className = 'num-digit ' + state;
+                div.innerHTML = `<span class="digit-val">${d}</span><span class="digit-pos">d${i}</span>`;
+                div.style.animationDelay = (i * 0.1) + 's';
+                container.appendChild(div);
+                if (i < digits.length - 1) {
+                    const op = document.createElement('div');
+                    op.style.cssText = 'font-size:1.2rem; font-weight:800; color:var(--text-muted); display:grid; place-items:center;';
+                    op.textContent = '×';
+                    container.appendChild(op);
+                }
+            });
+        }
+
+        function initViz() {
+            const ex = examples[currentExample];
+            vizState = { steps: buildSteps(ex.n, ex.t), step: -1, ex };
+            document.getElementById('num-display').innerHTML = '';
+            document.getElementById('product-value').textContent = '—';
+            document.getElementById('divcheck').style.display = 'none';
+            document.getElementById('viz-info').textContent = `${ex.name} — Press Play`;
+            document.getElementById('viz-final').textContent = '';
+            document.getElementById('btn-play').disabled = false;
+            renderTimeline(vizState.steps, -1);
+        }
+
+        function playStep() {
+            if (!vizState) return;
+            vizState.step++;
+            if (vizState.step >= vizState.steps.length) return;
+
+            const s = vizState.steps[vizState.step];
+            renderTimeline(vizState.steps, vizState.step);
+            renderDigits(s.digits, s.divisible ? 'pass' : 'multiplied');
+
+            const pv = document.getElementById('product-value');
+            pv.textContent = s.product;
+            pv.className = 'product-value' + (s.divisible ? ' success' : '');
+
+            const dc = document.getElementById('divcheck');
+            dc.style.display = 'inline-flex';
+            if (s.divisible) {
+                dc.className = 'divcheck yes';
+                dc.innerHTML = `✅ ${s.product} % ${s.t} = 0`;
+            } else {
+                dc.className = 'divcheck no';
+                dc.innerHTML = `❌ ${s.product} % ${s.t} = ${s.product % s.t}`;
+            }
+
+            const digStr = s.digits.join(' × ');
+            document.getElementById('viz-info').innerHTML = `Checking <strong>${s.num}</strong>: digits ${digStr} = <strong>${s.product}</strong>`;
+
+            if (s.divisible) {
+                document.getElementById('viz-final').innerHTML = `<span style="color:var(--green);">🎉 Found! <strong>${s.num}</strong> → digit product ${s.product} is divisible by ${s.t}</span>`;
+                document.getElementById('btn-play').disabled = true;
+                // Mark found in timeline
+                setTimeout(() => renderTimeline(vizState.steps, vizState.step), 100);
+            }
+        }
+
+        function resetViz() { initViz(); }
+        function changeExample() { currentExample = (currentExample + 1) % examples.length; initViz(); }
+        initViz();
+    </script>
+</body>
+</html>
