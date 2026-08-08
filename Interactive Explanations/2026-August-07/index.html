@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeetCode 3348 — Smallest Divisible Digit Product II | Algorithm Atlas</title>
+    <meta name="description" content="Interactive visual explanation of LeetCode Problem 3348: Smallest Divisible Digit Product II — find the smallest number ≥ num whose digit product is divisible by t, using greedy backtracking and prime factorization.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════════════════════
+           ROOT — "Blossom" Warm Pink/Peach Palette
+           #FEEAC9 cream  ·  #FFCDC9 light pink
+           #FDACAC medium pink  ·  #FD7979 coral
+           ═══════════════════════════════════════════════════════ */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #fff8f2;
+            --bg-secondary: #fef3ec;
+            --bg-card: rgba(255, 248, 242, 0.82);
+            --glass: rgba(253, 121, 121, 0.05);
+            --glass-border: rgba(253, 121, 121, 0.14);
+            --text-primary: #3d2828;
+            --text-secondary: #6b4444;
+            --text-muted: #a07676;
+            --accent-1: #FD7979;
+            --accent-2: #FDACAC;
+            --accent-3: #FFCDC9;
+            --accent-4: #d04848;
+            --green: #52a058;
+            --yellow: #c49030;
+            --cyan: #5a8ab0;
+            --orange: #d08050;
+            --blue: #5a8ab0;
+            --pink: #FD7979;
+            --neutral-1: #FEEAC9;
+            --neutral-2: #FFCDC9;
+            --gradient-hero: linear-gradient(135deg, #FD7979 0%, #FDACAC 40%, #FFCDC9 70%, #FEEAC9 100%);
+            --gradient-warm: linear-gradient(135deg, #FEEAC9, #FFCDC9, #FD7979);
+            --gradient-cool: linear-gradient(135deg, #FDACAC, #FD7979, #d04848);
+            --gradient-accent: linear-gradient(135deg, #FD7979, #FDACAC, #FEEAC9);
+            --shadow-glow: 0 0 60px rgba(253, 121, 121, 0.10);
+            --shadow-card: 0 8px 32px rgba(253, 121, 121, 0.06);
+            --radius: 18px;
+            --radius-sm: 12px;
+            --radius-xs: 6px;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           ANIMATED BACKGROUND
+           ═══════════════════════════════════════════════════════ */
+        .bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .bg-mesh::after {
+            content: ''; position: absolute; inset: 0;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(253,121,121,0.04) 0%, transparent 60%),
+                radial-gradient(circle at 80% 70%, rgba(254,234,201,0.06) 0%, transparent 50%);
+        }
+        .bg-mesh .orb { position: absolute; border-radius: 50%; filter: blur(120px); animation: orbFloat 20s ease-in-out infinite; }
+        .bg-mesh .orb:nth-child(1) { width: 650px; height: 650px; top: -12%; left: -8%; background: rgba(253,121,121,0.08); animation-duration: 25s; }
+        .bg-mesh .orb:nth-child(2) { width: 500px; height: 500px; top: 30%; right: -10%; background: rgba(254,234,201,0.10); animation-duration: 30s; animation-delay: -5s; }
+        .bg-mesh .orb:nth-child(3) { width: 480px; height: 480px; bottom: -8%; left: 20%; background: rgba(255,205,201,0.10); animation-duration: 22s; animation-delay: -10s; }
+        .bg-mesh .orb:nth-child(4) { width: 380px; height: 380px; top: 55%; left: 50%; background: rgba(253,172,172,0.08); animation-duration: 28s; animation-delay: -15s; }
+        @keyframes orbFloat {
+            0%,100% { transform: translate(0,0) scale(1); }
+            25% { transform: translate(50px,-35px) scale(1.08); }
+            50% { transform: translate(-25px,50px) scale(0.95); }
+            75% { transform: translate(35px,25px) scale(1.04); }
+        }
+        .particle { position: fixed; pointer-events: none; z-index: 0; border-radius: 50%; animation: particleDrift linear infinite; }
+        .particle:nth-child(odd) { background: rgba(253,121,121,0.12); }
+        .particle:nth-child(even) { background: rgba(255,205,201,0.18); }
+        .particle:nth-child(3n) { background: rgba(254,234,201,0.16); }
+        .particle:nth-child(5n) { background: rgba(253,172,172,0.14); border-radius: 3px; }
+        .particle:nth-child(7n) { background: rgba(208,72,72,0.08); }
+        @keyframes particleDrift {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            8% { opacity: 1; } 92% { opacity: 1; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        .container { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+        /* ═══════════════════════════════════════════════════════
+           NAVIGATION
+           ═══════════════════════════════════════════════════════ */
+        .navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; backdrop-filter: blur(20px) saturate(1.8); -webkit-backdrop-filter: blur(20px) saturate(1.8); background: rgba(255,248,242,0.88); border-bottom: 1px solid var(--glass-border); transition: box-shadow 0.3s, background 0.3s; }
+        .navbar.scrolled { box-shadow: 0 4px 30px rgba(253,121,121,0.06); background: rgba(255,248,242,0.95); }
+        .nav-progress { position: absolute; bottom: 0; left: 0; height: 2.5px; background: var(--gradient-hero); transition: width 0.15s ease-out; width: 0%; border-radius: 0 2px 2px 0; }
+        .navbar-inner { max-width: 900px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+        .nav-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; text-decoration: none; color: var(--text-primary); transition: transform 0.2s; }
+        .nav-brand:hover { transform: scale(1.03); }
+        .nav-brand .logo { width: 34px; height: 34px; border-radius: 9px; background: var(--gradient-cool); display: grid; place-items: center; font-size: 0.85rem; font-weight: 800; color: #fff; box-shadow: 0 3px 14px rgba(253,121,121,0.3); }
+        .nav-links { display: flex; align-items: center; gap: 14px; }
+        .nav-date { font-size: 0.82rem; color: var(--text-secondary); font-weight: 500; padding: 6px 14px; border-radius: 20px; background: var(--glass); border: 1px solid var(--glass-border); }
+        .nav-difficulty { font-size: 0.72rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; background: rgba(208,72,72,0.08); color: var(--accent-4); border: 1px solid rgba(208,72,72,0.2); text-transform: uppercase; letter-spacing: 1px; }
+
+        /* ═══════════════════════════════════════════════════════
+           HERO
+           ═══════════════════════════════════════════════════════ */
+        .hero { padding: 130px 0 60px; text-align: center; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; border-radius: 50px; background: rgba(253,121,121,0.08); border: 1px solid rgba(253,121,121,0.2); font-size: 0.78rem; font-weight: 600; color: var(--accent-1); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 26px; animation: fadeInDown 0.8s ease-out; }
+        .hero-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-4); animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
+        .hero h1 { font-size: clamp(2.1rem, 5vw, 3rem); font-weight: 900; line-height: 1.12; letter-spacing: -2px; color: var(--text-primary); animation: fadeInUp 0.8s ease-out 0.1s both; }
+        .hero h1 .gradient-text { background: var(--gradient-cool); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero h1 .leetcode-num { display: block; font-size: 0.42em; letter-spacing: 3px; -webkit-text-fill-color: var(--text-muted); background: none; margin-top: 8px; font-weight: 700; }
+        .hero-subtitle { margin-top: 20px; font-size: 1.08rem; color: var(--text-secondary); max-width: 660px; margin-left: auto; margin-right: auto; line-height: 1.75; animation: fadeInUp 0.8s ease-out 0.25s both; }
+        .hero-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 28px; animation: fadeInUp 0.8s ease-out 0.4s both; }
+        .hero-tag { padding: 6px 16px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; border: 1px solid; transition: transform 0.2s, box-shadow 0.2s; }
+        .hero-tag:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        .hero-tag.diff { color: var(--accent-4); border-color: rgba(208,72,72,0.3); background: rgba(208,72,72,0.06); }
+        .hero-tag.cat { color: #a05050; border-color: rgba(253,121,121,0.3); background: rgba(253,121,121,0.06); }
+        .hero-tag.pattern { color: #8a5a30; border-color: rgba(254,234,201,0.5); background: rgba(254,234,201,0.2); }
+
+        /* Hero prime factorization animation */
+        .hero-factor-demo {
+            margin-top: 38px; animation: fadeInUp 0.8s ease-out 0.55s both;
+            display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap;
+        }
+        .hero-factor {
+            padding: 8px 16px; border-radius: 10px; font-family: 'JetBrains Mono', monospace;
+            font-weight: 700; font-size: 0.9rem;
+            animation: factorPop 2.4s ease-in-out infinite;
+        }
+        .hero-factor:nth-child(1) { background: rgba(253,121,121,0.12); color: #c04040; border: 1px solid rgba(253,121,121,0.25); animation-delay: 0s; }
+        .hero-factor:nth-child(2) { background: rgba(253,172,172,0.15); color: #a05050; border: 1px solid rgba(253,172,172,0.3); animation-delay: 0.2s; }
+        .hero-factor:nth-child(3) { background: rgba(255,205,201,0.18); color: #b06050; border: 1px solid rgba(255,205,201,0.35); animation-delay: 0.4s; }
+        .hero-factor:nth-child(4) { background: rgba(254,234,201,0.22); color: #9a7040; border: 1px solid rgba(254,234,201,0.45); animation-delay: 0.6s; }
+        .hero-factor-op { font-size: 1.1rem; font-weight: 800; color: var(--text-muted); }
+        @keyframes factorPop { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-5px) scale(1.05); } }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1); }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        /* ═══════════════════════════════════════════════════════
+           GLASS CARD
+           ═══════════════════════════════════════════════════════ */
+        .card { background: var(--bg-card); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid var(--glass-border); border-radius: var(--radius); padding: 38px; margin-bottom: 32px; transition: border-color 0.3s, box-shadow 0.4s, transform 0.3s; position: relative; overflow: hidden; }
+        .card::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(253,121,121,0.03), transparent); transition: left 0.7s ease; }
+        .card:hover::before { left: 100%; }
+        .card:hover { border-color: rgba(253,121,121,0.22); box-shadow: var(--shadow-card), var(--shadow-glow); transform: translateY(-3px); }
+        .card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+        .card-icon { width: 50px; height: 50px; border-radius: 14px; display: grid; place-items: center; font-size: 1.35rem; flex-shrink: 0; transition: transform 0.3s; }
+        .card:hover .card-icon { transform: scale(1.12) rotate(-4deg); }
+        .card-title { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px; color: var(--text-primary); }
+        .card p, .card li { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8; }
+        .card ul { list-style: none; padding: 0; }
+        .card ul li { padding: 6px 0; padding-left: 24px; position: relative; }
+        .card ul li::before { content: '▸'; position: absolute; left: 0; color: var(--accent-1); font-weight: 700; }
+        .card strong { color: var(--text-primary); }
+
+        .section-label { display: flex; align-items: center; gap: 14px; margin: 55px 0 26px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; color: var(--text-muted); }
+        .section-label .sec-num { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 9px; background: var(--gradient-cool); color: #fff; font-size: 0.72rem; font-weight: 800; flex-shrink: 0; box-shadow: 0 3px 12px rgba(253,121,121,0.22); }
+        .section-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--glass-border), transparent); }
+
+        /* ═══════════════════════════════════════════════════════
+           INTERACTIVE VISUALIZER
+           ═══════════════════════════════════════════════════════ */
+        .viz-board { text-align: center; }
+        .digit-row { display: flex; justify-content: center; gap: 8px; margin: 18px 0; flex-wrap: wrap; }
+        .digit-cell {
+            width: 54px; height: 60px; border-radius: 13px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--glass); border: 2px solid var(--glass-border);
+            transition: all 0.45s cubic-bezier(0.34,1.56,0.64,1);
+            position: relative;
+        }
+        .digit-cell .dv { font-size: 1.35rem; font-weight: 800; color: var(--text-primary); }
+        .digit-cell .dp { font-size: 0.5rem; color: var(--text-muted); font-weight: 600; margin-top: 1px; }
+        .digit-cell.locked { border-color: rgba(82,160,88,0.35); background: rgba(82,160,88,0.06); }
+        .digit-cell.locked .dv { color: var(--green); }
+        .digit-cell.scanning { border-color: var(--accent-1); background: rgba(253,121,121,0.08); box-shadow: 0 0 18px rgba(253,121,121,0.12); animation: scanPulse 1s ease-in-out infinite; }
+        .digit-cell.scanning .dv { color: var(--accent-1); }
+        .digit-cell.changed { border-color: var(--accent-4); background: rgba(208,72,72,0.08); transform: scale(1.1) translateY(-6px); box-shadow: 0 8px 22px rgba(253,121,121,0.18); }
+        .digit-cell.changed .dv { color: var(--accent-4); }
+        .digit-cell.filled { border-color: rgba(254,234,201,0.5); background: rgba(254,234,201,0.15); }
+        .digit-cell.filled .dv { color: #9a7040; }
+        .digit-cell.faded { opacity: 0.3; transform: scale(0.9); }
+        @keyframes scanPulse { 0%,100% { box-shadow: 0 0 12px rgba(253,121,121,0.08); } 50% { box-shadow: 0 0 22px rgba(253,121,121,0.2); } }
+
+        /* Factor display */
+        .factor-display { display: flex; justify-content: center; align-items: center; gap: 12px; margin: 16px 0; flex-wrap: wrap; }
+        .factor-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); }
+        .factor-val { font-size: 1.3rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; padding: 6px 18px; border-radius: 10px; transition: all 0.3s; }
+        .factor-val.needed { color: var(--accent-1); background: rgba(253,121,121,0.06); border: 1px solid rgba(253,121,121,0.15); }
+        .factor-val.done { color: var(--green); background: rgba(82,160,88,0.06); border: 1px solid rgba(82,160,88,0.2); }
+
+        .phase-indicator { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .phase-pill { padding: 6px 16px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; background: var(--glass); border: 1px solid var(--glass-border); color: var(--text-muted); transition: all 0.3s; }
+        .phase-pill.active { background: var(--gradient-cool); border-color: transparent; color: #fff; box-shadow: 0 3px 12px rgba(253,121,121,0.2); }
+        .phase-pill.done { background: rgba(82,160,88,0.08); border-color: rgba(82,160,88,0.25); color: var(--green); }
+
+        .viz-controls { display: flex; justify-content: center; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+        .viz-btn { padding: 11px 26px; border-radius: 11px; border: none; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.25s; }
+        .viz-btn.primary { background: var(--gradient-cool); color: #fff; box-shadow: 0 4px 20px rgba(253,121,121,0.25); }
+        .viz-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(253,121,121,0.4); }
+        .viz-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .viz-btn.secondary { background: var(--glass); color: var(--text-primary); border: 1px solid var(--glass-border); }
+        .viz-btn.secondary:hover { border-color: var(--accent-1); transform: translateY(-1px); }
+        .viz-step-info { margin-top: 16px; font-size: 0.88rem; color: var(--text-secondary); min-height: 30px; padding: 10px 20px; border-radius: 8px; background: rgba(253,121,121,0.04); display: inline-block; }
+        .viz-result-text { margin-top: 16px; font-weight: 700; font-size: 1.05rem; min-height: 32px; }
+
+        /* ═══════════════════════════════════════════════════════
+           TIMELINE
+           ═══════════════════════════════════════════════════════ */
+        .timeline { position: relative; padding-left: 42px; }
+        .timeline::before { content: ''; position: absolute; left: 17px; top: 0; bottom: 0; width: 2px; background: linear-gradient(180deg, #FD7979, #FDACAC, #FFCDC9, #FEEAC9); border-radius: 2px; }
+        .timeline-item { position: relative; margin-bottom: 32px; padding-left: 4px; }
+        .timeline-dot { position: absolute; left: -32px; top: 4px; width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--accent-1); background: var(--bg-primary); transition: all 0.3s; }
+        .timeline-item:hover .timeline-dot { transform: scale(1.35); box-shadow: 0 0 14px rgba(253,121,121,0.25); }
+        .timeline-item:nth-child(2) .timeline-dot { border-color: var(--accent-2); }
+        .timeline-item:nth-child(3) .timeline-dot { border-color: var(--accent-3); }
+        .timeline-item:nth-child(4) .timeline-dot { border-color: var(--neutral-1); }
+        .timeline-item:nth-child(5) .timeline-dot { border-color: var(--accent-4); }
+        .timeline-item h4 { font-size: 1.02rem; font-weight: 700; margin-bottom: 6px; color: var(--text-primary); }
+        .timeline-item p { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.75; }
+
+        .hl { padding: 2px 8px; border-radius: 5px; font-family: 'JetBrains Mono', monospace; font-size: 0.82em; font-weight: 600; }
+        .hl-coral { background: rgba(253,121,121,0.12); color: #c04040; }
+        .hl-rose { background: rgba(253,172,172,0.15); color: #a05050; }
+        .hl-pink { background: rgba(255,205,201,0.2); color: #b06050; }
+        .hl-cream { background: rgba(254,234,201,0.3); color: #8a6a30; }
+        .hl-green { background: rgba(82,160,88,0.1); color: #3a7a42; }
+        .hl-blue { background: rgba(90,138,176,0.1); color: #4070a0; }
+
+        /* CODE */
+        .code-container { position: relative; border-radius: var(--radius); overflow: hidden; background: #2a1e1e; border: 1px solid rgba(253,121,121,0.15); }
+        .code-topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(253,121,121,0.1); }
+        .code-dots { display: flex; gap: 7px; }
+        .code-dots span { width: 12px; height: 12px; border-radius: 50%; transition: transform 0.2s; }
+        .code-dots span:hover { transform: scale(1.3); }
+        .code-dots span:nth-child(1) { background: #FD7979; }
+        .code-dots span:nth-child(2) { background: #c49030; }
+        .code-dots span:nth-child(3) { background: #52a058; }
+        .code-lang { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #a07676; }
+        .code-body { padding: 24px; overflow-x: auto; }
+        .code-body pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.85; color: #e0c8c8; }
+        .syn-kw { color: #fda0a0; } .syn-type { color: #a0c8f0; } .syn-fn { color: #f0d090; }
+        .syn-num { color: #e0a090; } .syn-str { color: #a0d0a0; } .syn-cmt { color: #6a5050; font-style: italic; }
+        .syn-op { color: #b09898; } .syn-bool { color: #d0a898; }
+
+        .complexity-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .complexity-pill { padding: 24px; border-radius: var(--radius-sm); background: var(--glass); border: 1px solid var(--glass-border); text-align: center; transition: all 0.3s; }
+        .complexity-pill:hover { border-color: rgba(253,121,121,0.3); transform: translateY(-2px); }
+        .complexity-pill .label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+        .complexity-pill .big { font-size: 1.5rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; }
+        .complexity-pill .note { font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px; }
+
+        .callout { display: flex; gap: 16px; padding: 22px 24px; border-radius: var(--radius-sm); border-left: 4px solid; margin: 20px 0; transition: transform 0.2s; }
+        .callout:hover { transform: translateX(4px); }
+        .callout.insight { background: rgba(253,172,172,0.06); border-color: var(--accent-2); }
+        .callout.warning { background: rgba(253,121,121,0.05); border-color: var(--accent-1); }
+        .callout .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+        .callout .callout-text { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7; }
+        .callout .callout-text strong { color: var(--text-primary); }
+
+        .visual-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: var(--radius-sm); overflow: hidden; margin: 16px 0; }
+        .visual-table th { background: rgba(253,121,121,0.07); color: var(--accent-1); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--glass-border); }
+        .visual-table td { padding: 12px 16px; font-size: 0.88rem; color: var(--text-secondary); border-bottom: 1px solid rgba(253,121,121,0.04); transition: background 0.2s; }
+        .visual-table tr:last-child td { border-bottom: none; }
+        .visual-table tr:hover td { background: rgba(253,121,121,0.03); }
+        .visual-table code { font-family: 'JetBrains Mono', monospace; font-size: 0.82em; color: #c04040; background: rgba(253,121,121,0.06); padding: 2px 7px; border-radius: 4px; }
+
+        .pattern-badges { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+        .pattern-badge { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; background: var(--glass); border: 1px solid var(--glass-border); font-size: 0.85rem; font-weight: 600; color: var(--text-primary); transition: all 0.3s; }
+        .pattern-badge:hover { border-color: var(--accent-1); transform: translateY(-3px); box-shadow: 0 6px 18px rgba(253,121,121,0.08); }
+        .pattern-badge .emoji { font-size: 1.1rem; }
+
+        .footer { text-align: center; padding: 60px 0 40px; color: var(--text-muted); font-size: 0.8rem; }
+        .footer .heart { color: var(--accent-1); }
+        .footer a { color: var(--accent-4); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(253,121,121,0.22); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(253,121,121,0.4); }
+
+        @media (max-width: 640px) {
+            .card { padding: 24px; } .complexity-grid { grid-template-columns: 1fr; }
+            .navbar-inner { padding: 0 16px; } .container { padding: 0 16px; }
+            .nav-difficulty { display: none; }
+            .digit-cell { width: 44px; height: 50px; }
+            .digit-cell .dv { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"><div class="orb"></div><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
+    <div id="particles"></div>
+
+    <nav class="navbar" id="navbar">
+        <div class="nav-progress" id="nav-progress"></div>
+        <div class="navbar-inner">
+            <a href="#" class="nav-brand"><div class="logo">A²</div> Algorithm Atlas</a>
+            <div class="nav-links">
+                <span class="nav-difficulty">Hard</span>
+                <span class="nav-date">📅 07 Aug 2026</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <section class="hero">
+            <div class="hero-badge"><span class="dot"></span> Problem of the Day</div>
+            <h1>
+                <span class="gradient-text">Smallest Divisible<br>Digit Product II</span>
+                <span class="leetcode-num">LeetCode #3348</span>
+            </h1>
+            <p class="hero-subtitle">
+                Given a <strong>huge number as a string</strong> and a target <strong>t</strong>,
+                find the smallest number ≥ num whose <strong>digit product</strong> is divisible by t.
+                Greedy backtracking meets prime factorization!
+            </p>
+            <div class="hero-tags">
+                <span class="hero-tag diff">🔥 Hard</span>
+                <span class="hero-tag cat">🔢 Math</span>
+                <span class="hero-tag cat">🧮 Number Theory</span>
+                <span class="hero-tag pattern">🎯 Greedy</span>
+                <span class="hero-tag pattern">📐 GCD</span>
+                <span class="hero-tag pattern">🔙 Backtracking</span>
+            </div>
+            <div class="hero-factor-demo">
+                <div class="hero-factor">256</div>
+                <span class="hero-factor-op">=</span>
+                <div class="hero-factor">2⁸</div>
+                <span class="hero-factor-op">→</span>
+                <div class="hero-factor">8×8</div>
+                <span class="hero-factor-op">→</span>
+                <div class="hero-factor">"1488"</div>
+            </div>
+        </section>
+
+        <!-- SECTION 1 -->
+        <div class="section-label reveal"><span class="sec-num">01</span> The Problem</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(253,121,121,0.1); color:var(--accent-1);">📖</div>
+                <div class="card-title">What's the Problem?</div>
+            </div>
+            <p>Given a <strong>number as a string</strong> <span class="hl hl-coral">num</span> (can be very large!) and a <strong>target</strong> <span class="hl hl-coral">t</span>, find the <strong>smallest number ≥ num</strong> whose <strong>digit product</strong> is divisible by <span class="hl hl-coral">t</span>.</p>
+            <br>
+            <p>This is the <strong>hard version</strong> of LC 3345. The key difference: <span class="hl hl-rose">num</span> can have up to <strong>10⁵ digits</strong> — far too large to iterate number by number. We need a clever approach!</p>
+            <div class="callout warning" style="margin-top:20px;">
+                <div class="callout-icon">🔥</div>
+                <div class="callout-text">
+                    <strong>Critical constraint:</strong> Since <code style="font-family:'JetBrains Mono';font-size:0.85em;color:#c04040;background:rgba(253,121,121,0.06);padding:2px 6px;border-radius:4px;">t</code> must be expressible purely in terms of primes 2, 3, 5, 7 (the only primes that are digits), if t has any other prime factor, it's <strong>impossible</strong> → return <span class="hl hl-coral">"-1"</span>.
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2 -->
+        <div class="section-label reveal"><span class="sec-num">02</span> Try It Yourself</div>
+        <div class="card reveal" id="viz-card">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(82,160,88,0.1); color:var(--green);">🎮</div>
+                <div class="card-title">Interactive Step-Through</div>
+            </div>
+            <p style="margin-bottom:14px;">Watch the algorithm scan digits, backtrack, and fill slots to build the smallest valid number.</p>
+            <div class="viz-board">
+                <div class="phase-indicator" id="phase-indicator">
+                    <span class="phase-pill active" id="ph-1">① Check Primes</span>
+                    <span class="phase-pill" id="ph-2">② Scan Digits</span>
+                    <span class="phase-pill" id="ph-3">③ Backtrack</span>
+                    <span class="phase-pill" id="ph-4">④ Fill Slots</span>
+                </div>
+                <div class="digit-row" id="digit-row"></div>
+                <div class="factor-display" id="factor-display">
+                    <span class="factor-label">Remaining Factor</span>
+                    <span class="factor-val needed" id="factor-val">—</span>
+                </div>
+                <div class="viz-step-info" id="viz-info">Press Play to start</div>
+                <div class="viz-result-text" id="viz-final"></div>
+                <div class="viz-controls">
+                    <button class="viz-btn primary" id="btn-play" onclick="playStep()">▶ Play Step</button>
+                    <button class="viz-btn secondary" onclick="resetViz()">↻ Reset</button>
+                    <button class="viz-btn secondary" onclick="changeExample()">⟳ Next Example</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3 -->
+        <div class="section-label reveal"><span class="sec-num">03</span> Intuition</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(253,172,172,0.1); color:var(--accent-2);">🧠</div>
+                <div class="card-title">Three-Phase Strategy</div>
+            </div>
+            <p>The algorithm combines <strong>greedy scanning</strong>, <strong>backtracking</strong>, and <strong>digit filling</strong>:</p>
+            <ul style="margin-top:10px;">
+                <li><strong>Phase 1 — Prime check:</strong> Divide <span class="hl hl-coral">t</span> by 2, 3, 5, 7 until nothing's left. If <span class="hl hl-coral">temp ≠ 1</span>, then t has a non-digit prime factor → return <span class="hl hl-coral">"-1"</span>.</li>
+                <li><strong>Phase 2 — Prefix scan:</strong> Track <span class="hl hl-rose">remainingFactor[i]</span> — how much of t is still not covered after processing digits 0..i. Use <span class="hl hl-blue">GCD</span> to divide out what each digit contributes.</li>
+                <li><strong>Phase 3 — Backtrack:</strong> Starting from the rightmost digit (or the first <span class="hl hl-cream">0</span>), try incrementing it. For each candidate digit, check if the remaining slots can be filled with digits 9→2 to cover the remaining factor.</li>
+                <li><strong>Phase 4 — Fill slots:</strong> <span class="hl hl-green">freeSlotsFiller</span> greedily packs the largest digits (9, 8, 7...) first to minimize the number, pad with 1s if extra slots remain.</li>
+            </ul>
+            <div class="callout insight" style="margin-top:20px;">
+                <div class="callout-icon">💡</div>
+                <div class="callout-text">
+                    <strong>Why GCD?</strong> When we encounter digit <code style="font-family:'JetBrains Mono';font-size:0.85em;color:#c04040;background:rgba(253,121,121,0.06);padding:2px 6px;border-radius:4px;">d</code>, it contributes <code style="font-family:'JetBrains Mono';font-size:0.85em;color:#c04040;background:rgba(253,121,121,0.06);padding:2px 6px;border-radius:4px;">gcd(remaining, d)</code> to the target. We divide out only the <em>common factors</em>, not the full digit, because we need the exact remaining obligation.
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4 -->
+        <div class="section-label reveal"><span class="sec-num">04</span> Approach</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(254,234,201,0.2); color:var(--orange);">🗺️</div>
+                <div class="card-title">Step-by-Step Approach</div>
+            </div>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>1. Verify t is achievable</h4>
+                    <p>Strip all factors of <span class="hl hl-coral">2, 3, 5, 7</span> from t. If anything remains, no single digit can contribute it → return <span class="hl hl-coral">"-1"</span>.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>2. Compute prefix remaining factors</h4>
+                    <p>For each position <span class="hl hl-blue">i</span>, compute how much of t is still needed: <span class="hl hl-rose">remainingFactor[i+1] = remainingFactor[i] / gcd(remainingFactor[i], digit)</span>. Stop at any <span class="hl hl-cream">0</span> digit (product becomes 0).</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>3. Check: already valid?</h4>
+                    <p>If <span class="hl hl-green">remainingFactor[n] == 1</span>, the number itself works — return it!</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>4. Backtrack from right</h4>
+                    <p>Start from the first <span class="hl hl-cream">0</span> position (or the last digit). Try incrementing the digit and check if the remaining free slots can satisfy the remaining factor using <span class="hl hl-green">freeSlotsFiller</span>.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>5. Last resort: add a digit</h4>
+                    <p>If no position works, create a number with <span class="hl hl-coral">n+1</span> digits filled entirely by <span class="hl hl-green">freeSlotsFiller(t, n+1)</span>.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 5 -->
+        <div class="section-label reveal"><span class="sec-num">05</span> Methods & Functions</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(196,144,48,0.1); color:var(--yellow);">⚙️</div>
+                <div class="card-title">Key Functions Explained</div>
+            </div>
+            <table class="visual-table">
+                <thead><tr><th>Function</th><th>Purpose</th></tr></thead>
+                <tbody>
+                    <tr><td><code>smallestNumber(num, t)</code></td><td>Main driver — validates t, computes prefix factors, backtracks, and builds the result.</td></tr>
+                    <tr><td><code>gcd(a, b)</code></td><td>Euclidean GCD — finds the greatest common divisor to determine how much a digit contributes to the target.</td></tr>
+                    <tr><td><code>freeSlotsFiller(req, len)</code></td><td>Greedy digit filler — packs digits <strong>9→2</strong> to satisfy the remaining factor in exactly <code>len</code> slots.</td></tr>
+                    <tr><td><code>remainingFactor[i]</code></td><td>Prefix array — how much of <code>t</code> is <strong>still needed</strong> after processing the first <code>i</code> digits.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 6 -->
+        <div class="section-label reveal"><span class="sec-num">06</span> Patterns Used</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(253,121,121,0.08); color:var(--accent-1);">🧩</div>
+                <div class="card-title">Design Patterns</div>
+            </div>
+            <div class="pattern-badges">
+                <div class="pattern-badge"><span class="emoji">🎯</span> Greedy Construction</div>
+                <div class="pattern-badge"><span class="emoji">🔙</span> Backtracking</div>
+                <div class="pattern-badge"><span class="emoji">📐</span> GCD / Number Theory</div>
+                <div class="pattern-badge"><span class="emoji">🧮</span> Prime Factorization</div>
+                <div class="pattern-badge"><span class="emoji">📊</span> Prefix Arrays</div>
+            </div>
+            <ul style="margin-top:16px;">
+                <li><strong>Greedy Construction:</strong> <span class="hl hl-green">freeSlotsFiller</span> always picks the <em>largest</em> digit first (9, 8, 7...) to pack max factor contribution into fewer digits, leaving the rest as 1s → smallest number.</li>
+                <li><strong>Backtracking:</strong> When the current prefix doesn't work, backtrack to the nearest modifiable position and try a larger digit.</li>
+                <li><strong>GCD Trick:</strong> Instead of tracking full prime decomposition, use <span class="hl hl-blue">gcd(remaining, digit)</span> to compute exactly how much each digit "pays off".</li>
+                <li><strong>Prefix Factor Array:</strong> Precompute the remaining obligation at each position — avoids recomputation during backtracking.</li>
+            </ul>
+        </div>
+
+        <!-- SECTION 7 -->
+        <div class="section-label reveal"><span class="sec-num">07</span> Full Code</div>
+        <div class="card reveal" style="padding:0; overflow:hidden;">
+            <div class="code-container">
+                <div class="code-topbar">
+                    <div class="code-dots"><span></span><span></span><span></span></div>
+                    <span class="code-lang">C++ • solution.cpp</span>
+                </div>
+                <div class="code-body">
+<pre><span class="syn-kw">class</span> <span class="syn-type">Solution</span> {
+<span class="syn-kw">public</span>:
+    <span class="syn-kw">typedef</span> <span class="syn-type">long long</span> ll;
+
+    <span class="syn-type">ll</span> <span class="syn-fn">gcd</span>(<span class="syn-type">ll</span> a, <span class="syn-type">ll</span> b) {
+        <span class="syn-kw">while</span> (b <span class="syn-op">!=</span> <span class="syn-num">0</span>) {
+            <span class="syn-type">ll</span> temp <span class="syn-op">=</span> b;
+            b <span class="syn-op">=</span> a <span class="syn-op">%</span> b;
+            a <span class="syn-op">=</span> temp;
+        }
+        <span class="syn-kw">return</span> a;
+    }
+
+    <span class="syn-type">string</span> <span class="syn-fn">freeSlotsFiller</span>(<span class="syn-type">ll</span> required, <span class="syn-type">int</span> length) {
+        <span class="syn-type">string</span> str;
+        <span class="syn-kw">for</span> (<span class="syn-type">int</span> digit <span class="syn-op">=</span> <span class="syn-num">9</span>; digit <span class="syn-op">&gt;=</span> <span class="syn-num">2</span>; digit<span class="syn-op">--</span>) {
+            <span class="syn-kw">while</span> (required <span class="syn-op">%</span> digit <span class="syn-op">==</span> <span class="syn-num">0</span>) {
+                str.<span class="syn-fn">push_back</span>(digit <span class="syn-op">+</span> <span class="syn-str">'0'</span>);
+                required <span class="syn-op">/=</span> digit;
+            }
+        }
+        <span class="syn-kw">if</span> (required <span class="syn-op">!=</span> <span class="syn-num">1</span>) <span class="syn-kw">return</span> <span class="syn-str">""</span>;    <span class="syn-cmt">// impossible</span>
+        <span class="syn-kw">while</span> (str.<span class="syn-fn">length</span>() <span class="syn-op">&lt;</span> length)
+            str.<span class="syn-fn">push_back</span>(<span class="syn-str">'1'</span>);        <span class="syn-cmt">// pad with 1s</span>
+        <span class="syn-kw">if</span> (str.<span class="syn-fn">length</span>() <span class="syn-op">&gt;</span> length) <span class="syn-kw">return</span> <span class="syn-str">""</span>;
+        <span class="syn-fn">reverse</span>(str.<span class="syn-fn">begin</span>(), str.<span class="syn-fn">end</span>());
+        <span class="syn-kw">return</span> str;
+    }
+
+    <span class="syn-type">string</span> <span class="syn-fn">smallestNumber</span>(<span class="syn-type">string</span> num, <span class="syn-type">ll</span> t) {
+        <span class="syn-type">int</span> n <span class="syn-op">=</span> num.<span class="syn-fn">length</span>();
+
+        <span class="syn-cmt">// Phase 1: Check if t is achievable</span>
+        <span class="syn-type">ll</span> temp <span class="syn-op">=</span> t;
+        <span class="syn-kw">for</span> (<span class="syn-type">int</span> p : {<span class="syn-num">2</span>,<span class="syn-num">3</span>,<span class="syn-num">5</span>,<span class="syn-num">7</span>})
+            <span class="syn-kw">while</span> (temp <span class="syn-op">%</span> p <span class="syn-op">==</span> <span class="syn-num">0</span>) temp <span class="syn-op">/=</span> p;
+        <span class="syn-kw">if</span> (temp <span class="syn-op">!=</span> <span class="syn-num">1</span>) <span class="syn-kw">return</span> <span class="syn-str">"-1"</span>;
+
+        <span class="syn-cmt">// Phase 2: Prefix remaining factors</span>
+        <span class="syn-type">vector</span>&lt;<span class="syn-type">ll</span>&gt; rf(n<span class="syn-op">+</span><span class="syn-num">1</span>, t);
+        <span class="syn-kw">for</span> (<span class="syn-type">int</span> i <span class="syn-op">=</span> <span class="syn-num">0</span>; i <span class="syn-op">&lt;</span> n; i<span class="syn-op">++</span>) {
+            <span class="syn-type">int</span> d <span class="syn-op">=</span> num[i] <span class="syn-op">-</span> <span class="syn-str">'0'</span>;
+            <span class="syn-kw">if</span> (d <span class="syn-op">==</span> <span class="syn-num">0</span>) <span class="syn-kw">break</span>;
+            rf[i<span class="syn-op">+</span><span class="syn-num">1</span>] <span class="syn-op">=</span> rf[i] <span class="syn-op">/</span> <span class="syn-fn">gcd</span>(rf[i], (<span class="syn-type">ll</span>)d);
+        }
+        <span class="syn-kw">if</span> (rf[n] <span class="syn-op">==</span> <span class="syn-num">1</span>) <span class="syn-kw">return</span> num;     <span class="syn-cmt">// already valid!</span>
+
+        <span class="syn-cmt">// Phase 3: Backtrack</span>
+        <span class="syn-type">int</span> zeroIdx <span class="syn-op">=</span> (num.<span class="syn-fn">find</span>(<span class="syn-str">'0'</span>) <span class="syn-op">==</span> string::npos)
+                     <span class="syn-op">?</span> n<span class="syn-op">-</span><span class="syn-num">1</span> <span class="syn-op">:</span> num.<span class="syn-fn">find</span>(<span class="syn-str">'0'</span>);
+        <span class="syn-kw">for</span> (<span class="syn-type">int</span> i <span class="syn-op">=</span> zeroIdx; i <span class="syn-op">&gt;=</span> <span class="syn-num">0</span>; i<span class="syn-op">--</span>) {
+            <span class="syn-type">ll</span> req <span class="syn-op">=</span> rf[i];
+            <span class="syn-type">int</span> free <span class="syn-op">=</span> n <span class="syn-op">-</span> <span class="syn-num">1</span> <span class="syn-op">-</span> i;
+            <span class="syn-kw">for</span> (<span class="syn-type">int</span> d <span class="syn-op">=</span> <span class="syn-fn">max</span>(num[i]<span class="syn-op">-</span><span class="syn-str">'0'</span><span class="syn-op">+</span><span class="syn-num">1</span>,<span class="syn-num">1</span>); d <span class="syn-op">&lt;=</span> <span class="syn-num">9</span>; d<span class="syn-op">++</span>) {
+                <span class="syn-type">ll</span> fr <span class="syn-op">=</span> req <span class="syn-op">/</span> <span class="syn-fn">gcd</span>(req, (<span class="syn-type">ll</span>)d);
+                <span class="syn-type">string</span> fill <span class="syn-op">=</span> <span class="syn-fn">freeSlotsFiller</span>(fr, free);
+                <span class="syn-kw">if</span> (<span class="syn-op">!</span>fill.<span class="syn-fn">empty</span>() <span class="syn-op">||</span>
+                    (free<span class="syn-op">==</span><span class="syn-num">0</span> <span class="syn-op">&amp;&amp;</span> fr<span class="syn-op">==</span><span class="syn-num">1</span>))
+                    <span class="syn-kw">return</span> num.<span class="syn-fn">substr</span>(<span class="syn-num">0</span>,i)
+                        <span class="syn-op">+</span> <span class="syn-kw">char</span>(d<span class="syn-op">+</span><span class="syn-str">'0'</span>) <span class="syn-op">+</span> fill;
+            }
+        }
+        <span class="syn-kw">return</span> <span class="syn-fn">freeSlotsFiller</span>(t, n<span class="syn-op">+</span><span class="syn-num">1</span>);  <span class="syn-cmt">// add digit</span>
+    }
+};</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 8 -->
+        <div class="section-label reveal"><span class="sec-num">08</span> Code Walkthrough</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(253,172,172,0.12); color:var(--accent-2);">🔍</div>
+                <div class="card-title">Line-by-Line Breakdown</div>
+            </div>
+            <table class="visual-table">
+                <thead><tr><th style="width:42%">Code</th><th>What it does</th></tr></thead>
+                <tbody>
+                    <tr><td><code>while(temp % p == 0) temp /= p</code></td><td>Strip prime factors 2, 3, 5, 7 from t. If anything remains, t is impossible.</td></tr>
+                    <tr><td><code>rf[i+1] = rf[i] / gcd(rf[i], d)</code></td><td>Compute remaining factor — what t still needs after digit d contributes its share via GCD.</td></tr>
+                    <tr><td><code>if (rf[n] == 1) return num</code></td><td>The number already satisfies the constraint — return it as-is.</td></tr>
+                    <tr><td><code>zeroIdx = num.find('0')</code></td><td>Find the first <strong>0 digit</strong> — products involving 0 are always 0, so start backtracking there.</td></tr>
+                    <tr><td><code>for (d = max(num[i]-'0'+1, 1)...)</code></td><td>Try digits <strong>larger</strong> than the current one at position i. Start from 1 minimum (no 0).</td></tr>
+                    <tr><td><code>freeSlotsFiller(fr, free)</code></td><td>Can we fill the remaining <code>free</code> slots with digits 9→2 to cover <code>fr</code>? If yes, build it!</td></tr>
+                    <tr><td><code>freeSlotsFiller(t, n+1)</code></td><td>Last resort — add an extra digit and fill the entire (n+1)-length number.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 9 -->
+        <div class="section-label reveal"><span class="sec-num">09</span> Complexity Analysis</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(208,128,80,0.1); color:var(--orange);">📊</div>
+                <div class="card-title">Time & Space Complexity</div>
+            </div>
+            <div class="complexity-grid">
+                <div class="complexity-pill">
+                    <div class="label">Time</div>
+                    <div class="big" style="color:var(--accent-4);">O(n · log t)</div>
+                    <div class="note">n digits scanned once,<br>GCD is O(log t) per digit,<br>freeSlotsFiller is O(log t).</div>
+                </div>
+                <div class="complexity-pill">
+                    <div class="label">Space</div>
+                    <div class="big" style="color:var(--accent-1);">O(n)</div>
+                    <div class="note">remainingFactor array<br>of size n+1.</div>
+                </div>
+            </div>
+            <div class="callout insight" style="margin-top:20px;">
+                <div class="callout-icon">🚀</div>
+                <div class="callout-text">
+                    <strong>Handles 10⁵-digit numbers!</strong> Unlike the brute-force Easy version, this solution never iterates through numbers one by one. It directly constructs the answer using GCD-based prefix tracking and greedy digit packing.
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 10 -->
+        <div class="section-label reveal"><span class="sec-num">10</span> Key Takeaways</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(82,160,88,0.1); color:var(--green);">✅</div>
+                <div class="card-title">Remember These</div>
+            </div>
+            <ul>
+                <li><strong>Only primes 2, 3, 5, 7</strong> can appear as digit factors. Any other prime in t makes the problem impossible.</li>
+                <li><span class="hl hl-blue">GCD</span> is the elegant tool to track how much of the target each digit "pays off".</li>
+                <li><strong>Greedy digit filling</strong> (9→2) packs maximum factor contribution into minimum digits → smallest number.</li>
+                <li>The <strong>prefix remaining factor array</strong> avoids recomputation and enables efficient backtracking.</li>
+                <li>Finding the first <span class="hl hl-cream">0</span> is crucial — any digit product involving 0 is 0 (divisible by everything but kills the chain).</li>
+                <li>This is a masterclass in combining <strong>number theory + greedy + backtracking</strong> for large-number problems.</li>
+            </ul>
+        </div>
+
+        <footer class="footer">
+            <p>Made with <span class="heart">♥</span> by <a href="#">Algorithm Atlas</a></p>
+            <p style="margin-top:6px;">LeetCode Problem of the Day — 07 August 2026</p>
+        </footer>
+    </div>
+
+    <script>
+        // ─── Particles ───
+        (function() {
+            const c = document.getElementById('particles');
+            for (let i = 0; i < 16; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const s = 3 + Math.random() * 7;
+                p.style.width = s+'px'; p.style.height = s+'px';
+                p.style.left = Math.random()*100+'%';
+                p.style.animationDuration = (14+Math.random()*22)+'s';
+                p.style.animationDelay = -(Math.random()*30)+'s';
+                c.appendChild(p);
+            }
+        })();
+
+        // ─── Navbar ───
+        const navbar = document.getElementById('navbar');
+        const progress = document.getElementById('nav-progress');
+        window.addEventListener('scroll', () => {
+            navbar.classList.toggle('scrolled', window.scrollY > 20);
+            const h = document.documentElement.scrollHeight - window.innerHeight;
+            progress.style.width = (h > 0 ? (window.scrollY/h)*100 : 0) + '%';
+        });
+
+        // ─── Reveal ───
+        document.querySelectorAll('.reveal').forEach(r => {
+            new IntersectionObserver((entries) => {
+                entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+            }, { threshold: 0.1 }).observe(r);
+        });
+
+        // ─── Interactive Visualizer ───
+        const examples = [
+            { num: "1234", t: 256, name: 'num="1234", t=256' },
+            { num: "12355", t: 50, name: 'num="12355", t=50' },
+            { num: "11111", t: 26, name: 'num="11111", t=26 (impossible)' },
+        ];
+        let curEx = 0, vizState = null;
+
+        function gcd(a, b) { while (b !== 0) { [a, b] = [b, a % b]; } return a; }
+
+        function setPhase(p) {
+            for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById('ph-' + i);
+                el.classList.remove('active', 'done');
+                if (i < p) el.classList.add('done');
+                if (i === p) el.classList.add('active');
+            }
+        }
+
+        function renderDigits(digits, states) {
+            const row = document.getElementById('digit-row');
+            row.innerHTML = '';
+            digits.forEach((d, i) => {
+                const div = document.createElement('div');
+                div.className = 'digit-cell ' + (states[i] || '');
+                div.innerHTML = `<span class="dv">${d}</span><span class="dp">pos ${i}</span>`;
+                row.appendChild(div);
+            });
+        }
+
+        function buildSteps(ex) {
+            const steps = [];
+            const num = ex.num, t = ex.t, n = num.length;
+            const digits = num.split('').map(Number);
+            const states = new Array(n).fill('');
+
+            // Step 0: Initial
+            steps.push({ phase: 1, digits: [...digits], states: [...states], factor: t, info: `Input: "${num}", t = ${t}` });
+
+            // Step 1: Check primes
+            let temp = t;
+            for (const p of [2, 3, 5, 7]) while (temp % p === 0) temp /= p;
+            if (temp !== 1) {
+                steps.push({ phase: 1, digits: [...digits], states: [...states], factor: t, info: `❌ t = ${t} has non-digit prime factor → return "-1"`, result: '-1' });
+                return steps;
+            }
+            steps.push({ phase: 1, digits: [...digits], states: [...states], factor: t, info: `✅ t = ${t} only has prime factors 2, 3, 5, 7 — achievable!` });
+
+            // Step 2: Prefix scan
+            const rf = new Array(n + 1).fill(t);
+            for (let i = 0; i < n; i++) {
+                const d = digits[i];
+                if (d === 0) break;
+                rf[i + 1] = rf[i] / gcd(rf[i], d);
+                states[i] = 'locked';
+                steps.push({ phase: 2, digits: [...digits], states: [...states], factor: rf[i + 1], info: `Scan digit ${d} at pos ${i}: remaining factor = ${rf[i]} / gcd(${rf[i]}, ${d}) = ${rf[i + 1]}` });
+            }
+
+            if (rf[n] === 1) {
+                steps.push({ phase: 4, digits: [...digits], states: states.map(() => 'locked'), factor: 1, info: `🎉 Already valid! Digit product is divisible by ${t}`, result: num });
+                return steps;
+            }
+
+            // Step 3: Backtrack
+            let zeroPos = num.indexOf('0');
+            let zeroIdx = zeroPos === -1 ? n - 1 : zeroPos;
+            const stBacktrack = new Array(n).fill('faded');
+
+            for (let i = zeroIdx; i >= 0; i--) {
+                stBacktrack[i] = 'scanning';
+                steps.push({ phase: 3, digits: [...digits], states: [...stBacktrack], factor: rf[i], info: `Backtrack to pos ${i} (digit ${digits[i]}), remaining = ${rf[i]}, free slots = ${n - 1 - i}` });
+
+                const startD = Math.max(digits[i] + 1, 1);
+                for (let d = startD; d <= 9; d++) {
+                    const fr = rf[i] / gcd(rf[i], d);
+                    // Simulate freeSlotsFiller
+                    let req = fr, fillLen = n - 1 - i, fillStr = '';
+                    let tempReq = req;
+                    for (let dd = 9; dd >= 2; dd--) while (tempReq % dd === 0) { fillStr += dd; tempReq /= dd; }
+                    if (tempReq === 1) {
+                        while (fillStr.length < fillLen) fillStr += '1';
+                        if (fillStr.length <= fillLen) {
+                            fillStr = fillStr.split('').sort().join('');
+                            const newDigits = num.substring(0, i).split('').map(Number);
+                            newDigits.push(d);
+                            for (const c of fillStr) newDigits.push(parseInt(c));
+                            const newStates = newDigits.map((_, idx) => idx < i ? 'locked' : idx === i ? 'changed' : 'filled');
+                            const result = newDigits.join('');
+                            steps.push({ phase: 4, digits: newDigits, states: newStates, factor: 1, info: `✅ pos ${i} → digit ${d}, fill remaining: "${fillStr}" → result: "${result}"`, result });
+                            return steps;
+                        }
+                    }
+                }
+                stBacktrack[i] = 'faded';
+            }
+
+            // Last resort
+            let req = t, fillStr = '';
+            for (let dd = 9; dd >= 2; dd--) while (req % dd === 0) { fillStr += dd; req /= dd; }
+            if (req === 1) {
+                while (fillStr.length < n + 1) fillStr += '1';
+                fillStr = fillStr.split('').sort().join('');
+                const newDigits = fillStr.split('').map(Number);
+                const newStates = newDigits.map(() => 'filled');
+                steps.push({ phase: 4, digits: newDigits, states: newStates, factor: 1, info: `Added extra digit → ${fillStr}`, result: fillStr });
+            }
+            return steps;
+        }
+
+        function initViz() {
+            const ex = examples[curEx];
+            vizState = { steps: buildSteps(ex), step: -1, ex };
+            renderDigits(ex.num.split('').map(Number), new Array(ex.num.length).fill(''));
+            document.getElementById('factor-val').textContent = ex.t;
+            document.getElementById('factor-val').className = 'factor-val needed';
+            document.getElementById('viz-info').textContent = `${ex.name} — Press Play`;
+            document.getElementById('viz-final').textContent = '';
+            document.getElementById('btn-play').disabled = false;
+            setPhase(1);
+        }
+
+        function playStep() {
+            if (!vizState) return;
+            vizState.step++;
+            if (vizState.step >= vizState.steps.length) return;
+            const s = vizState.steps[vizState.step];
+            setPhase(s.phase);
+            renderDigits(s.digits, s.states);
+            const fv = document.getElementById('factor-val');
+            fv.textContent = s.factor;
+            fv.className = 'factor-val ' + (s.factor === 1 ? 'done' : 'needed');
+            document.getElementById('viz-info').innerHTML = s.info;
+            if (s.result !== undefined) {
+                const color = s.result === '-1' ? 'var(--accent-4)' : 'var(--green)';
+                document.getElementById('viz-final').innerHTML = `<span style="color:${color};">Result: <strong>${s.result}</strong></span>`;
+                document.getElementById('btn-play').disabled = true;
+            }
+        }
+
+        function resetViz() { initViz(); }
+        function changeExample() { curEx = (curEx + 1) % examples.length; initViz(); }
+        initViz();
+    </script>
+</body>
+</html>
