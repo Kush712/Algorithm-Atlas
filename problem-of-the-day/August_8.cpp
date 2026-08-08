@@ -1,3 +1,6 @@
+// leetcode problem 3302 Find The Lexicographically Smallest Valid Sequence
+// https://leetcode.com/problems/find-the-lexicographically-smallest-valid-sequence
+
 #include<iostream>
 #include<vector>
 #include<algorithm>
