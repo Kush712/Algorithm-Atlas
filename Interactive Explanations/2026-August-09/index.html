@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeetCode 1140 — Stone Game II | Algorithm Atlas</title>
+    <meta name="description" content="Interactive visual explanation of LeetCode 1140: Stone Game II — a minimax DP game where Alice and Bob optimally pick 1 to 2M piles of stones.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --bg-primary:#fff8f2;--bg-secondary:#fef3ec;--bg-card:rgba(255,248,242,0.82);
+            --glass:rgba(253,121,121,0.05);--glass-border:rgba(253,121,121,0.14);
+            --text-primary:#3d2828;--text-secondary:#6b4444;--text-muted:#a07676;
+            --accent-1:#FD7979;--accent-2:#FDACAC;--accent-3:#FFCDC9;--accent-4:#d04848;
+            --green:#52a058;--yellow:#c49030;--orange:#d08050;--blue:#5a8ab0;
+            --neutral-1:#FEEAC9;--neutral-2:#FFCDC9;
+            --gradient-hero:linear-gradient(135deg,#FD7979 0%,#FDACAC 40%,#FFCDC9 70%,#FEEAC9 100%);
+            --gradient-cool:linear-gradient(135deg,#FDACAC,#FD7979,#d04848);
+            --shadow-glow:0 0 60px rgba(253,121,121,0.10);--shadow-card:0 8px 32px rgba(253,121,121,0.06);
+            --radius:18px;--radius-sm:12px;--radius-xs:6px;
+        }
+        html{scroll-behavior:smooth}
+        body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg-primary);color:var(--text-primary);line-height:1.7;overflow-x:hidden;min-height:100vh}
+
+        .bg-mesh{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+        .bg-mesh::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 15% 25%,rgba(253,121,121,0.04) 0%,transparent 60%),radial-gradient(circle at 85% 65%,rgba(254,234,201,0.06) 0%,transparent 50%)}
+        .bg-mesh .orb{position:absolute;border-radius:50%;filter:blur(120px);animation:orbFloat 20s ease-in-out infinite}
+        .bg-mesh .orb:nth-child(1){width:650px;height:650px;top:-12%;left:-8%;background:rgba(253,121,121,0.08);animation-duration:25s}
+        .bg-mesh .orb:nth-child(2){width:500px;height:500px;top:30%;right:-10%;background:rgba(254,234,201,0.10);animation-duration:30s;animation-delay:-5s}
+        .bg-mesh .orb:nth-child(3){width:480px;height:480px;bottom:-8%;left:20%;background:rgba(255,205,201,0.10);animation-duration:22s;animation-delay:-10s}
+        .bg-mesh .orb:nth-child(4){width:380px;height:380px;top:55%;left:50%;background:rgba(253,172,172,0.08);animation-duration:28s;animation-delay:-15s}
+        @keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(50px,-35px) scale(1.08)}50%{transform:translate(-25px,50px) scale(0.95)}75%{transform:translate(35px,25px) scale(1.04)}}
+        .particle{position:fixed;pointer-events:none;z-index:0;border-radius:50%;animation:particleDrift linear infinite}
+        .particle:nth-child(odd){background:rgba(253,121,121,0.12)}.particle:nth-child(even){background:rgba(255,205,201,0.18)}
+        .particle:nth-child(3n){background:rgba(254,234,201,0.16)}.particle:nth-child(5n){background:rgba(253,172,172,0.14);border-radius:3px}
+        @keyframes particleDrift{0%{transform:translateY(100vh) rotate(0deg);opacity:0}8%{opacity:1}92%{opacity:1}100%{transform:translateY(-10vh) rotate(360deg);opacity:0}}
+
+        .container{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 24px}
+
+        .navbar{position:fixed;top:0;left:0;right:0;z-index:100;backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8);background:rgba(255,248,242,0.88);border-bottom:1px solid var(--glass-border);transition:box-shadow .3s,background .3s}
+        .navbar.scrolled{box-shadow:0 4px 30px rgba(253,121,121,0.06);background:rgba(255,248,242,0.95)}
+        .nav-progress{position:absolute;bottom:0;left:0;height:2.5px;background:var(--gradient-hero);transition:width .15s ease-out;width:0%;border-radius:0 2px 2px 0}
+        .navbar-inner{max-width:900px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px}
+        .nav-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;text-decoration:none;color:var(--text-primary);transition:transform .2s}
+        .nav-brand:hover{transform:scale(1.03)}
+        .nav-brand .logo{width:34px;height:34px;border-radius:9px;background:var(--gradient-cool);display:grid;place-items:center;font-size:.85rem;font-weight:800;color:#fff;box-shadow:0 3px 14px rgba(253,121,121,0.3)}
+        .nav-links{display:flex;align-items:center;gap:14px}
+        .nav-date{font-size:.82rem;color:var(--text-secondary);font-weight:500;padding:6px 14px;border-radius:20px;background:var(--glass);border:1px solid var(--glass-border)}
+        .nav-difficulty{font-size:.72rem;font-weight:700;padding:4px 12px;border-radius:20px;background:rgba(253,121,121,0.08);color:var(--accent-1);border:1px solid rgba(253,121,121,0.2);text-transform:uppercase;letter-spacing:1px}
+
+        .hero{padding:130px 0 60px;text-align:center}
+        .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:50px;background:rgba(253,121,121,0.08);border:1px solid rgba(253,121,121,0.2);font-size:.78rem;font-weight:600;color:var(--accent-1);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:26px;animation:fadeInDown .8s ease-out}
+        .hero-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-4);animation:pulse 2s ease-in-out infinite}
+        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+        .hero h1{font-size:clamp(2.4rem,5.5vw,3.4rem);font-weight:900;line-height:1.12;letter-spacing:-2px;color:var(--text-primary);animation:fadeInUp .8s ease-out .1s both}
+        .hero h1 .gradient-text{background:var(--gradient-cool);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .hero h1 .leetcode-num{display:block;font-size:.42em;letter-spacing:3px;-webkit-text-fill-color:var(--text-muted);background:none;margin-top:8px;font-weight:700}
+        .hero-subtitle{margin-top:20px;font-size:1.08rem;color:var(--text-secondary);max-width:640px;margin-left:auto;margin-right:auto;line-height:1.75;animation:fadeInUp .8s ease-out .25s both}
+        .hero-tags{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:28px;animation:fadeInUp .8s ease-out .4s both}
+        .hero-tag{padding:6px 16px;border-radius:20px;font-size:.78rem;font-weight:600;border:1px solid;transition:transform .2s,box-shadow .2s}
+        .hero-tag:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.06)}
+        .hero-tag.diff{color:var(--accent-1);border-color:rgba(253,121,121,0.3);background:rgba(253,121,121,0.06)}
+        .hero-tag.cat{color:#a05050;border-color:rgba(253,121,121,0.3);background:rgba(253,121,121,0.06)}
+        .hero-tag.pattern{color:#8a5a30;border-color:rgba(254,234,201,0.5);background:rgba(254,234,201,0.2)}
+
+        /* Hero stone piles */
+        .hero-piles{margin-top:38px;animation:fadeInUp .8s ease-out .55s both;display:flex;justify-content:center;align-items:flex-end;gap:10px}
+        .hero-pile{display:flex;flex-direction:column;align-items:center;gap:3px}
+        .hero-pile-bar{width:34px;border-radius:8px 8px 4px 4px;animation:pileGrow 2.4s ease-in-out infinite;transition:all .3s}
+        .hero-pile-bar:nth-child(1){background:rgba(253,121,121,0.3);border:1px solid rgba(253,121,121,0.4)}
+        .hero-pile-label{font-size:.7rem;font-weight:700;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+        @keyframes pileGrow{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.08)}}
+
+        /* Hero players */
+        .hero-players{display:flex;justify-content:center;gap:24px;margin-top:16px;animation:fadeInUp .8s ease-out .65s both}
+        .hero-player{padding:8px 18px;border-radius:12px;font-size:.78rem;font-weight:700;border:1px solid}
+        .hero-player.alice{background:rgba(253,121,121,0.08);border-color:rgba(253,121,121,0.25);color:var(--accent-1)}
+        .hero-player.bob{background:rgba(90,138,176,0.08);border-color:rgba(90,138,176,0.25);color:var(--blue)}
+
+        @keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes fadeInDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+        .reveal{opacity:0;transform:translateY(40px);transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1)}
+        .reveal.visible{opacity:1;transform:translateY(0)}
+
+        .card{background:var(--bg-card);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:38px;margin-bottom:32px;transition:border-color .3s,box-shadow .4s,transform .3s;position:relative;overflow:hidden}
+        .card::before{content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(253,121,121,0.03),transparent);transition:left .7s ease}
+        .card:hover::before{left:100%}
+        .card:hover{border-color:rgba(253,121,121,0.22);box-shadow:var(--shadow-card),var(--shadow-glow);transform:translateY(-3px)}
+        .card-header{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+        .card-icon{width:50px;height:50px;border-radius:14px;display:grid;place-items:center;font-size:1.35rem;flex-shrink:0;transition:transform .3s}
+        .card:hover .card-icon{transform:scale(1.12) rotate(-4deg)}
+        .card-title{font-size:1.4rem;font-weight:800;letter-spacing:-.5px;color:var(--text-primary)}
+        .card p,.card li{color:var(--text-secondary);font-size:.95rem;line-height:1.8}
+        .card ul{list-style:none;padding:0}.card ul li{padding:6px 0;padding-left:24px;position:relative}
+        .card ul li::before{content:'▸';position:absolute;left:0;color:var(--accent-1);font-weight:700}
+        .card strong{color:var(--text-primary)}
+
+        .section-label{display:flex;align-items:center;gap:14px;margin:55px 0 26px;font-size:.72rem;text-transform:uppercase;letter-spacing:3px;font-weight:700;color:var(--text-muted)}
+        .section-label .sec-num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;background:var(--gradient-cool);color:#fff;font-size:.72rem;font-weight:800;flex-shrink:0;box-shadow:0 3px 12px rgba(253,121,121,0.22)}
+        .section-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--glass-border),transparent)}
+
+        /* VIZ — Game board */
+        .viz-board{text-align:center}
+        .pile-row{display:flex;justify-content:center;gap:8px;margin:18px 0;flex-wrap:wrap}
+        .pile-cell{width:56px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;font-family:'JetBrains Mono',monospace;background:var(--glass);border:2px solid var(--glass-border);transition:all .45s cubic-bezier(.34,1.56,.64,1);padding:6px 0;min-height:60px;position:relative}
+        .pile-cell .pv{font-size:1.2rem;font-weight:800;color:var(--text-primary)}
+        .pile-cell .pi{font-size:.5rem;color:var(--text-muted);font-weight:600;margin-top:2px}
+        .pile-cell .pile-bar{width:30px;border-radius:6px 6px 3px 3px;margin-bottom:4px;transition:height .3s}
+        .pile-cell.alice-pick{border-color:var(--accent-1);background:rgba(253,121,121,0.1);transform:scale(1.06) translateY(-4px);box-shadow:0 6px 18px rgba(253,121,121,0.15)}
+        .pile-cell.alice-pick .pv{color:var(--accent-1)}
+        .pile-cell.bob-pick{border-color:var(--blue);background:rgba(90,138,176,0.08);transform:scale(1.06) translateY(-4px);box-shadow:0 6px 18px rgba(90,138,176,0.12)}
+        .pile-cell.bob-pick .pv{color:var(--blue)}
+        .pile-cell.taken{opacity:.2;transform:scale(.85)}
+        .pile-cell.highlight{border-color:var(--yellow);box-shadow:0 0 16px rgba(196,144,48,0.15);animation:highlightPulse 1.2s ease-in-out infinite}
+        @keyframes highlightPulse{0%,100%{box-shadow:0 0 10px rgba(196,144,48,0.1)}50%{box-shadow:0 0 22px rgba(196,144,48,0.22)}}
+
+        /* Score display */
+        .score-row{display:flex;justify-content:center;gap:32px;margin:18px 0}
+        .score-card{padding:16px 28px;border-radius:var(--radius-sm);background:var(--glass);border:1px solid var(--glass-border);text-align:center;min-width:130px;transition:all .3s}
+        .score-card .sc-label{font-size:.68rem;text-transform:uppercase;letter-spacing:2px;font-weight:700;color:var(--text-muted);margin-bottom:4px}
+        .score-card .sc-value{font-size:2rem;font-weight:900;font-family:'JetBrains Mono',monospace;transition:all .3s}
+        .score-card.alice{border-color:rgba(253,121,121,0.2)}.score-card.alice .sc-value{color:var(--accent-1)}
+        .score-card.bob{border-color:rgba(90,138,176,0.2)}.score-card.bob .sc-value{color:var(--blue)}
+        .score-card.active{border-color:var(--accent-1);box-shadow:0 0 16px rgba(253,121,121,0.1);transform:scale(1.03)}
+        .score-card.bob.active{border-color:var(--blue);box-shadow:0 0 16px rgba(90,138,176,0.1)}
+
+        /* M indicator */
+        .m-display{display:flex;justify-content:center;align-items:center;gap:10px;margin:10px 0}
+        .m-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted)}
+        .m-val{font-size:1.2rem;font-weight:900;font-family:'JetBrains Mono',monospace;color:var(--yellow);padding:4px 14px;border-radius:8px;background:rgba(196,144,48,0.08);border:1px solid rgba(196,144,48,0.18)}
+        .m-range{font-size:.8rem;font-weight:600;color:var(--text-muted)}
+
+        /* Turn indicator */
+        .turn-indicator{display:flex;justify-content:center;gap:8px;margin:14px 0}
+        .turn-pill{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;padding:5px 16px;border-radius:20px;color:var(--text-muted);background:var(--glass);border:1px solid var(--glass-border);transition:all .3s}
+        .turn-pill.active-alice{background:var(--gradient-cool);color:#fff;border-color:transparent;box-shadow:0 3px 12px rgba(253,121,121,0.2)}
+        .turn-pill.active-bob{background:linear-gradient(135deg,#7ab0d0,#5a8ab0);color:#fff;border-color:transparent;box-shadow:0 3px 12px rgba(90,138,176,0.2)}
+
+        .viz-controls{display:flex;justify-content:center;gap:12px;margin-top:24px;flex-wrap:wrap}
+        .viz-btn{padding:11px 26px;border-radius:11px;border:none;font-family:'Inter',sans-serif;font-weight:600;font-size:.85rem;cursor:pointer;transition:all .25s}
+        .viz-btn.primary{background:var(--gradient-cool);color:#fff;box-shadow:0 4px 20px rgba(253,121,121,0.25)}
+        .viz-btn.primary:hover{transform:translateY(-2px);box-shadow:0 6px 30px rgba(253,121,121,0.4)}
+        .viz-btn.primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+        .viz-btn.secondary{background:var(--glass);color:var(--text-primary);border:1px solid var(--glass-border)}
+        .viz-btn.secondary:hover{border-color:var(--accent-1);transform:translateY(-1px)}
+        .viz-step-info{margin-top:16px;font-size:.88rem;color:var(--text-secondary);min-height:30px;padding:10px 20px;border-radius:8px;background:rgba(253,121,121,0.04);display:inline-block}
+        .viz-result-text{margin-top:16px;font-weight:700;font-size:1.05rem;min-height:32px}
+
+        .timeline{position:relative;padding-left:42px}
+        .timeline::before{content:'';position:absolute;left:17px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,#FD7979,#FDACAC,#FFCDC9,#FEEAC9);border-radius:2px}
+        .timeline-item{position:relative;margin-bottom:32px;padding-left:4px}
+        .timeline-dot{position:absolute;left:-32px;top:4px;width:16px;height:16px;border-radius:50%;border:3px solid var(--accent-1);background:var(--bg-primary);transition:all .3s}
+        .timeline-item:hover .timeline-dot{transform:scale(1.35);box-shadow:0 0 14px rgba(253,121,121,0.25)}
+        .timeline-item:nth-child(2) .timeline-dot{border-color:var(--accent-2)}
+        .timeline-item:nth-child(3) .timeline-dot{border-color:var(--accent-3)}
+        .timeline-item:nth-child(4) .timeline-dot{border-color:var(--neutral-1)}
+        .timeline-item:nth-child(5) .timeline-dot{border-color:var(--accent-4)}
+        .timeline-item h4{font-size:1.02rem;font-weight:700;margin-bottom:6px;color:var(--text-primary)}
+        .timeline-item p{color:var(--text-secondary);font-size:.9rem;line-height:1.75}
+
+        .hl{padding:2px 8px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.82em;font-weight:600}
+        .hl-coral{background:rgba(253,121,121,0.12);color:#c04040}
+        .hl-rose{background:rgba(253,172,172,0.15);color:#a05050}
+        .hl-pink{background:rgba(255,205,201,0.2);color:#b06050}
+        .hl-cream{background:rgba(254,234,201,0.3);color:#8a6a30}
+        .hl-green{background:rgba(82,160,88,0.1);color:#3a7a42}
+        .hl-blue{background:rgba(90,138,176,0.1);color:#4070a0}
+
+        .code-container{position:relative;border-radius:var(--radius);overflow:hidden;background:#2a1e1e;border:1px solid rgba(253,121,121,0.15)}
+        .code-topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(253,121,121,0.1)}
+        .code-dots{display:flex;gap:7px}.code-dots span{width:12px;height:12px;border-radius:50%;transition:transform .2s}
+        .code-dots span:hover{transform:scale(1.3)}
+        .code-dots span:nth-child(1){background:#FD7979}.code-dots span:nth-child(2){background:#c49030}.code-dots span:nth-child(3){background:#52a058}
+        .code-lang{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#a07676}
+        .code-body{padding:24px;overflow-x:auto}
+        .code-body pre{margin:0;font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.85;color:#e0c8c8}
+        .syn-kw{color:#fda0a0}.syn-type{color:#a0c8f0}.syn-fn{color:#f0d090}
+        .syn-num{color:#e0a090}.syn-str{color:#a0d0a0}.syn-cmt{color:#6a5050;font-style:italic}
+        .syn-op{color:#b09898}.syn-bool{color:#d0a898}
+
+        .complexity-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .complexity-pill{padding:24px;border-radius:var(--radius-sm);background:var(--glass);border:1px solid var(--glass-border);text-align:center;transition:all .3s}
+        .complexity-pill:hover{border-color:rgba(253,121,121,0.3);transform:translateY(-2px)}
+        .complexity-pill .label{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;color:var(--text-muted);margin-bottom:8px}
+        .complexity-pill .big{font-size:1.5rem;font-weight:900;font-family:'JetBrains Mono',monospace}
+        .complexity-pill .note{font-size:.78rem;color:var(--text-secondary);margin-top:6px}
+
+        .callout{display:flex;gap:16px;padding:22px 24px;border-radius:var(--radius-sm);border-left:4px solid;margin:20px 0;transition:transform .2s}
+        .callout:hover{transform:translateX(4px)}
+        .callout.insight{background:rgba(253,172,172,0.06);border-color:var(--accent-2)}
+        .callout.warning{background:rgba(253,121,121,0.05);border-color:var(--accent-1)}
+        .callout .callout-icon{font-size:1.3rem;flex-shrink:0;margin-top:2px}
+        .callout .callout-text{font-size:.9rem;color:var(--text-secondary);line-height:1.7}
+        .callout .callout-text strong{color:var(--text-primary)}
+
+        .visual-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:var(--radius-sm);overflow:hidden;margin:16px 0}
+        .visual-table th{background:rgba(253,121,121,0.07);color:var(--accent-1);font-size:.78rem;text-transform:uppercase;letter-spacing:1px;font-weight:700;padding:12px 16px;text-align:left;border-bottom:1px solid var(--glass-border)}
+        .visual-table td{padding:12px 16px;font-size:.88rem;color:var(--text-secondary);border-bottom:1px solid rgba(253,121,121,0.04);transition:background .2s}
+        .visual-table tr:last-child td{border-bottom:none}.visual-table tr:hover td{background:rgba(253,121,121,0.03)}
+        .visual-table code{font-family:'JetBrains Mono',monospace;font-size:.82em;color:#c04040;background:rgba(253,121,121,0.06);padding:2px 7px;border-radius:4px}
+
+        .pattern-badges{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}
+        .pattern-badge{display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:10px;background:var(--glass);border:1px solid var(--glass-border);font-size:.85rem;font-weight:600;color:var(--text-primary);transition:all .3s}
+        .pattern-badge:hover{border-color:var(--accent-1);transform:translateY(-3px);box-shadow:0 6px 18px rgba(253,121,121,0.08)}
+        .pattern-badge .emoji{font-size:1.1rem}
+
+        .footer{text-align:center;padding:60px 0 40px;color:var(--text-muted);font-size:.8rem}
+        .footer .heart{color:var(--accent-1)}.footer a{color:var(--accent-4);text-decoration:none}.footer a:hover{text-decoration:underline}
+
+        ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:rgba(253,121,121,0.22);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:rgba(253,121,121,0.4)}
+
+        @media(max-width:640px){.card{padding:24px}.complexity-grid{grid-template-columns:1fr}.navbar-inner{padding:0 16px}.container{padding:0 16px}.nav-difficulty{display:none}.pile-cell{width:44px;min-height:50px}.pile-cell .pv{font-size:1rem}.score-row{gap:14px;flex-direction:column;align-items:center}}
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"><div class="orb"></div><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
+    <div id="particles"></div>
+
+    <nav class="navbar" id="navbar">
+        <div class="nav-progress" id="nav-progress"></div>
+        <div class="navbar-inner">
+            <a href="#" class="nav-brand"><div class="logo">A²</div> Algorithm Atlas</a>
+            <div class="nav-links">
+                <span class="nav-difficulty">Medium</span>
+                <span class="nav-date">📅 09 Aug 2026</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <section class="hero">
+            <div class="hero-badge"><span class="dot"></span> Problem of the Day</div>
+            <h1>
+                <span class="gradient-text">Stone Game II</span>
+                <span class="leetcode-num">LeetCode #1140</span>
+            </h1>
+            <p class="hero-subtitle">
+                Alice and Bob take turns picking <strong>1 to 2M</strong> piles from the front.<br>
+                Both play optimally. How many stones can <strong>Alice</strong> guarantee?
+            </p>
+            <div class="hero-tags">
+                <span class="hero-tag diff">⚡ Medium</span>
+                <span class="hero-tag cat">🎯 Dynamic Programming</span>
+                <span class="hero-tag cat">🧠 Game Theory</span>
+                <span class="hero-tag pattern">🎮 Minimax</span>
+                <span class="hero-tag pattern">📦 Memoization</span>
+            </div>
+            <div class="hero-piles" id="hero-piles"></div>
+            <div class="hero-players">
+                <span class="hero-player alice">🧑 Alice (Maximize)</span>
+                <span class="hero-player bob">🤖 Bob (Minimize)</span>
+            </div>
+        </section>
+
+        <!-- SECTION 1 -->
+        <div class="section-label reveal"><span class="sec-num">01</span> The Problem</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(253,121,121,0.1);color:var(--accent-1)">📖</div>
+                <div class="card-title">What's the Problem?</div>
+            </div>
+            <p>You have <span class="hl hl-coral">n</span> piles of stones arranged in a row. Alice and Bob take turns (Alice goes first). On each turn, the current player takes the first <span class="hl hl-cream">x</span> piles where <span class="hl hl-cream">1 ≤ x ≤ 2M</span>. After taking x piles, M becomes <span class="hl hl-coral">max(M, x)</span>. Return the <strong>maximum stones Alice</strong> can get when both play optimally.</p>
+            <div class="callout warning" style="margin-top:20px">
+                <div class="callout-icon">🎮</div>
+                <div class="callout-text">
+                    <strong>The M parameter is key:</strong> M starts at 1, so initially you can take 1 or 2 piles. But if you take x piles, M becomes max(M, x) — potentially expanding the range for the <em>next</em> player. This creates a fascinating trade-off: take more now (more stones) but give the opponent a wider range!
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2 -->
+        <div class="section-label reveal"><span class="sec-num">02</span> Try It Yourself</div>
+        <div class="card reveal" id="viz-card">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(82,160,88,0.1);color:var(--green)">🎮</div>
+                <div class="card-title">Interactive Game Simulation</div>
+            </div>
+            <p style="margin-bottom:14px">Watch Alice and Bob play optimally. Each step shows the best move for the current player.</p>
+            <div class="viz-board">
+                <div class="turn-indicator" id="turn-indicator">
+                    <span class="turn-pill active-alice" id="turn-alice">🧑 Alice's Turn</span>
+                    <span class="turn-pill" id="turn-bob">🤖 Bob's Turn</span>
+                </div>
+                <div class="m-display">
+                    <span class="m-label">M =</span>
+                    <span class="m-val" id="m-val">1</span>
+                    <span class="m-range" id="m-range">(can take 1–2 piles)</span>
+                </div>
+                <div class="pile-row" id="pile-row"></div>
+                <div class="score-row">
+                    <div class="score-card alice active" id="sc-alice">
+                        <div class="sc-label">Alice</div>
+                        <div class="sc-value" id="alice-score">0</div>
+                    </div>
+                    <div class="score-card bob" id="sc-bob">
+                        <div class="sc-label">Bob</div>
+                        <div class="sc-value" id="bob-score">0</div>
+                    </div>
+                </div>
+                <div class="viz-step-info" id="viz-info">Press Play to start</div>
+                <div class="viz-result-text" id="viz-final"></div>
+                <div class="viz-controls">
+                    <button class="viz-btn primary" id="btn-play" onclick="playStep()">▶ Play Step</button>
+                    <button class="viz-btn secondary" onclick="resetViz()">↻ Reset</button>
+                    <button class="viz-btn secondary" onclick="changeExample()">⟳ Next Example</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3 -->
+        <div class="section-label reveal"><span class="sec-num">03</span> Intuition</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(253,172,172,0.1);color:var(--accent-2)">🧠</div>
+                <div class="card-title">Minimax with Variable Range</div>
+            </div>
+            <p>This is a classic <strong>minimax</strong> game, but with a twist — the number of piles you can take <em>grows dynamically</em>:</p>
+            <ul style="margin-top:10px">
+                <li><strong>Alice (person=1):</strong> Wants to <span class="hl hl-coral">maximize</span> her total. She tries all possible x (1..2M), takes the sum of those piles, and adds the recursive result.</li>
+                <li><strong>Bob (person=0):</strong> Wants to <span class="hl hl-blue">minimize</span> Alice's total. He tries all x and picks the one that gives Alice the <em>least</em>.</li>
+                <li><strong>State:</strong> <span class="hl hl-cream">(person, i, M)</span> — who's playing, current pile index, current M value.</li>
+                <li><strong>Memoization:</strong> There are only <span class="hl hl-green">2 × n × n</span> unique states — cache them in <span class="hl hl-coral">t[person][i][m]</span>.</li>
+            </ul>
+            <div class="callout insight" style="margin-top:20px">
+                <div class="callout-icon">💡</div>
+                <div class="callout-text">
+                    <strong>Why doesn't Bob track his own score?</strong> The function <code style="font-family:'JetBrains Mono';font-size:.85em;color:#c04040;background:rgba(253,121,121,0.06);padding:2px 6px;border-radius:4px">solveForAlice</code> always returns <em>Alice's</em> score. When it's Bob's turn, he picks the move that <strong>minimizes</strong> Alice's total — no need to track Bob's score separately!
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4 -->
+        <div class="section-label reveal"><span class="sec-num">04</span> Approach</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(254,234,201,0.2);color:var(--orange)">🗺️</div>
+                <div class="card-title">Step-by-Step Approach</div>
+            </div>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>1. Define state: <span class="hl hl-cream">solve(person, i, M)</span></h4>
+                    <p>Returns Alice's optimal score from position <span class="hl hl-coral">i</span> onward, with current M, when it's <span class="hl hl-blue">person</span>'s turn (1=Alice, 0=Bob).</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>2. Base case: <span class="hl hl-green">i ≥ n</span></h4>
+                    <p>No piles left → return 0 (no more stones for Alice).</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>3. Try all x from 1 to min(2M, n-i)</h4>
+                    <p>For each x, accumulate the sum of piles[i..i+x-1]. If Alice: <span class="hl hl-coral">max(stone + recurse)</span>. If Bob: <span class="hl hl-blue">min(recurse)</span> — Bob doesn't add stones (we only track Alice).</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>4. Update M = max(M, x)</h4>
+                    <p>After taking x piles, the range expands for the next player if x > M.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>5. Memoize in t[person][i][m]</h4>
+                    <p>Cache the result to avoid recomputation — each state is visited at most once.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 5 -->
+        <div class="section-label reveal"><span class="sec-num">05</span> Methods & Functions</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(196,144,48,0.1);color:var(--yellow)">⚙️</div>
+                <div class="card-title">Key Functions Explained</div>
+            </div>
+            <table class="visual-table">
+                <thead><tr><th>Function / Variable</th><th>Purpose</th></tr></thead>
+                <tbody>
+                    <tr><td><code>solveForAlice(piles, person, i, m)</code></td><td>Recursive solver — returns <strong>Alice's optimal score</strong> from position i onward.</td></tr>
+                    <tr><td><code>t[person][i][m]</code></td><td><strong>Memoization table</strong> — 2 × 101 × 101 3D array, initialized to -1.</td></tr>
+                    <tr><td><code>person == 1</code></td><td>Alice's turn → <strong>maximize</strong> (stone + recurse).</td></tr>
+                    <tr><td><code>person == 0</code></td><td>Bob's turn → <strong>minimize</strong> (just recurse, no stone addition).</td></tr>
+                    <tr><td><code>max(m, x)</code></td><td>Update M — expand the picking range if x exceeds current M.</td></tr>
+                    <tr><td><code>stoneGameII(piles)</code></td><td>Driver — initializes memo table, calls solver with person=1, i=0, M=1.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 6 -->
+        <div class="section-label reveal"><span class="sec-num">06</span> Patterns Used</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(253,121,121,0.08);color:var(--accent-1)">🧩</div>
+                <div class="card-title">Design Patterns</div>
+            </div>
+            <div class="pattern-badges">
+                <div class="pattern-badge"><span class="emoji">🎮</span> Minimax</div>
+                <div class="pattern-badge"><span class="emoji">📦</span> Memoization</div>
+                <div class="pattern-badge"><span class="emoji">🎯</span> Game DP</div>
+                <div class="pattern-badge"><span class="emoji">📐</span> Variable Range</div>
+                <div class="pattern-badge"><span class="emoji">🔄</span> Recursion</div>
+            </div>
+            <ul style="margin-top:16px">
+                <li><strong>Minimax:</strong> Alice maximizes, Bob minimizes — classic two-player game theory. The function alternates perspective.</li>
+                <li><strong>3D Memoization:</strong> State is <span class="hl hl-cream">(person, i, M)</span>. Without memo, this would be exponential. With memo, each state is O(n) to compute.</li>
+                <li><strong>Variable Range DP:</strong> Unlike fixed-range games (pick 1 or 2), here the range <em>grows</em> with M — making the state space more complex.</li>
+            </ul>
+        </div>
+
+        <!-- SECTION 7 -->
+        <div class="section-label reveal"><span class="sec-num">07</span> Full Code</div>
+        <div class="card reveal" style="padding:0;overflow:hidden">
+            <div class="code-container">
+                <div class="code-topbar">
+                    <div class="code-dots"><span></span><span></span><span></span></div>
+                    <span class="code-lang">C++ • solution.cpp</span>
+                </div>
+                <div class="code-body">
+<pre><span class="syn-kw">class</span> <span class="syn-type">Solution</span> {
+<span class="syn-kw">public</span>:
+    <span class="syn-type">int</span> t[<span class="syn-num">2</span>][<span class="syn-num">101</span>][<span class="syn-num">101</span>];           <span class="syn-cmt">// memo: [person][i][m]</span>
+
+    <span class="syn-type">int</span> <span class="syn-fn">solveForAlice</span>(<span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt;&amp; piles,
+            <span class="syn-type">int</span> person, <span class="syn-type">int</span> i, <span class="syn-type">int</span> m) {
+        <span class="syn-type">int</span> n <span class="syn-op">=</span> piles.<span class="syn-fn">size</span>();
+        <span class="syn-kw">if</span> (i <span class="syn-op">&gt;=</span> n) <span class="syn-kw">return</span> <span class="syn-num">0</span>;        <span class="syn-cmt">// no piles left</span>
+
+        <span class="syn-type">int</span> stone <span class="syn-op">=</span> <span class="syn-num">0</span>;
+        <span class="syn-type">int</span> result <span class="syn-op">=</span> (person <span class="syn-op">==</span> <span class="syn-num">1</span>)
+                   <span class="syn-op">?</span> <span class="syn-num">-1</span> <span class="syn-op">:</span> INT_MAX;  <span class="syn-cmt">// Alice→max, Bob→min</span>
+
+        <span class="syn-kw">if</span> (t[person][i][m] <span class="syn-op">!=</span> <span class="syn-num">-1</span>)
+            <span class="syn-kw">return</span> t[person][i][m];    <span class="syn-cmt">// cached!</span>
+
+        <span class="syn-kw">for</span> (<span class="syn-type">int</span> x <span class="syn-op">=</span> <span class="syn-num">1</span>; x <span class="syn-op">&lt;=</span> <span class="syn-fn">min</span>(<span class="syn-num">2</span><span class="syn-op">*</span>m, n<span class="syn-op">-</span>i); x<span class="syn-op">++</span>) {
+            stone <span class="syn-op">+=</span> piles[i<span class="syn-op">+</span>x<span class="syn-op">-</span><span class="syn-num">1</span>];    <span class="syn-cmt">// accumulate piles</span>
+
+            <span class="syn-kw">if</span> (person <span class="syn-op">==</span> <span class="syn-num">1</span>) {         <span class="syn-cmt">// Alice: maximize</span>
+                result <span class="syn-op">=</span> <span class="syn-fn">max</span>(result,
+                    stone <span class="syn-op">+</span> <span class="syn-fn">solveForAlice</span>(
+                        piles, <span class="syn-num">0</span>, i<span class="syn-op">+</span>x,
+                        <span class="syn-fn">max</span>(m, x)));
+            } <span class="syn-kw">else</span> {                  <span class="syn-cmt">// Bob: minimize Alice</span>
+                result <span class="syn-op">=</span> <span class="syn-fn">min</span>(result,
+                    <span class="syn-fn">solveForAlice</span>(
+                        piles, <span class="syn-num">1</span>, i<span class="syn-op">+</span>x,
+                        <span class="syn-fn">max</span>(m, x)));
+            }
+        }
+        <span class="syn-kw">return</span> t[person][i][m] <span class="syn-op">=</span> result;
+    }
+
+    <span class="syn-type">int</span> <span class="syn-fn">stoneGameII</span>(<span class="syn-type">vector</span>&lt;<span class="syn-type">int</span>&gt;&amp; piles) {
+        <span class="syn-fn">memset</span>(t, <span class="syn-num">-1</span>, <span class="syn-kw">sizeof</span>(t));
+        <span class="syn-kw">return</span> <span class="syn-fn">solveForAlice</span>(piles, <span class="syn-num">1</span>, <span class="syn-num">0</span>, <span class="syn-num">1</span>);
+    }
+};</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 8 -->
+        <div class="section-label reveal"><span class="sec-num">08</span> Code Walkthrough</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(253,172,172,0.12);color:var(--accent-2)">🔍</div>
+                <div class="card-title">Line-by-Line Breakdown</div>
+            </div>
+            <table class="visual-table">
+                <thead><tr><th style="width:42%">Code</th><th>What it does</th></tr></thead>
+                <tbody>
+                    <tr><td><code>t[2][101][101]</code></td><td>3D memo table — [person 0/1][pile index][M value]. Initialized to -1.</td></tr>
+                    <tr><td><code>if (i >= n) return 0</code></td><td>Base case — no piles left, Alice gets <strong>0</strong> more stones.</td></tr>
+                    <tr><td><code>person == 1 ? -1 : INT_MAX</code></td><td>Alice starts at <strong>-1</strong> (will maximize). Bob starts at <strong>INT_MAX</strong> (will minimize).</td></tr>
+                    <tr><td><code>x <= min(2*m, n-i)</code></td><td>Try taking 1 to <strong>2M piles</strong> (but don't exceed remaining).</td></tr>
+                    <tr><td><code>stone += piles[i+x-1]</code></td><td>Accumulate the running sum of piles being taken.</td></tr>
+                    <tr><td><code>stone + solveForAlice(0,i+x,...)</code></td><td>Alice adds her stones + recursion (switch to Bob).</td></tr>
+                    <tr><td><code>solveForAlice(1,i+x,...)</code></td><td>Bob just recurses (switch to Alice) — doesn't add stones to Alice's total.</td></tr>
+                    <tr><td><code>max(m, x)</code></td><td>Update M — if x > m, the next player gets a wider range.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 9 -->
+        <div class="section-label reveal"><span class="sec-num">09</span> Complexity Analysis</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(208,128,80,0.1);color:var(--orange)">📊</div>
+                <div class="card-title">Time & Space Complexity</div>
+            </div>
+            <div class="complexity-grid">
+                <div class="complexity-pill">
+                    <div class="label">Time</div>
+                    <div class="big" style="color:var(--accent-4)">O(n³)</div>
+                    <div class="note">2 × n × n states,<br>each tries up to 2M ≈ n moves.</div>
+                </div>
+                <div class="complexity-pill">
+                    <div class="label">Space</div>
+                    <div class="big" style="color:var(--accent-1)">O(n²)</div>
+                    <div class="note">Memo table t[2][n][n]<br>+ O(n) recursion stack.</div>
+                </div>
+            </div>
+            <div class="callout insight" style="margin-top:20px">
+                <div class="callout-icon">🚀</div>
+                <div class="callout-text">
+                    <strong>n ≤ 100:</strong> With n³ ≈ 10⁶, this runs comfortably within time limits. The memoization reduces the exponential recursion tree to a polynomial number of unique states.
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 10 -->
+        <div class="section-label reveal"><span class="sec-num">10</span> Key Takeaways</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(82,160,88,0.1);color:var(--green)">✅</div>
+                <div class="card-title">Remember These</div>
+            </div>
+            <ul>
+                <li><strong>Minimax + Memoization</strong> is the go-to pattern for two-player optimal games.</li>
+                <li>The function tracks <strong>Alice's score only</strong> — Bob's turn minimizes it, no separate tracking needed.</li>
+                <li><span class="hl hl-cream">M = max(M, x)</span> creates a <strong>dynamic range</strong> — the key twist that makes this harder than basic Stone Game.</li>
+                <li>3D state space <span class="hl hl-coral">(person, i, M)</span> — don't forget the <strong>person</strong> dimension!</li>
+                <li>Initialize result to <span class="hl hl-coral">-1</span> for maximizer, <span class="hl hl-blue">INT_MAX</span> for minimizer — classic minimax setup.</li>
+                <li>This pattern extends to Stone Game III, IV, V and other variable-pick games.</li>
+            </ul>
+        </div>
+
+        <footer class="footer">
+            <p>Made with <span class="heart">♥</span> by <a href="#">Algorithm Atlas</a></p>
+            <p style="margin-top:6px;">LeetCode Problem of the Day — 09 August 2026</p>
+        </footer>
+    </div>
+
+    <script>
+        // Particles
+        (function(){const c=document.getElementById('particles');for(let i=0;i<15;i++){const p=document.createElement('div');p.className='particle';const s=3+Math.random()*6;p.style.width=s+'px';p.style.height=s+'px';p.style.left=Math.random()*100+'%';p.style.animationDuration=(14+Math.random()*22)+'s';p.style.animationDelay=-(Math.random()*30)+'s';c.appendChild(p)}})();
+
+        // Navbar
+        const navbar=document.getElementById('navbar'),progress=document.getElementById('nav-progress');
+        window.addEventListener('scroll',()=>{navbar.classList.toggle('scrolled',window.scrollY>20);const h=document.documentElement.scrollHeight-window.innerHeight;progress.style.width=(h>0?(window.scrollY/h)*100:0)+'%'});
+
+        // Reveal
+        document.querySelectorAll('.reveal').forEach(r=>{new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting)en.target.classList.add('visible')})},{threshold:0.1}).observe(r)});
+
+        // Hero piles
+        (function(){const piles=[2,7,9,4,4],c=document.getElementById('hero-piles');const maxP=Math.max(...piles);piles.forEach((p,i)=>{const d=document.createElement('div');d.className='hero-pile';const bar=document.createElement('div');bar.className='hero-pile-bar';bar.style.height=(p/maxP*50+10)+'px';bar.style.background=`rgba(253,${80+i*20},${80+i*15},0.3)`;bar.style.border=`1px solid rgba(253,${80+i*20},${80+i*15},0.45)`;bar.style.animationDelay=(i*0.15)+'s';const lbl=document.createElement('div');lbl.className='hero-pile-label';lbl.textContent=p;d.appendChild(bar);d.appendChild(lbl);c.appendChild(d)})})();
+
+        // Game Visualizer
+        const examples=[
+            {piles:[2,7,9,4,4],name:'[2, 7, 9, 4, 4]'},
+            {piles:[1,2,3,4,5,100],name:'[1, 2, 3, 4, 5, 100]'},
+        ];
+        let curEx=0,vizState=null;
+
+        // Solve with memoization
+        function solve(piles){
+            const n=piles.length,memo={};
+            function rec(person,i,m){
+                if(i>=n)return 0;
+                const key=`${person},${i},${m}`;
+                if(memo[key]!==undefined)return memo[key];
+                let stone=0,result=person===1?-Infinity:Infinity;
+                for(let x=1;x<=Math.min(2*m,n-i);x++){
+                    stone+=piles[i+x-1];
+                    if(person===1)result=Math.max(result,stone+rec(0,i+x,Math.max(m,x)));
+                    else result=Math.min(result,rec(1,i+x,Math.max(m,x)));
+                }
+                return memo[key]=result;
+            }
+            // Also trace moves
+            const moves=[];
+            function trace(person,i,m){
+                if(i>=n)return;
+                let stone=0,bestX=-1,bestVal=person===1?-Infinity:Infinity;
+                for(let x=1;x<=Math.min(2*m,n-i);x++){
+                    stone+=piles[i+x-1];
+                    let val;
+                    if(person===1)val=stone+rec(0,i+x,Math.max(m,x));
+                    else val=rec(1,i+x,Math.max(m,x));
+                    if(person===1&&val>bestVal){bestVal=val;bestX=x}
+                    if(person===0&&val<bestVal){bestVal=val;bestX=x}
+                }
+                if(bestX===-1)return;
+                let sum=0;for(let k=0;k<bestX;k++)sum+=piles[i+k];
+                moves.push({person,i,x:bestX,sum,m,newM:Math.max(m,bestX)});
+                trace(person===1?0:1,i+bestX,Math.max(m,bestX));
+            }
+            rec(1,0,1);trace(1,0,1);
+            return moves;
+        }
+
+        function renderPiles(piles,states){
+            const c=document.getElementById('pile-row');c.innerHTML='';
+            const maxP=Math.max(...piles);
+            piles.forEach((p,i)=>{
+                const d=document.createElement('div');d.className='pile-cell '+(states[i]||'');
+                const bar=document.createElement('div');bar.className='pile-bar';
+                bar.style.height=(p/maxP*35+8)+'px';
+                bar.style.background=states[i]==='alice-pick'?'rgba(253,121,121,0.25)':states[i]==='bob-pick'?'rgba(90,138,176,0.2)':states[i]==='highlight'?'rgba(196,144,48,0.2)':'rgba(253,172,172,0.12)';
+                d.innerHTML=`<div class="pile-bar" style="height:${(p/maxP*35+8)}px;background:${bar.style.background};border-radius:6px 6px 3px 3px;width:30px"></div><span class="pv">${p}</span><span class="pi">${i}</span>`;
+                c.appendChild(d);
+            });
+        }
+
+        function initViz(){
+            const ex=examples[curEx];
+            const moves=solve([...ex.piles]);
+            vizState={moves,step:-1,ex,aliceScore:0,bobScore:0,states:new Array(ex.piles.length).fill(''),m:1};
+            renderPiles(ex.piles,vizState.states);
+            document.getElementById('alice-score').textContent='0';
+            document.getElementById('bob-score').textContent='0';
+            document.getElementById('m-val').textContent='1';
+            document.getElementById('m-range').textContent='(can take 1–2 piles)';
+            document.getElementById('turn-alice').className='turn-pill active-alice';
+            document.getElementById('turn-bob').className='turn-pill';
+            document.getElementById('sc-alice').className='score-card alice active';
+            document.getElementById('sc-bob').className='score-card bob';
+            document.getElementById('viz-info').textContent=`${ex.name} — Press Play`;
+            document.getElementById('viz-final').textContent='';
+            document.getElementById('btn-play').disabled=false;
+        }
+
+        function playStep(){
+            if(!vizState)return;
+            vizState.step++;
+            if(vizState.step>=vizState.moves.length){
+                document.getElementById('btn-play').disabled=true;
+                document.getElementById('viz-final').innerHTML=`<span style="color:var(--green)">🏆 Alice gets <strong>${vizState.aliceScore}</strong> stones!</span>`;
+                document.getElementById('turn-alice').className='turn-pill';
+                document.getElementById('turn-bob').className='turn-pill';
+                return;
+            }
+            const mv=vizState.moves[vizState.step];
+            const cls=mv.person===1?'alice-pick':'bob-pick';
+            for(let k=mv.i;k<mv.i+mv.x;k++)vizState.states[k]=cls;
+            // After a short delay mark taken
+            setTimeout(()=>{for(let k=mv.i;k<mv.i+mv.x;k++)vizState.states[k]='taken';renderPiles(vizState.ex.piles,vizState.states)},800);
+            // Highlight pickable range for next move
+            if(vizState.step+1<vizState.moves.length){
+                const next=vizState.moves[vizState.step+1];
+                setTimeout(()=>{
+                    for(let k=next.i;k<Math.min(next.i+2*next.m,vizState.ex.piles.length);k++){
+                        if(vizState.states[k]!=='taken')vizState.states[k]='highlight';
+                    }
+                    renderPiles(vizState.ex.piles,vizState.states);
+                },900);
+            }
+
+            renderPiles(vizState.ex.piles,vizState.states);
+            if(mv.person===1)vizState.aliceScore+=mv.sum;else vizState.bobScore+=mv.sum;
+            document.getElementById('alice-score').textContent=vizState.aliceScore;
+            document.getElementById('bob-score').textContent=vizState.bobScore;
+            document.getElementById('m-val').textContent=mv.newM;
+            document.getElementById('m-range').textContent=`(can take 1–${2*mv.newM} piles)`;
+            const who=mv.person===1?'Alice':'Bob';
+            document.getElementById('viz-info').innerHTML=`<strong>${who}</strong> takes ${mv.x} pile${mv.x>1?'s':''} (sum=${mv.sum}), M becomes ${mv.newM}`;
+            const nextP=vizState.step+1<vizState.moves.length?vizState.moves[vizState.step+1].person:0;
+            document.getElementById('turn-alice').className='turn-pill'+(nextP===1?' active-alice':'');
+            document.getElementById('turn-bob').className='turn-pill'+(nextP===0?' active-bob':'');
+            document.getElementById('sc-alice').className='score-card alice'+(mv.person===1?' active':'');
+            document.getElementById('sc-bob').className='score-card bob'+(mv.person===0?' active':'');
+        }
+
+        function resetViz(){initViz()}
+        function changeExample(){curEx=(curEx+1)%examples.length;initViz()}
+        initViz();
+    </script>
+</body>
+</html>
