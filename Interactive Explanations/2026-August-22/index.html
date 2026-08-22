@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Divisibility by Digit Sum + Product | Algorithm Atlas</title>
+    <meta name="description" content="Interactive visual explanation: Check if a number is divisible by the sum of its digit sum and digit product. Step-by-step digit extraction visualizer.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --bg-primary:#fff8f2;--bg-secondary:#fef3ec;--bg-card:rgba(255,248,242,0.82);
+            --glass:rgba(253,121,121,0.05);--glass-border:rgba(253,121,121,0.14);
+            --text-primary:#3d2828;--text-secondary:#6b4444;--text-muted:#a07676;
+            --accent-1:#FD7979;--accent-2:#FDACAC;--accent-3:#FFCDC9;--accent-4:#d04848;
+            --green:#52a058;--yellow:#c49030;--orange:#d08050;--blue:#5a8ab0;
+            --neutral-1:#FEEAC9;--neutral-2:#FFCDC9;
+            --gradient-hero:linear-gradient(135deg,#FD7979 0%,#FDACAC 40%,#FFCDC9 70%,#FEEAC9 100%);
+            --gradient-cool:linear-gradient(135deg,#FDACAC,#FD7979,#d04848);
+            --shadow-glow:0 0 60px rgba(253,121,121,0.10);--shadow-card:0 8px 32px rgba(253,121,121,0.06);
+            --radius:18px;--radius-sm:12px;
+        }
+        html{scroll-behavior:smooth}
+        body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg-primary);color:var(--text-primary);line-height:1.7;overflow-x:hidden;min-height:100vh}
+
+        /* BG */
+        .bg-mesh{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+        .bg-mesh::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(253,121,121,0.04) 0%,transparent 60%),radial-gradient(circle at 80% 70%,rgba(254,234,201,0.06) 0%,transparent 50%)}
+        .bg-mesh .orb{position:absolute;border-radius:50%;filter:blur(120px);animation:orbFloat 20s ease-in-out infinite}
+        .bg-mesh .orb:nth-child(1){width:650px;height:650px;top:-12%;left:-8%;background:rgba(253,121,121,0.08);animation-duration:25s}
+        .bg-mesh .orb:nth-child(2){width:500px;height:500px;top:30%;right:-10%;background:rgba(254,234,201,0.10);animation-duration:30s;animation-delay:-5s}
+        .bg-mesh .orb:nth-child(3){width:480px;height:480px;bottom:-8%;left:20%;background:rgba(255,205,201,0.10);animation-duration:22s;animation-delay:-10s}
+        .bg-mesh .orb:nth-child(4){width:380px;height:380px;top:55%;left:50%;background:rgba(253,172,172,0.08);animation-duration:28s;animation-delay:-15s}
+        @keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(50px,-35px) scale(1.08)}50%{transform:translate(-25px,50px) scale(0.95)}75%{transform:translate(35px,25px) scale(1.04)}}
+        .particle{position:fixed;pointer-events:none;z-index:0;border-radius:50%;animation:particleDrift linear infinite}
+        .particle:nth-child(odd){background:rgba(253,121,121,0.12)}.particle:nth-child(even){background:rgba(255,205,201,0.18)}
+        .particle:nth-child(3n){background:rgba(254,234,201,0.16)}.particle:nth-child(5n){background:rgba(253,172,172,0.14);border-radius:3px}
+        @keyframes particleDrift{0%{transform:translateY(100vh) rotate(0deg);opacity:0}8%{opacity:1}92%{opacity:1}100%{transform:translateY(-10vh) rotate(360deg);opacity:0}}
+
+        .container{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 24px}
+
+        /* NAV */
+        .navbar{position:fixed;top:0;left:0;right:0;z-index:100;backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8);background:rgba(255,248,242,0.88);border-bottom:1px solid var(--glass-border);transition:box-shadow .3s,background .3s}
+        .navbar.scrolled{box-shadow:0 4px 30px rgba(253,121,121,0.06);background:rgba(255,248,242,0.95)}
+        .nav-progress{position:absolute;bottom:0;left:0;height:2.5px;background:var(--gradient-hero);transition:width .15s ease-out;width:0%;border-radius:0 2px 2px 0}
+        .navbar-inner{max-width:900px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px}
+        .nav-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;text-decoration:none;color:var(--text-primary);transition:transform .2s}.nav-brand:hover{transform:scale(1.03)}
+        .nav-brand .logo{width:34px;height:34px;border-radius:9px;background:var(--gradient-cool);display:grid;place-items:center;font-size:.85rem;font-weight:800;color:#fff;box-shadow:0 3px 14px rgba(253,121,121,0.3)}
+        .nav-links{display:flex;align-items:center;gap:14px}
+        .nav-date{font-size:.82rem;color:var(--text-secondary);font-weight:500;padding:6px 14px;border-radius:20px;background:var(--glass);border:1px solid var(--glass-border)}
+        .nav-difficulty{font-size:.72rem;font-weight:700;padding:4px 12px;border-radius:20px;background:rgba(82,160,88,0.08);color:var(--green);border:1px solid rgba(82,160,88,0.2);text-transform:uppercase;letter-spacing:1px}
+
+        /* HERO */
+        .hero{padding:130px 0 60px;text-align:center}
+        .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:50px;background:rgba(253,121,121,0.08);border:1px solid rgba(253,121,121,0.2);font-size:.78rem;font-weight:600;color:var(--accent-1);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:26px;animation:fadeInDown .8s ease-out}
+        .hero-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-4);animation:pulse 2s ease-in-out infinite}
+        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+        .hero h1{font-size:clamp(2rem,5vw,2.9rem);font-weight:900;line-height:1.12;letter-spacing:-1.5px;color:var(--text-primary);animation:fadeInUp .8s ease-out .1s both}
+        .hero h1 .gradient-text{background:var(--gradient-cool);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .hero h1 .leetcode-num{display:block;font-size:.42em;letter-spacing:3px;-webkit-text-fill-color:var(--text-muted);background:none;margin-top:8px;font-weight:700}
+        .hero-subtitle{margin-top:20px;font-size:1.08rem;color:var(--text-secondary);max-width:660px;margin-left:auto;margin-right:auto;line-height:1.75;animation:fadeInUp .8s ease-out .25s both}
+        .hero-tags{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:28px;animation:fadeInUp .8s ease-out .4s both}
+        .hero-tag{padding:6px 16px;border-radius:20px;font-size:.78rem;font-weight:600;border:1px solid;transition:transform .2s,box-shadow .2s}
+        .hero-tag:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.06)}
+        .hero-tag.diff{color:var(--green);border-color:rgba(82,160,88,0.3);background:rgba(82,160,88,0.06)}
+        .hero-tag.cat{color:#a05050;border-color:rgba(253,121,121,0.3);background:rgba(253,121,121,0.06)}
+        .hero-tag.pattern{color:#8a5a30;border-color:rgba(254,234,201,0.5);background:rgba(254,234,201,0.2)}
+
+        /* Hero equation animation */
+        .hero-equation{margin-top:38px;animation:fadeInUp .8s ease-out .55s both;display:flex;flex-direction:column;align-items:center;gap:12px}
+        .hero-eq-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center}
+        .hero-digit{width:42px;height:42px;border-radius:10px;display:grid;place-items:center;font-size:1.15rem;font-weight:800;font-family:'JetBrains Mono',monospace;animation:digitBounce 2.6s ease-in-out infinite;border:2px solid}
+        .hero-digit.d1{background:rgba(253,121,121,0.1);border-color:rgba(253,121,121,0.3);color:var(--accent-1);animation-delay:0s}
+        .hero-digit.d2{background:rgba(253,172,172,0.12);border-color:rgba(253,172,172,0.3);color:var(--accent-4);animation-delay:.15s}
+        .hero-digit.d3{background:rgba(254,234,201,0.2);border-color:rgba(254,234,201,0.45);color:#8a6a30;animation-delay:.3s}
+        @keyframes digitBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+        .hero-op{font-size:1.1rem;font-weight:800;color:var(--text-muted);margin:0 2px}
+        .hero-eq-badge{padding:6px 18px;border-radius:10px;font-size:.8rem;font-weight:700;font-family:'JetBrains Mono',monospace}
+        .hero-eq-badge.sum{color:var(--blue);background:rgba(90,138,176,0.08);border:1px solid rgba(90,138,176,0.2)}
+        .hero-eq-badge.prod{color:var(--orange);background:rgba(208,128,80,0.08);border:1px solid rgba(208,128,80,0.2)}
+        .hero-eq-badge.check{color:var(--green);background:rgba(82,160,88,0.08);border:1px solid rgba(82,160,88,0.2)}
+
+        @keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes fadeInDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+        .reveal{opacity:0;transform:translateY(40px);transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1)}
+        .reveal.visible{opacity:1;transform:translateY(0)}
+
+        /* CARD */
+        .card{background:var(--bg-card);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:38px;margin-bottom:32px;transition:border-color .3s,box-shadow .4s,transform .3s;position:relative;overflow:hidden}
+        .card::before{content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(253,121,121,0.03),transparent);transition:left .7s ease}
+        .card:hover::before{left:100%}
+        .card:hover{border-color:rgba(253,121,121,0.22);box-shadow:var(--shadow-card),var(--shadow-glow);transform:translateY(-3px)}
+        .card-header{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+        .card-icon{width:50px;height:50px;border-radius:14px;display:grid;place-items:center;font-size:1.35rem;flex-shrink:0;transition:transform .3s}
+        .card:hover .card-icon{transform:scale(1.12) rotate(-4deg)}
+        .card-title{font-size:1.4rem;font-weight:800;letter-spacing:-.5px;color:var(--text-primary)}
+        .card p,.card li{color:var(--text-secondary);font-size:.95rem;line-height:1.8}
+        .card ul{list-style:none;padding:0}.card ul li{padding:6px 0;padding-left:24px;position:relative}
+        .card ul li::before{content:'▸';position:absolute;left:0;color:var(--accent-1);font-weight:700}
+        .card strong{color:var(--text-primary)}
+
+        .section-label{display:flex;align-items:center;gap:14px;margin:55px 0 26px;font-size:.72rem;text-transform:uppercase;letter-spacing:3px;font-weight:700;color:var(--text-muted)}
+        .section-label .sec-num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;background:var(--gradient-cool);color:#fff;font-size:.72rem;font-weight:800;flex-shrink:0;box-shadow:0 3px 12px rgba(253,121,121,0.22)}
+        .section-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--glass-border),transparent)}
+
+        /* VIZ */
+        .viz-board{text-align:center}
+        .digit-row{display:flex;justify-content:center;gap:8px;margin:18px 0;flex-wrap:wrap}
+        .digit-cell{width:62px;height:72px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;background:var(--glass);border:2px solid var(--glass-border);transition:all .45s cubic-bezier(.34,1.56,.64,1);position:relative}
+        .digit-cell .dv{font-size:1.5rem;font-weight:800;color:var(--text-primary)}
+        .digit-cell .dp{font-size:.5rem;color:var(--text-muted);font-weight:600;margin-top:2px}
+        .digit-cell.current{border-color:var(--accent-1);background:rgba(253,121,121,0.08);box-shadow:0 0 20px rgba(253,121,121,0.12);animation:cellPulse 1s ease-in-out infinite}
+        .digit-cell.current .dv{color:var(--accent-1)}
+        .digit-cell.processed{border-color:var(--green);background:rgba(82,160,88,0.06);transform:scale(1.04)}
+        .digit-cell.processed .dv{color:var(--green)}
+        .digit-cell.faded{opacity:.25;transform:scale(.9)}
+        @keyframes cellPulse{0%,100%{box-shadow:0 0 14px rgba(253,121,121,0.08)}50%{box-shadow:0 0 24px rgba(253,121,121,0.2)}}
+
+        /* Accumulator row */
+        .accum-row{display:flex;justify-content:center;gap:24px;margin:18px 0;flex-wrap:wrap}
+        .accum-card{padding:18px 28px;border-radius:var(--radius-sm);background:var(--glass);border:1px solid var(--glass-border);text-align:center;min-width:140px;transition:all .4s}
+        .accum-card .ac-label{font-size:.68rem;text-transform:uppercase;letter-spacing:2px;font-weight:700;color:var(--text-muted);margin-bottom:4px}
+        .accum-card .ac-value{font-size:2rem;font-weight:900;font-family:'JetBrains Mono',monospace;transition:all .3s}
+        .accum-card.sum-card .ac-value{color:var(--blue)}
+        .accum-card.prod-card .ac-value{color:var(--orange)}
+        .accum-card.total-card .ac-value{color:var(--accent-1)}
+        .accum-card.total-card{border-color:rgba(253,121,121,0.2)}
+        .accum-card.active{transform:scale(1.06);box-shadow:0 6px 20px rgba(253,121,121,0.1);border-color:rgba(253,121,121,0.3)}
+
+        /* Divisibility check display */
+        .div-check-display{margin:16px 0;padding:18px 24px;border-radius:var(--radius-sm);background:var(--glass);border:1px solid var(--glass-border);font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:600;color:var(--text-secondary);transition:all .4s;min-height:54px;display:flex;align-items:center;justify-content:center;gap:10px}
+        .div-check-display.pass{border-color:rgba(82,160,88,0.3);background:rgba(82,160,88,0.06);color:var(--green)}
+        .div-check-display.fail{border-color:rgba(253,121,121,0.2);background:rgba(253,121,121,0.04);color:var(--accent-4)}
+
+        .phase-indicator{display:flex;justify-content:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+        .phase-pill{padding:6px 16px;border-radius:20px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text-muted);transition:all .3s}
+        .phase-pill.active{background:var(--gradient-cool);border-color:transparent;color:#fff;box-shadow:0 3px 12px rgba(253,121,121,0.2)}
+        .phase-pill.done{background:rgba(82,160,88,0.08);border-color:rgba(82,160,88,0.25);color:var(--green)}
+
+        /* Number input display */
+        .num-input-row{display:flex;justify-content:center;gap:14px;align-items:center;margin:14px 0;flex-wrap:wrap}
+        .num-input-label{font-size:.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
+        .num-input-val{font-size:1.6rem;font-weight:900;font-family:'JetBrains Mono',monospace;color:var(--accent-1);padding:6px 20px;border-radius:10px;background:rgba(253,121,121,0.06);border:1px solid rgba(253,121,121,0.15)}
+
+        .viz-controls{display:flex;justify-content:center;gap:12px;margin-top:24px;flex-wrap:wrap}
+        .viz-btn{padding:11px 26px;border-radius:11px;border:none;font-family:'Inter',sans-serif;font-weight:600;font-size:.85rem;cursor:pointer;transition:all .25s}
+        .viz-btn.primary{background:var(--gradient-cool);color:#fff;box-shadow:0 4px 20px rgba(253,121,121,0.25)}
+        .viz-btn.primary:hover{transform:translateY(-2px);box-shadow:0 6px 30px rgba(253,121,121,0.4)}
+        .viz-btn.primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+        .viz-btn.secondary{background:var(--glass);color:var(--text-primary);border:1px solid var(--glass-border)}
+        .viz-btn.secondary:hover{border-color:var(--accent-1);transform:translateY(-1px)}
+        .viz-step-info{margin-top:16px;font-size:.88rem;color:var(--text-secondary);min-height:30px;padding:10px 20px;border-radius:8px;background:rgba(253,121,121,0.04);display:inline-block}
+        .viz-result-text{margin-top:16px;font-weight:700;font-size:1.05rem;min-height:32px}
+
+        /* TIMELINE */
+        .timeline{position:relative;padding-left:42px}
+        .timeline::before{content:'';position:absolute;left:17px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,#FD7979,#FDACAC,#FFCDC9,#FEEAC9);border-radius:2px}
+        .timeline-item{position:relative;margin-bottom:32px;padding-left:4px}
+        .timeline-dot{position:absolute;left:-32px;top:4px;width:16px;height:16px;border-radius:50%;border:3px solid var(--accent-1);background:var(--bg-primary);transition:all .3s}
+        .timeline-item:hover .timeline-dot{transform:scale(1.35);box-shadow:0 0 14px rgba(253,121,121,0.25)}
+        .timeline-item:nth-child(2) .timeline-dot{border-color:var(--accent-2)}
+        .timeline-item:nth-child(3) .timeline-dot{border-color:var(--accent-3)}
+        .timeline-item:nth-child(4) .timeline-dot{border-color:var(--neutral-1)}
+        .timeline-item h4{font-size:1.02rem;font-weight:700;margin-bottom:6px;color:var(--text-primary)}
+        .timeline-item p{color:var(--text-secondary);font-size:.9rem;line-height:1.75}
+
+        .hl{padding:2px 8px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.82em;font-weight:600}
+        .hl-coral{background:rgba(253,121,121,0.12);color:#c04040}
+        .hl-rose{background:rgba(253,172,172,0.15);color:#a05050}
+        .hl-cream{background:rgba(254,234,201,0.3);color:#8a6a30}
+        .hl-green{background:rgba(82,160,88,0.1);color:#3a7a42}
+        .hl-blue{background:rgba(90,138,176,0.1);color:#4070a0}
+        .hl-orange{background:rgba(208,128,80,0.1);color:#a06030}
+
+        /* CODE */
+        .code-container{position:relative;border-radius:var(--radius);overflow:hidden;background:#2a1e1e;border:1px solid rgba(253,121,121,0.15)}
+        .code-topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(253,121,121,0.1)}
+        .code-dots{display:flex;gap:7px}.code-dots span{width:12px;height:12px;border-radius:50%;transition:transform .2s}.code-dots span:hover{transform:scale(1.3)}
+        .code-dots span:nth-child(1){background:#FD7979}.code-dots span:nth-child(2){background:#c49030}.code-dots span:nth-child(3){background:#52a058}
+        .code-lang{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#a07676}
+        .code-body{padding:24px;overflow-x:auto}
+        .code-body pre{margin:0;font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.85;color:#e0c8c8}
+        .syn-kw{color:#fda0a0}.syn-type{color:#a0c8f0}.syn-fn{color:#f0d090}
+        .syn-num{color:#e0a090}.syn-str{color:#a0d0a0}.syn-cmt{color:#6a5050;font-style:italic}
+        .syn-op{color:#b09898}.syn-bool{color:#d0a898}
+
+        .complexity-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .complexity-pill{padding:24px;border-radius:var(--radius-sm);background:var(--glass);border:1px solid var(--glass-border);text-align:center;transition:all .3s}
+        .complexity-pill:hover{border-color:rgba(253,121,121,0.3);transform:translateY(-2px)}
+        .complexity-pill .label{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;color:var(--text-muted);margin-bottom:8px}
+        .complexity-pill .big{font-size:1.5rem;font-weight:900;font-family:'JetBrains Mono',monospace}
+        .complexity-pill .note{font-size:.78rem;color:var(--text-secondary);margin-top:6px}
+
+        .callout{display:flex;gap:16px;padding:22px 24px;border-radius:var(--radius-sm);border-left:4px solid;margin:20px 0;transition:transform .2s}
+        .callout:hover{transform:translateX(4px)}
+        .callout.insight{background:rgba(253,172,172,0.06);border-color:var(--accent-2)}
+        .callout.warning{background:rgba(253,121,121,0.05);border-color:var(--accent-1)}
+        .callout .callout-icon{font-size:1.3rem;flex-shrink:0;margin-top:2px}
+        .callout .callout-text{font-size:.9rem;color:var(--text-secondary);line-height:1.7}
+        .callout .callout-text strong{color:var(--text-primary)}
+
+        .visual-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:var(--radius-sm);overflow:hidden;margin:16px 0}
+        .visual-table th{background:rgba(253,121,121,0.07);color:var(--accent-1);font-size:.78rem;text-transform:uppercase;letter-spacing:1px;font-weight:700;padding:12px 16px;text-align:left;border-bottom:1px solid var(--glass-border)}
+        .visual-table td{padding:12px 16px;font-size:.88rem;color:var(--text-secondary);border-bottom:1px solid rgba(253,121,121,0.04);transition:background .2s}
+        .visual-table tr:last-child td{border-bottom:none}.visual-table tr:hover td{background:rgba(253,121,121,0.03)}
+        .visual-table code{font-family:'JetBrains Mono',monospace;font-size:.82em;color:#c04040;background:rgba(253,121,121,0.06);padding:2px 7px;border-radius:4px}
+
+        .pattern-badges{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}
+        .pattern-badge{display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:10px;background:var(--glass);border:1px solid var(--glass-border);font-size:.85rem;font-weight:600;color:var(--text-primary);transition:all .3s}
+        .pattern-badge:hover{border-color:var(--accent-1);transform:translateY(-3px);box-shadow:0 6px 18px rgba(253,121,121,0.08)}
+        .pattern-badge .emoji{font-size:1.1rem}
+
+        .footer{text-align:center;padding:60px 0 40px;color:var(--text-muted);font-size:.8rem}
+        .footer .heart{color:var(--accent-1)}.footer a{color:var(--accent-4);text-decoration:none}.footer a:hover{text-decoration:underline}
+
+        ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:rgba(253,121,121,0.22);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:rgba(253,121,121,0.4)}
+
+        @media(max-width:640px){.card{padding:24px}.complexity-grid{grid-template-columns:1fr}.navbar-inner{padding:0 16px}.container{padding:0 16px}.nav-difficulty{display:none}.digit-cell{width:50px;height:58px}.digit-cell .dv{font-size:1.2rem}.accum-row{gap:12px}.accum-card{min-width:100px;padding:12px 18px}.accum-card .ac-value{font-size:1.4rem}}
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"><div class="orb"></div><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
+    <div id="particles"></div>
+
+    <nav class="navbar" id="navbar">
+        <div class="nav-progress" id="nav-progress"></div>
+        <div class="navbar-inner">
+            <a href="#" class="nav-brand"><div class="logo">A²</div> Algorithm Atlas</a>
+            <div class="nav-links">
+                <span class="nav-difficulty">Easy</span>
+                <span class="nav-date">📅 22 Aug 2026</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <section class="hero">
+            <div class="hero-badge"><span class="dot"></span> Problem of the Day</div>
+            <h1>
+                <span class="gradient-text">Check Divisibility by<br>Digit Sum + Product</span>
+                <span class="leetcode-num">Digit Extraction Problem</span>
+            </h1>
+            <p class="hero-subtitle">
+                Given a number <strong>n</strong>, check if it's divisible by the <strong>sum of its digit sum and digit product</strong>. A clean digit-extraction exercise!
+            </p>
+            <div class="hero-tags">
+                <span class="hero-tag diff">✅ Easy</span>
+                <span class="hero-tag cat">🔢 Math</span>
+                <span class="hero-tag cat">🔄 Simulation</span>
+                <span class="hero-tag pattern">🔍 Digit Extraction</span>
+                <span class="hero-tag pattern">📐 Modular Arithmetic</span>
+            </div>
+            <div class="hero-equation">
+                <div class="hero-eq-row">
+                    <div class="hero-digit d1">1</div>
+                    <div class="hero-digit d2">2</div>
+                    <div class="hero-digit d3">3</div>
+                </div>
+                <div class="hero-eq-row" style="gap:10px;margin-top:6px;">
+                    <span class="hero-eq-badge sum">Σ 1+2+3 = 6</span>
+                    <span class="hero-op">+</span>
+                    <span class="hero-eq-badge prod">Π 1×2×3 = 6</span>
+                    <span class="hero-op">=</span>
+                    <span class="hero-eq-badge check">12 → 123 % 12? ✓</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 1 -->
+        <div class="section-label reveal"><span class="sec-num">01</span> The Problem</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(253,121,121,0.1);color:var(--accent-1)">📖</div>
+                <div class="card-title">What's the Problem?</div>
+            </div>
+            <p>Given an integer <span class="hl hl-coral">n</span>, compute the <strong>digit sum</strong> and <strong>digit product</strong> of its digits. Then check if <span class="hl hl-coral">n</span> is divisible by <span class="hl hl-blue">(sum + product)</span>.</p>
+            <br>
+            <p>For example, <span class="hl hl-coral">n = 123</span>: digit sum = <span class="hl hl-blue">1+2+3 = 6</span>, digit product = <span class="hl hl-orange">1×2×3 = 6</span>, sum+product = <span class="hl hl-green">12</span>. Since <span class="hl hl-green">123 % 12 ≠ 0</span> → <strong>false</strong>. Wait, actually 123 / 12 = 10.25, so it's not divisible!</p>
+            <div class="callout insight" style="margin-top:20px">
+                <div class="callout-icon">💡</div>
+                <div class="callout-text">
+                    <strong>Two operations in one pass:</strong> You extract each digit once and simultaneously compute <em>both</em> the running sum and running product. Classic digit extraction with dual accumulators!
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2 -->
+        <div class="section-label reveal"><span class="sec-num">02</span> Try It Yourself</div>
+        <div class="card reveal" id="viz-card">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(82,160,88,0.1);color:var(--green)">🎮</div>
+                <div class="card-title">Interactive Digit Decomposer</div>
+            </div>
+            <p style="margin-bottom:14px">Watch each digit get extracted, accumulating the <strong>sum</strong> and <strong>product</strong> in real-time.</p>
+            <div class="viz-board">
+                <div class="phase-indicator" id="phase-indicator">
+                    <span class="phase-pill active" id="ph-1">① Extract Digits</span>
+                    <span class="phase-pill" id="ph-2">② Compute Sum+Prod</span>
+                    <span class="phase-pill" id="ph-3">③ Check Divisibility</span>
+                </div>
+                <div class="num-input-row">
+                    <span class="num-input-label">Number n =</span>
+                    <span class="num-input-val" id="num-val">123</span>
+                </div>
+                <div class="digit-row" id="digit-row"></div>
+                <div class="accum-row">
+                    <div class="accum-card sum-card">
+                        <div class="ac-label">Digit Sum (Σ)</div>
+                        <div class="ac-value" id="sum-val">0</div>
+                    </div>
+                    <div class="accum-card prod-card">
+                        <div class="ac-label">Digit Product (Π)</div>
+                        <div class="ac-value" id="prod-val">1</div>
+                    </div>
+                    <div class="accum-card total-card">
+                        <div class="ac-label">Sum + Product</div>
+                        <div class="ac-value" id="total-val">—</div>
+                    </div>
+                </div>
+                <div class="div-check-display" id="div-check">Waiting for computation...</div>
+                <div class="viz-step-info" id="viz-info">Press Play to start</div>
+                <div class="viz-result-text" id="viz-final"></div>
+                <div class="viz-controls">
+                    <button class="viz-btn primary" id="btn-play" onclick="playStep()">▶ Play Step</button>
+                    <button class="viz-btn secondary" onclick="resetViz()">↻ Reset</button>
+                    <button class="viz-btn secondary" onclick="changeExample()">⟳ Next Example</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3 -->
+        <div class="section-label reveal"><span class="sec-num">03</span> Intuition</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(253,172,172,0.1);color:var(--accent-2)">🧠</div>
+                <div class="card-title">Why It's Simple & Elegant</div>
+            </div>
+            <p>This problem is a perfect exercise in the <strong>digit extraction pattern</strong>:</p>
+            <ul style="margin-top:10px">
+                <li><strong>Extract:</strong> Use <span class="hl hl-coral">n % 10</span> to get the last digit, <span class="hl hl-coral">n /= 10</span> to remove it.</li>
+                <li><strong>Dual accumulate:</strong> Maintain <em>two</em> accumulators simultaneously — <span class="hl hl-blue">sum += digit</span> and <span class="hl hl-orange">product *= digit</span>.</li>
+                <li><strong>Final check:</strong> One modulo operation: <span class="hl hl-green">orig % (sum + product) == 0</span>.</li>
+            </ul>
+            <div class="callout warning" style="margin-top:20px">
+                <div class="callout-icon">⚠️</div>
+                <div class="callout-text">
+                    <strong>Edge case alert:</strong> If any digit is <span class="hl hl-coral">0</span>, the product becomes 0, so <span class="hl hl-blue">sum + product = sum</span>. Also, if n itself is 0, you'd be dividing by 0 — handle this carefully!
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4 -->
+        <div class="section-label reveal"><span class="sec-num">04</span> Approach</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(254,234,201,0.2);color:var(--orange)">🗺️</div>
+                <div class="card-title">Step-by-Step Approach</div>
+            </div>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>1. Save the original number</h4>
+                    <p>Store <span class="hl hl-coral">orig = n</span> because we'll modify n during extraction but need it for the final check.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>2. Initialize accumulators</h4>
+                    <p>Set <span class="hl hl-blue">sum = 0</span> (additive identity) and <span class="hl hl-orange">product = 1</span> (multiplicative identity).</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>3. Extract digits one by one</h4>
+                    <p>While <span class="hl hl-coral">n > 0</span>: extract <span class="hl hl-cream">dig = n % 10</span>, accumulate into both sum and product, then <span class="hl hl-coral">n /= 10</span>.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <h4>4. Check divisibility</h4>
+                    <p>Return <span class="hl hl-green">orig % (sum + product) == 0</span>.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 5 -->
+        <div class="section-label reveal"><span class="sec-num">05</span> Methods & Functions</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(196,144,48,0.1);color:var(--yellow)">⚙️</div>
+                <div class="card-title">Key Operations</div>
+            </div>
+            <table class="visual-table">
+                <thead><tr><th>Code</th><th>Purpose</th></tr></thead>
+                <tbody>
+                    <tr><td><code>checkDivisibility(n)</code></td><td>Main function — extracts digits, computes sum + product, checks divisibility.</td></tr>
+                    <tr><td><code>int orig = n</code></td><td>Preserve the original number before destructive digit extraction.</td></tr>
+                    <tr><td><code>n % 10</code></td><td><strong>Extracts the last digit.</strong> E.g., 123 % 10 = 3.</td></tr>
+                    <tr><td><code>sum += dig</code></td><td>Running <strong>digit sum</strong> accumulator.</td></tr>
+                    <tr><td><code>prod *= dig</code></td><td>Running <strong>digit product</strong> accumulator.</td></tr>
+                    <tr><td><code>n = n / 10</code></td><td>Remove the last digit. E.g., 123 / 10 = 12.</td></tr>
+                    <tr><td><code>orig % (sum + prod) == 0</code></td><td>Final divisibility test against the <strong>combined</strong> sum + product.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 6 -->
+        <div class="section-label reveal"><span class="sec-num">06</span> Patterns Used</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(253,121,121,0.08);color:var(--accent-1)">🧩</div>
+                <div class="card-title">Design Patterns</div>
+            </div>
+            <div class="pattern-badges">
+                <div class="pattern-badge"><span class="emoji">🔢</span> Digit Extraction</div>
+                <div class="pattern-badge"><span class="emoji">➕</span> Dual Accumulator</div>
+                <div class="pattern-badge"><span class="emoji">📐</span> Modular Arithmetic</div>
+                <div class="pattern-badge"><span class="emoji">💾</span> Save & Restore</div>
+            </div>
+            <ul style="margin-top:16px">
+                <li><strong>Digit Extraction:</strong> The <span class="hl hl-coral">% 10</span> / <span class="hl hl-coral">/= 10</span> pattern — fundamental for any "digit manipulation" problem.</li>
+                <li><strong>Dual Accumulator:</strong> Tracking <em>two</em> running values (sum and product) in a single loop — efficient and clean.</li>
+                <li><strong>Save Original:</strong> A critical pattern — if your loop destroys the input, save it first!</li>
+                <li><strong>Modular Arithmetic:</strong> <span class="hl hl-green">a % b == 0</span> checks exact divisibility — one of math's most useful operations.</li>
+            </ul>
+        </div>
+
+        <!-- SECTION 7 -->
+        <div class="section-label reveal"><span class="sec-num">07</span> Full Code</div>
+        <div class="card reveal" style="padding:0;overflow:hidden">
+            <div class="code-container">
+                <div class="code-topbar">
+                    <div class="code-dots"><span></span><span></span><span></span></div>
+                    <span class="code-lang">C++ • solution.cpp</span>
+                </div>
+                <div class="code-body">
+<pre><span class="syn-kw">class</span> <span class="syn-type">Solution</span> {
+<span class="syn-kw">public</span>:
+    <span class="syn-type">bool</span> <span class="syn-fn">checkDivisibility</span>(<span class="syn-type">int</span> n) {
+        <span class="syn-type">int</span> orig <span class="syn-op">=</span> n;             <span class="syn-cmt">// save original</span>
+        <span class="syn-type">int</span> sum  <span class="syn-op">=</span> <span class="syn-num">0</span>;             <span class="syn-cmt">// digit sum</span>
+        <span class="syn-type">int</span> prod <span class="syn-op">=</span> <span class="syn-num">1</span>;             <span class="syn-cmt">// digit product</span>
+
+        <span class="syn-kw">while</span> (n <span class="syn-op">&gt;</span> <span class="syn-num">0</span>) {
+            <span class="syn-type">int</span> dig <span class="syn-op">=</span> n <span class="syn-op">%</span> <span class="syn-num">10</span>;       <span class="syn-cmt">// extract last digit</span>
+            sum  <span class="syn-op">+=</span> dig;              <span class="syn-cmt">// accumulate sum</span>
+            prod <span class="syn-op">*=</span> dig;              <span class="syn-cmt">// accumulate product</span>
+            n <span class="syn-op">=</span> n <span class="syn-op">/</span> <span class="syn-num">10</span>;              <span class="syn-cmt">// remove last digit</span>
+        }
+
+        <span class="syn-kw">if</span> ((orig <span class="syn-op">%</span> (sum <span class="syn-op">+</span> prod)) <span class="syn-op">==</span> <span class="syn-num">0</span>) {
+            <span class="syn-kw">return</span> <span class="syn-bool">true</span>;           <span class="syn-cmt">// divisible!</span>
+        }
+        <span class="syn-kw">return</span> <span class="syn-bool">false</span>;
+    }
+};</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 8 -->
+        <div class="section-label reveal"><span class="sec-num">08</span> Code Walkthrough</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(253,172,172,0.12);color:var(--accent-2)">🔍</div>
+                <div class="card-title">Line-by-Line Breakdown</div>
+            </div>
+            <table class="visual-table">
+                <thead><tr><th style="width:42%">Code</th><th>What it does</th></tr></thead>
+                <tbody>
+                    <tr><td><code>int orig = n</code></td><td>Save the original number — the loop will destroy <code>n</code>.</td></tr>
+                    <tr><td><code>int sum = 0</code></td><td>Additive identity — start sum at <strong>0</strong>.</td></tr>
+                    <tr><td><code>int prod = 1</code></td><td>Multiplicative identity — start product at <strong>1</strong>.</td></tr>
+                    <tr><td><code>n % 10</code></td><td>Get the <strong>last digit</strong>. E.g., 456 % 10 = 6.</td></tr>
+                    <tr><td><code>sum += dig</code></td><td>Add digit to running sum. E.g., 0+6 = 6.</td></tr>
+                    <tr><td><code>prod *= dig</code></td><td>Multiply digit into running product. E.g., 1×6 = 6.</td></tr>
+                    <tr><td><code>n = n / 10</code></td><td>Remove last digit. E.g., 456 / 10 = 45.</td></tr>
+                    <tr><td><code>orig % (sum + prod) == 0</code></td><td>Final check: is the original number divisible by (sum + product)?</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 9 -->
+        <div class="section-label reveal"><span class="sec-num">09</span> Complexity Analysis</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(208,128,80,0.1);color:var(--orange)">📊</div>
+                <div class="card-title">Time & Space Complexity</div>
+            </div>
+            <div class="complexity-grid">
+                <div class="complexity-pill">
+                    <div class="label">Time</div>
+                    <div class="big" style="color:var(--accent-4)">O(d)</div>
+                    <div class="note">d = number of digits<br>= O(log₁₀ n).<br>Single pass through digits.</div>
+                </div>
+                <div class="complexity-pill">
+                    <div class="label">Space</div>
+                    <div class="big" style="color:var(--accent-1)">O(1)</div>
+                    <div class="note">Only 4 integer variables:<br>orig, sum, prod, dig.</div>
+                </div>
+            </div>
+            <div class="callout insight" style="margin-top:20px">
+                <div class="callout-icon">🚀</div>
+                <div class="callout-text">
+                    <strong>As efficient as it gets!</strong> Single pass, constant space. The algorithm processes each digit exactly once — no arrays, no strings, no extra data structures.
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 10 -->
+        <div class="section-label reveal"><span class="sec-num">10</span> Key Takeaways</div>
+        <div class="card reveal">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(82,160,88,0.1);color:var(--green)">✅</div>
+                <div class="card-title">Remember These</div>
+            </div>
+            <ul>
+                <li>The <span class="hl hl-coral">% 10</span> / <span class="hl hl-coral">/= 10</span> <strong>digit extraction</strong> pattern is the most fundamental building block for digit manipulation problems.</li>
+                <li><strong>Dual accumulators</strong> in a single loop are efficient — no need for separate passes for sum and product.</li>
+                <li>Always <strong>save the original</strong> (<span class="hl hl-cream">orig = n</span>) before destructive loops — a common source of bugs!</li>
+                <li>Initialize sum to <span class="hl hl-blue">0</span> (additive identity) and product to <span class="hl hl-orange">1</span> (multiplicative identity) — not the other way around!</li>
+                <li>Watch for <strong>zero digits</strong> — they kill the product but not the sum.</li>
+                <li>This pattern appears everywhere: digit root, happy numbers, Armstrong numbers, Kaprekar numbers, and more.</li>
+            </ul>
+        </div>
+
+        <footer class="footer">
+            <p>Made with <span class="heart">♥</span> by <a href="#">Algorithm Atlas</a></p>
+            <p style="margin-top:6px;">LeetCode Problem of the Day — 22 August 2026</p>
+        </footer>
+    </div>
+
+    <script>
+        // Particles
+        (function(){const c=document.getElementById('particles');for(let i=0;i<16;i++){const p=document.createElement('div');p.className='particle';const s=3+Math.random()*7;p.style.width=s+'px';p.style.height=s+'px';p.style.left=Math.random()*100+'%';p.style.animationDuration=(14+Math.random()*22)+'s';p.style.animationDelay=-(Math.random()*30)+'s';c.appendChild(p)}})();
+
+        // Navbar
+        const navbar=document.getElementById('navbar'),progressBar=document.getElementById('nav-progress');
+        window.addEventListener('scroll',()=>{navbar.classList.toggle('scrolled',window.scrollY>20);const h=document.documentElement.scrollHeight-window.innerHeight;progressBar.style.width=(h>0?(window.scrollY/h)*100:0)+'%'});
+
+        // Reveal
+        document.querySelectorAll('.reveal').forEach(r=>{new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting)en.target.classList.add('visible')})},{threshold:0.1}).observe(r)});
+
+        // Interactive Visualizer
+        const examples=[
+            {n:123,name:'n = 123'},
+            {n:456,name:'n = 456'},
+            {n:135,name:'n = 135'},
+            {n:111,name:'n = 111'},
+        ];
+        let curEx=0,vizState=null;
+
+        function setPhase(p){for(let i=1;i<=3;i++){const el=document.getElementById('ph-'+i);el.classList.remove('active','done');if(i<p)el.classList.add('done');if(i===p)el.classList.add('active')}}
+
+        function getDigitsReversed(n){const d=[];while(n>0){d.push(n%10);n=Math.floor(n/10)}return d}
+
+        function buildSteps(n){
+            const steps=[];
+            const orig=n;
+            const digitsReversed=getDigitsReversed(n);
+            const digitsForward=String(n).split('').map(Number);
+            const nDigits=digitsForward.length;
+
+            // Step 0: Show initial
+            steps.push({phase:1,digits:digitsForward,states:new Array(nDigits).fill(''),sum:0,prod:1,total:null,divResult:null,info:`Starting with n = ${orig}. Extract digits right-to-left.`});
+
+            // Extract each digit (right-to-left display order)
+            let sum=0,prod=1;
+            for(let k=0;k<digitsReversed.length;k++){
+                const dig=digitsReversed[k];
+                sum+=dig;prod*=dig;
+                const states=new Array(nDigits).fill('');
+                // Mark processed from right
+                for(let j=0;j<=k;j++)states[nDigits-1-j]='processed';
+                if(k+1<nDigits)states[nDigits-2-k]='current';
+                steps.push({phase:1,digits:digitsForward,states,sum,prod,total:null,divResult:null,
+                    info:`Extract digit <strong>${dig}</strong>: sum = ${sum-dig} + ${dig} = <strong>${sum}</strong>, product = ${prod===0?0:(prod/dig)} × ${dig} = <strong>${prod}</strong>`});
+            }
+
+            // Compute total
+            const total=sum+prod;
+            steps.push({phase:2,digits:digitsForward,states:new Array(nDigits).fill('processed'),sum,prod,total,divResult:null,
+                info:`Sum + Product = ${sum} + ${prod} = <strong>${total}</strong>`});
+
+            // Divisibility check
+            if(total===0){
+                steps.push({phase:3,digits:digitsForward,states:new Array(nDigits).fill('processed'),sum,prod,total,divResult:'error',
+                    info:`⚠️ Sum + Product = 0 — division by zero!`,result:'error'});
+            }else{
+                const remainder=orig%total;
+                const pass=remainder===0;
+                steps.push({phase:3,digits:digitsForward,states:new Array(nDigits).fill('processed'),sum,prod,total,
+                    divResult:pass?'pass':'fail',
+                    info:pass?`✅ ${orig} % ${total} = 0 → <strong>Divisible!</strong>`:`❌ ${orig} % ${total} = ${remainder} → <strong>Not divisible</strong>`,
+                    result:pass?'true':'false'});
+            }
+            return steps;
+        }
+
+        function renderDigits(digits,states){
+            const c=document.getElementById('digit-row');c.innerHTML='';
+            digits.forEach((d,i)=>{
+                const div=document.createElement('div');
+                div.className='digit-cell '+(states[i]||'');
+                div.innerHTML=`<span class="dv">${d}</span><span class="dp">d${i}</span>`;
+                c.appendChild(div);
+            });
+        }
+
+        function initViz(){
+            const ex=examples[curEx];
+            vizState={steps:buildSteps(ex.n),step:-1,ex};
+            document.getElementById('num-val').textContent=ex.n;
+            renderDigits(String(ex.n).split('').map(Number),new Array(String(ex.n).length).fill(''));
+            document.getElementById('sum-val').textContent='0';
+            document.getElementById('prod-val').textContent='1';
+            document.getElementById('total-val').textContent='—';
+            document.getElementById('div-check').textContent='Waiting for computation...';
+            document.getElementById('div-check').className='div-check-display';
+            document.getElementById('viz-info').textContent=`${ex.name} — Press Play`;
+            document.getElementById('viz-final').textContent='';
+            document.getElementById('btn-play').disabled=false;
+            setPhase(1);
+        }
+
+        function playStep(){
+            if(!vizState)return;
+            vizState.step++;
+            if(vizState.step>=vizState.steps.length)return;
+            const s=vizState.steps[vizState.step];
+            setPhase(s.phase);
+            renderDigits(s.digits,s.states);
+            document.getElementById('sum-val').textContent=s.sum;
+            document.getElementById('prod-val').textContent=s.prod;
+            if(s.total!==null)document.getElementById('total-val').textContent=s.total;
+
+            const dc=document.getElementById('div-check');
+            if(s.divResult==='pass'){dc.textContent=`✅ ${vizState.ex.n} % ${s.total} = 0 → Divisible!`;dc.className='div-check-display pass'}
+            else if(s.divResult==='fail'){dc.textContent=`❌ ${vizState.ex.n} % ${s.total} = ${vizState.ex.n%s.total} → Not divisible`;dc.className='div-check-display fail'}
+            else if(s.divResult==='error'){dc.textContent='⚠️ Division by zero!';dc.className='div-check-display fail'}
+
+            document.getElementById('viz-info').innerHTML=s.info;
+
+            if(s.result!==undefined){
+                const color=s.result==='true'?'var(--green)':'var(--accent-4)';
+                const text=s.result==='true'?'✅ TRUE — Divisible!':s.result==='error'?'⚠️ Edge case — division by zero':'❌ FALSE — Not divisible';
+                document.getElementById('viz-final').innerHTML=`<span style="color:${color}">${text}</span>`;
+                document.getElementById('btn-play').disabled=true;
+            }
+        }
+
+        function resetViz(){initViz()}
+        function changeExample(){curEx=(curEx+1)%examples.length;initViz()}
+        initViz();
+    </script>
+</body>
+</html>
