@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeetCode 2213 — Longest Substring of One Repeating Character | Algorithm Atlas</title>
+    <meta name="description" content="Interactive visual explanation of LeetCode 2213: Longest Substring of One Repeating Character using Segment Tree.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{--bg-primary:#faf6ee;--bg-secondary:#f4eed8;--bg-card:rgba(250,246,238,0.82);--glass:rgba(196,144,48,0.05);--glass-border:rgba(196,144,48,0.14);--text-primary:#3a3020;--text-secondary:#6a5a3a;--text-muted:#9a8a6a;--accent-1:#C49030;--accent-2:#D8B060;--accent-3:#F0D898;--accent-4:#8a6a20;--green:#52a058;--yellow:#c49030;--orange:#c07a40;--blue:#5080a0;--neutral-1:#f0e0b0;--neutral-2:#f0d898;--gradient-hero:linear-gradient(135deg,#C49030 0%,#D8B060 40%,#F0D898 70%,#f0e0b0 100%);--gradient-cool:linear-gradient(135deg,#D8B060,#C49030,#8a6a20);--shadow-glow:0 0 60px rgba(196,144,48,0.10);--shadow-card:0 8px 32px rgba(196,144,48,0.06);--radius:18px;--radius-sm:12px}
+        html{scroll-behavior:smooth}body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg-primary);color:var(--text-primary);line-height:1.7;overflow-x:hidden;min-height:100vh}
+        .bg-mesh{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}.bg-mesh::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(196,144,48,0.04) 0%,transparent 60%),radial-gradient(circle at 80% 70%,rgba(240,224,176,0.06) 0%,transparent 50%)}.bg-mesh .orb{position:absolute;border-radius:50%;filter:blur(120px);animation:orbFloat 20s ease-in-out infinite}.bg-mesh .orb:nth-child(1){width:650px;height:650px;top:-12%;left:-8%;background:rgba(196,144,48,0.08);animation-duration:25s}.bg-mesh .orb:nth-child(2){width:500px;height:500px;top:30%;right:-10%;background:rgba(240,224,176,0.10);animation-duration:30s;animation-delay:-5s}.bg-mesh .orb:nth-child(3){width:480px;height:480px;bottom:-8%;left:20%;background:rgba(240,216,152,0.10);animation-duration:22s;animation-delay:-10s}.bg-mesh .orb:nth-child(4){width:380px;height:380px;top:55%;left:50%;background:rgba(216,176,96,0.08);animation-duration:28s;animation-delay:-15s}
+        @keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(50px,-35px) scale(1.08)}50%{transform:translate(-25px,50px) scale(0.95)}75%{transform:translate(35px,25px) scale(1.04)}}
+        .particle{position:fixed;pointer-events:none;z-index:0;border-radius:50%;animation:particleDrift linear infinite}.particle:nth-child(odd){background:rgba(196,144,48,0.12)}.particle:nth-child(even){background:rgba(240,216,152,0.18)}.particle:nth-child(3n){background:rgba(240,224,176,0.16)}.particle:nth-child(5n){background:rgba(216,176,96,0.14);border-radius:3px}
+        @keyframes particleDrift{0%{transform:translateY(100vh) rotate(0deg);opacity:0}8%{opacity:1}92%{opacity:1}100%{transform:translateY(-10vh) rotate(360deg);opacity:0}}
+        .container{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 24px}
+        .navbar{position:fixed;top:0;left:0;right:0;z-index:100;backdrop-filter:blur(20px) saturate(1.8);background:rgba(250,246,238,0.88);border-bottom:1px solid var(--glass-border);transition:box-shadow .3s,background .3s}.navbar.scrolled{box-shadow:0 4px 30px rgba(196,144,48,0.06);background:rgba(250,246,238,0.95)}.nav-progress{position:absolute;bottom:0;left:0;height:2.5px;background:var(--gradient-hero);transition:width .15s ease-out;width:0%;border-radius:0 2px 2px 0}.navbar-inner{max-width:900px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px}.nav-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;text-decoration:none;color:var(--text-primary);transition:transform .2s}.nav-brand:hover{transform:scale(1.03)}.nav-brand .logo{width:34px;height:34px;border-radius:9px;background:var(--gradient-cool);display:grid;place-items:center;font-size:.85rem;font-weight:800;color:#fff;box-shadow:0 3px 14px rgba(196,144,48,0.3)}.nav-links{display:flex;align-items:center;gap:14px}.nav-date{font-size:.82rem;color:var(--text-secondary);font-weight:500;padding:6px 14px;border-radius:20px;background:var(--glass);border:1px solid var(--glass-border)}.nav-difficulty{font-size:.72rem;font-weight:700;padding:4px 12px;border-radius:20px;background:rgba(192,60,60,0.08);color:#c03c3c;border:1px solid rgba(192,60,60,0.2);text-transform:uppercase;letter-spacing:1px}
+        .hero{padding:130px 0 60px;text-align:center}.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:50px;background:rgba(196,144,48,0.08);border:1px solid rgba(196,144,48,0.2);font-size:.78rem;font-weight:600;color:var(--accent-1);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:26px;animation:fadeInDown .8s ease-out}.hero-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-4);animation:pulse 2s ease-in-out infinite}@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}.hero h1{font-size:clamp(2rem,5vw,2.9rem);font-weight:900;line-height:1.12;letter-spacing:-1.5px;animation:fadeInUp .8s ease-out .1s both}.hero h1 .gradient-text{background:var(--gradient-cool);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}.hero h1 .leetcode-num{display:block;font-size:.42em;letter-spacing:3px;-webkit-text-fill-color:var(--text-muted);background:none;margin-top:8px;font-weight:700}.hero-subtitle{margin-top:20px;font-size:1.08rem;color:var(--text-secondary);max-width:660px;margin-left:auto;margin-right:auto;line-height:1.75;animation:fadeInUp .8s ease-out .25s both}.hero-tags{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:28px;animation:fadeInUp .8s ease-out .4s both}.hero-tag{padding:6px 16px;border-radius:20px;font-size:.78rem;font-weight:600;border:1px solid;transition:transform .2s,box-shadow .2s}.hero-tag:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.06)}.hero-tag.diff{color:#c03c3c;border-color:rgba(192,60,60,0.3);background:rgba(192,60,60,0.06)}.hero-tag.cat{color:#6a5a3a;border-color:rgba(196,144,48,0.3);background:rgba(196,144,48,0.06)}.hero-tag.pattern{color:#5a6a30;border-color:rgba(240,216,152,0.5);background:rgba(240,216,152,0.2)}
+        @keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeInDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}.reveal{opacity:0;transform:translateY(40px);transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1)}.reveal.visible{opacity:1;transform:translateY(0)}
+        .card{background:var(--bg-card);backdrop-filter:blur(18px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:38px;margin-bottom:32px;transition:border-color .3s,box-shadow .4s,transform .3s;position:relative;overflow:hidden}.card::before{content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(196,144,48,0.03),transparent);transition:left .7s ease}.card:hover::before{left:100%}.card:hover{border-color:rgba(196,144,48,0.22);box-shadow:var(--shadow-card),var(--shadow-glow);transform:translateY(-3px)}.card-header{display:flex;align-items:center;gap:14px;margin-bottom:22px}.card-icon{width:50px;height:50px;border-radius:14px;display:grid;place-items:center;font-size:1.35rem;flex-shrink:0;transition:transform .3s}.card:hover .card-icon{transform:scale(1.12) rotate(-4deg)}.card-title{font-size:1.4rem;font-weight:800;letter-spacing:-.5px}.card p,.card li{color:var(--text-secondary);font-size:.95rem;line-height:1.8}.card ul{list-style:none;padding:0}.card ul li{padding:6px 0;padding-left:24px;position:relative}.card ul li::before{content:'▸';position:absolute;left:0;color:var(--accent-1);font-weight:700}.card strong{color:var(--text-primary)}
+        .section-label{display:flex;align-items:center;gap:14px;margin:55px 0 26px;font-size:.72rem;text-transform:uppercase;letter-spacing:3px;font-weight:700;color:var(--text-muted)}.section-label .sec-num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;background:var(--gradient-cool);color:#fff;font-size:.72rem;font-weight:800;flex-shrink:0;box-shadow:0 3px 12px rgba(196,144,48,0.22)}.section-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--glass-border),transparent)}
+        .str-row{display:flex;justify-content:center;gap:4px;margin:18px 0;flex-wrap:wrap}.str-cell{width:42px;height:50px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;background:var(--glass);border:2px solid var(--glass-border);transition:all .4s}.str-cell .ch{font-size:1.3rem;font-weight:800}.str-cell .idx{font-size:.5rem;color:var(--text-muted)}.str-cell.highlight{border-color:var(--accent-1);background:rgba(196,144,48,0.1);box-shadow:0 0 14px rgba(196,144,48,0.15)}.str-cell.longest{border-color:var(--green);background:rgba(82,160,88,0.08)}
+        .viz-controls{display:flex;justify-content:center;gap:12px;margin-top:24px;flex-wrap:wrap}.viz-btn{padding:11px 26px;border-radius:11px;border:none;font-family:'Inter',sans-serif;font-weight:600;font-size:.85rem;cursor:pointer;transition:all .25s}.viz-btn.primary{background:var(--gradient-cool);color:#fff;box-shadow:0 4px 20px rgba(196,144,48,0.25)}.viz-btn.primary:hover{transform:translateY(-2px);box-shadow:0 6px 30px rgba(196,144,48,0.4)}.viz-btn.primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}.viz-btn.secondary{background:var(--glass);color:var(--text-primary);border:1px solid var(--glass-border)}.viz-btn.secondary:hover{border-color:var(--accent-1);transform:translateY(-1px)}
+        .viz-step-info{margin-top:16px;font-size:.88rem;color:var(--text-secondary);min-height:30px;padding:10px 20px;border-radius:8px;background:rgba(196,144,48,0.04);display:inline-block}
+        .timeline{position:relative;padding-left:42px}.timeline::before{content:'';position:absolute;left:17px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,#C49030,#D8B060,#F0D898,#f0e0b0);border-radius:2px}.timeline-item{position:relative;margin-bottom:32px;padding-left:4px}.timeline-dot{position:absolute;left:-32px;top:4px;width:16px;height:16px;border-radius:50%;border:3px solid var(--accent-1);background:var(--bg-primary);transition:all .3s}.timeline-item:hover .timeline-dot{transform:scale(1.35);box-shadow:0 0 14px rgba(196,144,48,0.25)}.timeline-item:nth-child(2) .timeline-dot{border-color:var(--accent-2)}.timeline-item:nth-child(3) .timeline-dot{border-color:var(--accent-3)}.timeline-item h4{font-size:1.02rem;font-weight:700;margin-bottom:6px}.timeline-item p{color:var(--text-secondary);font-size:.9rem;line-height:1.75}
+        .hl{padding:2px 8px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.82em;font-weight:600}.hl-amber{background:rgba(196,144,48,0.12);color:#8a6a20}.hl-green{background:rgba(82,160,88,0.1);color:#3a7a42}.hl-blue{background:rgba(80,128,160,0.1);color:#306a90}.hl-orange{background:rgba(192,122,64,0.1);color:#a06030}
+        .code-container{position:relative;border-radius:var(--radius);overflow:hidden;background:#2a2618;border:1px solid rgba(196,144,48,0.15)}.code-topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(196,144,48,0.1)}.code-dots{display:flex;gap:7px}.code-dots span{width:12px;height:12px;border-radius:50%}.code-dots span:nth-child(1){background:#C49030}.code-dots span:nth-child(2){background:#c07a40}.code-dots span:nth-child(3){background:#52a058}.code-lang{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9a8a6a}.code-body{padding:24px;overflow-x:auto}.code-body pre{margin:0;font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.85;color:#f0e0c0}.syn-kw{color:#f0c060}.syn-type{color:#a0c8f0}.syn-fn{color:#f0d090}.syn-num{color:#e0a0c0}.syn-str{color:#a0d0a0}.syn-cmt{color:#7a6a4a;font-style:italic}.syn-op{color:#c0b090}
+        .complexity-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.complexity-pill{padding:24px;border-radius:var(--radius-sm);background:var(--glass);border:1px solid var(--glass-border);text-align:center;transition:all .3s}.complexity-pill:hover{border-color:rgba(196,144,48,0.3);transform:translateY(-2px)}.complexity-pill .label{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;color:var(--text-muted);margin-bottom:8px}.complexity-pill .big{font-size:1.5rem;font-weight:900;font-family:'JetBrains Mono',monospace}.complexity-pill .note{font-size:.78rem;color:var(--text-secondary);margin-top:6px}
+        .callout{display:flex;gap:16px;padding:22px 24px;border-radius:var(--radius-sm);border-left:4px solid;margin:20px 0;transition:transform .2s}.callout:hover{transform:translateX(4px)}.callout.insight{background:rgba(216,176,96,0.06);border-color:var(--accent-2)}.callout.warning{background:rgba(196,144,48,0.05);border-color:var(--accent-1)}.callout .callout-icon{font-size:1.3rem;flex-shrink:0;margin-top:2px}.callout .callout-text{font-size:.9rem;color:var(--text-secondary);line-height:1.7}.callout .callout-text strong{color:var(--text-primary)}
+        .visual-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:var(--radius-sm);overflow:hidden;margin:16px 0}.visual-table th{background:rgba(196,144,48,0.07);color:var(--accent-1);font-size:.78rem;text-transform:uppercase;letter-spacing:1px;font-weight:700;padding:12px 16px;text-align:left;border-bottom:1px solid var(--glass-border)}.visual-table td{padding:12px 16px;font-size:.88rem;color:var(--text-secondary);border-bottom:1px solid rgba(196,144,48,0.04)}.visual-table tr:last-child td{border-bottom:none}.visual-table tr:hover td{background:rgba(196,144,48,0.03)}.visual-table code{font-family:'JetBrains Mono',monospace;font-size:.82em;color:#8a6a20;background:rgba(196,144,48,0.06);padding:2px 7px;border-radius:4px}
+        .pattern-badges{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.pattern-badge{display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:10px;background:var(--glass);border:1px solid var(--glass-border);font-size:.85rem;font-weight:600;transition:all .3s}.pattern-badge:hover{border-color:var(--accent-1);transform:translateY(-3px)}.pattern-badge .emoji{font-size:1.1rem}
+        .footer{text-align:center;padding:60px 0 40px;color:var(--text-muted);font-size:.8rem}.footer .heart{color:var(--accent-1)}.footer a{color:var(--accent-4);text-decoration:none}.footer a:hover{text-decoration:underline}
+        @media(max-width:640px){.card{padding:24px}.complexity-grid{grid-template-columns:1fr}.navbar-inner{padding:0 16px}.container{padding:0 16px}.nav-difficulty{display:none}}
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"><div class="orb"></div><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
+    <div id="particles"></div>
+    <nav class="navbar" id="navbar"><div class="nav-progress" id="nav-progress"></div><div class="navbar-inner"><a href="#" class="nav-brand"><div class="logo">A²</div> Algorithm Atlas</a><div class="nav-links"><span class="nav-difficulty">Hard</span><span class="nav-date">📅 13 Aug 2026</span></div></div></nav>
+    <div class="container">
+        <section class="hero">
+            <div class="hero-badge"><span class="dot"></span> Problem of the Day</div>
+            <h1><span class="gradient-text">Longest Substring of<br>One Repeating Character</span><span class="leetcode-num">LeetCode #2213</span></h1>
+            <p class="hero-subtitle">Given a string and character update queries, after each update return the length of the <strong>longest substring</strong> consisting of a single repeating character.</p>
+            <div class="hero-tags"><span class="hero-tag diff">🔴 Hard</span><span class="hero-tag cat">🌲 Segment Tree</span><span class="hero-tag cat">📝 String</span><span class="hero-tag pattern">🔄 Point Update</span><span class="hero-tag pattern">📊 Range Query</span></div>
+        </section>
+        <div class="section-label reveal"><span class="sec-num">01</span> The Problem</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(196,144,48,0.1);color:var(--accent-1)">📖</div><div class="card-title">What's the Problem?</div></div>
+            <p>You're given a string <span class="hl hl-amber">s</span> and a series of queries. Each query updates one character in the string. After each update, you need to find the <strong>longest contiguous substring</strong> where all characters are the same.</p>
+            <br><p>Example: <span class="hl hl-amber">"babacc"</span> → update index 1 to 'c' → <span class="hl hl-amber">"bcbacc"</span> → longest repeating = <span class="hl hl-green">"cc"</span> = 2.</p>
+            <div class="callout insight" style="margin-top:20px"><div class="callout-icon">💡</div><div class="callout-text"><strong>Why a segment tree?</strong> Brute force rescanning is O(n) per query. With a segment tree, each update and query runs in <span class="hl hl-amber">O(log n)</span>, supporting up to 10⁵ queries efficiently.</div></div>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">02</span> Try It Yourself</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(82,160,88,0.1);color:var(--green)">🎮</div><div class="card-title">Interactive String Visualizer</div></div>
+            <p style="margin-bottom:14px">Watch how updates change the longest repeating substring.</p>
+            <div class="viz-board">
+                <div class="str-row" id="str-display"></div>
+                <div class="viz-step-info" id="viz-info">Press Play to see queries applied</div>
+                <div class="viz-controls"><button class="viz-btn primary" id="btn-play" onclick="playStep()">▶ Play Step</button><button class="viz-btn secondary" onclick="resetViz()">↻ Reset</button></div>
+            </div>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">03</span> Intuition</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(216,176,96,0.1);color:var(--accent-2)">🧠</div><div class="card-title">Segment Tree with Merge</div></div>
+            <p>Each segment tree node stores:</p>
+            <ul style="margin-top:10px">
+                <li><span class="hl hl-amber">pre</span> — longest repeating prefix of the segment</li>
+                <li><span class="hl hl-amber">suf</span> — longest repeating suffix of the segment</li>
+                <li><span class="hl hl-green">mx</span> — overall longest repeating substring in the segment</li>
+                <li><span class="hl hl-blue">lc, rc</span> — leftmost and rightmost characters</li>
+            </ul>
+            <div class="callout warning" style="margin-top:20px"><div class="callout-icon">⚠️</div><div class="callout-text"><strong>Merge logic is crucial:</strong> When merging two children, if the right char of left child equals the left char of right child, the suffix of left + prefix of right may form a longer repeating substring crossing the boundary.</div></div>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">04</span> Approach</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(240,224,176,0.2);color:var(--orange)">🗺️</div><div class="card-title">Step-by-Step Approach</div></div>
+            <div class="timeline">
+                <div class="timeline-item"><div class="timeline-dot"></div><h4>1. Build segment tree from string</h4><p>Each leaf stores {pre=1, suf=1, mx=1, len=1, lc=char, rc=char}.</p></div>
+                <div class="timeline-item"><div class="timeline-dot"></div><h4>2. Define merge operation</h4><p>Combine children: check if boundary characters match to extend runs across segments.</p></div>
+                <div class="timeline-item"><div class="timeline-dot"></div><h4>3. Point update</h4><p>Update a leaf, then propagate the merge up to the root.</p></div>
+                <div class="timeline-item"><div class="timeline-dot"></div><h4>4. Query the root</h4><p>After each update, <span class="hl hl-green">tree[1].mx</span> gives the global longest repeating substring.</p></div>
+            </div>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">05</span> Methods & Functions</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(192,144,48,0.1);color:var(--yellow)">⚙️</div><div class="card-title">Key Operations</div></div>
+            <table class="visual-table"><thead><tr><th>Code</th><th>Purpose</th></tr></thead><tbody>
+                <tr><td><code>build(node, start, end)</code></td><td>Recursively build the segment tree from the string.</td></tr>
+                <tr><td><code>merge(left, right)</code></td><td>Combine two nodes — the core logic for boundary merging.</td></tr>
+                <tr><td><code>update(node, start, end, idx, c)</code></td><td>Point update: change one character, propagate up.</td></tr>
+                <tr><td><code>tree[1].mx</code></td><td>Root node's max — the answer after each query.</td></tr>
+            </tbody></table>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">06</span> Patterns Used</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(196,144,48,0.08);color:var(--accent-1)">🧩</div><div class="card-title">Design Patterns</div></div>
+            <div class="pattern-badges"><div class="pattern-badge"><span class="emoji">🌲</span> Segment Tree</div><div class="pattern-badge"><span class="emoji">🔄</span> Point Update</div><div class="pattern-badge"><span class="emoji">🤝</span> Custom Merge</div><div class="pattern-badge"><span class="emoji">📏</span> Prefix/Suffix Tracking</div></div>
+            <ul style="margin-top:16px">
+                <li><strong>Segment Tree:</strong> The go-to data structure for range queries with point updates in O(log n).</li>
+                <li><strong>Custom Merge:</strong> Not all segment trees use simple sum/min/max — here we merge complex node structs.</li>
+                <li><strong>Prefix/Suffix Tracking:</strong> Storing boundary information enables correct cross-segment answers.</li>
+            </ul>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">07</span> Full Code</div>
+        <div class="card reveal" style="padding:0;overflow:hidden">
+            <div class="code-container"><div class="code-topbar"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-lang">C++ • solution.cpp</span></div><div class="code-body">
+<pre><span class="syn-kw">struct</span> <span class="syn-type">Node</span> {
+    <span class="syn-type">int</span> pre, suf, mx, len;
+    <span class="syn-type">char</span> lc, rc;
+};
+
+<span class="syn-type">Node</span> <span class="syn-fn">merge</span>(<span class="syn-type">Node</span>&amp; l, <span class="syn-type">Node</span>&amp; r) {
+    <span class="syn-type">Node</span> res;
+    res.len <span class="syn-op">=</span> l.len <span class="syn-op">+</span> r.len;
+    res.lc <span class="syn-op">=</span> l.lc; res.rc <span class="syn-op">=</span> r.rc;
+    res.pre <span class="syn-op">=</span> l.pre;
+    <span class="syn-kw">if</span> (l.pre <span class="syn-op">==</span> l.len <span class="syn-op">&amp;&amp;</span> l.rc <span class="syn-op">==</span> r.lc)
+        res.pre <span class="syn-op">=</span> l.len <span class="syn-op">+</span> r.pre;
+    res.suf <span class="syn-op">=</span> r.suf;
+    <span class="syn-kw">if</span> (r.suf <span class="syn-op">==</span> r.len <span class="syn-op">&amp;&amp;</span> r.lc <span class="syn-op">==</span> l.rc)
+        res.suf <span class="syn-op">=</span> r.len <span class="syn-op">+</span> l.suf;
+    res.mx <span class="syn-op">=</span> <span class="syn-fn">max</span>({l.mx, r.mx, res.pre, res.suf});
+    <span class="syn-kw">if</span> (l.rc <span class="syn-op">==</span> r.lc)
+        res.mx <span class="syn-op">=</span> <span class="syn-fn">max</span>(res.mx, l.suf <span class="syn-op">+</span> r.pre);
+    <span class="syn-kw">return</span> res;
+}</pre>
+            </div></div>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">08</span> Code Walkthrough</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(216,176,96,0.12);color:var(--accent-2)">🔍</div><div class="card-title">Line-by-Line Breakdown</div></div>
+            <table class="visual-table"><thead><tr><th style="width:42%">Code</th><th>What it does</th></tr></thead><tbody>
+                <tr><td><code>res.pre = l.pre</code></td><td>Default prefix from left child.</td></tr>
+                <tr><td><code>l.pre == l.len && l.rc == r.lc</code></td><td>Entire left is one char AND matches right — extend prefix.</td></tr>
+                <tr><td><code>l.suf + r.pre</code></td><td>Cross-boundary run when left suffix char = right prefix char.</td></tr>
+                <tr><td><code>max({l.mx, r.mx, ...})</code></td><td>Global max is the best of children + cross-boundary.</td></tr>
+            </tbody></table>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">09</span> Complexity Analysis</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(192,122,64,0.1);color:var(--orange)">📊</div><div class="card-title">Time & Space Complexity</div></div>
+            <div class="complexity-grid">
+                <div class="complexity-pill"><div class="label">Time</div><div class="big" style="color:var(--accent-4)">O((n+q)log n)</div><div class="note">Build: O(n log n)<br>Each query: O(log n).</div></div>
+                <div class="complexity-pill"><div class="label">Space</div><div class="big" style="color:var(--accent-1)">O(n)</div><div class="note">Segment tree with<br>4n node storage.</div></div>
+            </div>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">10</span> Key Takeaways</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(82,160,88,0.1);color:var(--green)">✅</div><div class="card-title">Remember These</div></div>
+            <ul>
+                <li>When queries are <strong>dynamic updates + global queries</strong>, think <strong>segment tree</strong>.</li>
+                <li>Segment tree nodes can store <strong>custom structs</strong> — not just sums or mins.</li>
+                <li>The <strong>merge function</strong> is the heart of a segment tree — get it right and everything else follows.</li>
+                <li>Tracking <strong>prefix, suffix, and boundary characters</strong> enables cross-segment answers.</li>
+                <li>This pattern applies to: longest consecutive 1s with flips, maximum subarray with updates, etc.</li>
+            </ul>
+        </div>
+        <footer class="footer"><p>Made with <span class="heart">♥</span> by <a href="#">Algorithm Atlas</a></p><p style="margin-top:6px;">LeetCode Problem of the Day — 13 August 2026</p></footer>
+    </div>
+    <script>
+        (function(){const c=document.getElementById('particles');for(let i=0;i<16;i++){const p=document.createElement('div');p.className='particle';const s=3+Math.random()*7;p.style.width=s+'px';p.style.height=s+'px';p.style.left=Math.random()*100+'%';p.style.animationDuration=(14+Math.random()*22)+'s';p.style.animationDelay=-(Math.random()*30)+'s';c.appendChild(p)}})();
+        const navbar=document.getElementById('navbar'),progressBar=document.getElementById('nav-progress');
+        window.addEventListener('scroll',()=>{navbar.classList.toggle('scrolled',window.scrollY>20);const h=document.documentElement.scrollHeight-window.innerHeight;progressBar.style.width=(h>0?(window.scrollY/h)*100:0)+'%'});
+        document.querySelectorAll('.reveal').forEach(r=>{new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting)en.target.classList.add('visible')})},{threshold:0.1}).observe(r)});
+        const states=[
+            {str:'babacc',highlights:[],longest:[4,5],info:'Initial: "babacc". Longest = "cc" (len 2).'},
+            {str:'bcbacc',highlights:[1],longest:[4,5],info:'Query 1: s[1] = "c" → "bcbacc". Longest = "cc" (len 2).'},
+            {str:'bccacc',highlights:[2],longest:[1,2],info:'Query 2: s[3] = "c" → "bccacc". Longest = "cc" at [1,2] (len 2). Wait — also "cc" at [4,5]!'},
+            {str:'bccccc',highlights:[3,4,5],longest:[2,3,4,5],info:'Query 3: s[3] = "c" → "bccccc". Longest = "ccccc" (len 5)! 🎉'},
+        ];
+        let step=-1;
+        function renderStr(s,highlights,longest){const d=document.getElementById('str-display');d.innerHTML='';for(let i=0;i<s.length;i++){const c=document.createElement('div');c.className='str-cell'+(highlights.includes(i)?' highlight':'')+(longest.includes(i)?' longest':'');c.innerHTML=`<span class="ch">${s[i]}</span><span class="idx">${i}</span>`;d.appendChild(c)}}
+        function playStep(){step++;if(step>=states.length){document.getElementById('btn-play').disabled=true;return}const s=states[step];renderStr(s.str,s.highlights,s.longest);document.getElementById('viz-info').innerHTML=s.info}
+        function resetViz(){step=-1;document.getElementById('str-display').innerHTML='';document.getElementById('viz-info').textContent='Press Play to see queries applied';document.getElementById('btn-play').disabled=false}
+    </script>
+</body>
+</html>
