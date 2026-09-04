@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeetCode 1563 — Stone Game V | Algorithm Atlas</title>
+    <meta name="description" content="Interactive visual explanation of LeetCode Problem 1563: Stone Game V using Dynamic Programming and Prefix Sums.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{--bg-primary:#f4f0fa;--bg-secondary:#e8e0f4;--bg-card:rgba(244,240,250,0.82);--glass:rgba(120,80,180,0.05);--glass-border:rgba(120,80,180,0.14);--text-primary:#282040;--text-secondary:#584a7a;--text-muted:#8a7aaa;--accent-1:#7850B4;--accent-2:#9060D0;--accent-3:#B490E8;--accent-4:#4a2a8a;--green:#52a058;--yellow:#c49030;--orange:#c07a40;--blue:#5a80b0;--neutral-1:#d0c0f0;--neutral-2:#b490e8;--gradient-hero:linear-gradient(135deg,#7850B4 0%,#9060D0 40%,#B490E8 70%,#d0c0f0 100%);--gradient-cool:linear-gradient(135deg,#9060D0,#7850B4,#4a2a8a);--shadow-glow:0 0 60px rgba(120,80,180,0.10);--shadow-card:0 8px 32px rgba(120,80,180,0.06);--radius:18px;--radius-sm:12px}
+        html{scroll-behavior:smooth}body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg-primary);color:var(--text-primary);line-height:1.7;overflow-x:hidden;min-height:100vh}
+        .bg-mesh{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}.bg-mesh::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(120,80,180,0.04) 0%,transparent 60%),radial-gradient(circle at 80% 70%,rgba(208,192,240,0.06) 0%,transparent 50%)}.bg-mesh .orb{position:absolute;border-radius:50%;filter:blur(120px);animation:orbFloat 20s ease-in-out infinite}.bg-mesh .orb:nth-child(1){width:650px;height:650px;top:-12%;left:-8%;background:rgba(120,80,180,0.08);animation-duration:25s}.bg-mesh .orb:nth-child(2){width:500px;height:500px;top:30%;right:-10%;background:rgba(208,192,240,0.10);animation-duration:30s;animation-delay:-5s}.bg-mesh .orb:nth-child(3){width:480px;height:480px;bottom:-8%;left:20%;background:rgba(180,144,232,0.10);animation-duration:22s;animation-delay:-10s}.bg-mesh .orb:nth-child(4){width:380px;height:380px;top:55%;left:50%;background:rgba(144,96,208,0.08);animation-duration:28s;animation-delay:-15s}
+        @keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(50px,-35px) scale(1.08)}50%{transform:translate(-25px,50px) scale(0.95)}75%{transform:translate(35px,25px) scale(1.04)}}
+        .particle{position:fixed;pointer-events:none;z-index:0;border-radius:50%;animation:particleDrift linear infinite}.particle:nth-child(odd){background:rgba(120,80,180,0.12)}.particle:nth-child(even){background:rgba(180,144,232,0.18)}.particle:nth-child(3n){background:rgba(208,192,240,0.16)}.particle:nth-child(5n){background:rgba(144,96,208,0.14);border-radius:3px}
+        @keyframes particleDrift{0%{transform:translateY(100vh) rotate(0deg);opacity:0}8%{opacity:1}92%{opacity:1}100%{transform:translateY(-10vh) rotate(360deg);opacity:0}}
+        .container{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 24px}
+        .navbar{position:fixed;top:0;left:0;right:0;z-index:100;backdrop-filter:blur(20px) saturate(1.8);background:rgba(244,240,250,0.88);border-bottom:1px solid var(--glass-border);transition:box-shadow .3s,background .3s}.navbar.scrolled{box-shadow:0 4px 30px rgba(120,80,180,0.06);background:rgba(244,240,250,0.95)}.nav-progress{position:absolute;bottom:0;left:0;height:2.5px;background:var(--gradient-hero);transition:width .15s ease-out;width:0%}.navbar-inner{max-width:900px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px}.nav-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;text-decoration:none;color:var(--text-primary)}.nav-brand .logo{width:34px;height:34px;border-radius:9px;background:var(--gradient-cool);display:grid;place-items:center;font-size:.85rem;font-weight:800;color:#fff;box-shadow:0 3px 14px rgba(120,80,180,0.3)}.nav-links{display:flex;align-items:center;gap:14px}.nav-date{font-size:.82rem;color:var(--text-secondary);font-weight:500;padding:6px 14px;border-radius:20px;background:var(--glass);border:1px solid var(--glass-border)}.nav-difficulty{font-size:.72rem;font-weight:700;padding:4px 12px;border-radius:20px;background:rgba(192,60,60,0.08);color:#c03c3c;border:1px solid rgba(192,60,60,0.2);text-transform:uppercase;letter-spacing:1px}
+        .hero{padding:130px 0 60px;text-align:center}.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:50px;background:rgba(120,80,180,0.08);border:1px solid rgba(120,80,180,0.2);font-size:.78rem;font-weight:600;color:var(--accent-1);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:26px;animation:fadeInDown .8s ease-out}.hero-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-4);animation:pulse 2s ease-in-out infinite}@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}.hero h1{font-size:clamp(2rem,5vw,2.9rem);font-weight:900;line-height:1.12;letter-spacing:-1.5px;animation:fadeInUp .8s ease-out .1s both}.hero h1 .gradient-text{background:var(--gradient-cool);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}.hero h1 .leetcode-num{display:block;font-size:.42em;letter-spacing:3px;-webkit-text-fill-color:var(--text-muted);background:none;margin-top:8px;font-weight:700}.hero-subtitle{margin-top:20px;font-size:1.08rem;color:var(--text-secondary);max-width:660px;margin-left:auto;margin-right:auto;line-height:1.75;animation:fadeInUp .8s ease-out .25s both}.hero-tags{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:28px;animation:fadeInUp .8s ease-out .4s both}.hero-tag{padding:6px 16px;border-radius:20px;font-size:.78rem;font-weight:600;border:1px solid}.hero-tag.diff{color:#c03c3c;border-color:rgba(192,60,60,0.3);background:rgba(192,60,60,0.06)}.hero-tag.cat{color:#584a7a;border-color:rgba(120,80,180,0.3);background:rgba(120,80,180,0.06)}.hero-tag.pattern{color:#6a5a30;border-color:rgba(208,192,240,0.5);background:rgba(208,192,240,0.2)}
+        @keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeInDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}.reveal{opacity:0;transform:translateY(40px);transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1)}.reveal.visible{opacity:1;transform:translateY(0)}
+        .card{background:var(--bg-card);backdrop-filter:blur(18px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:38px;margin-bottom:32px;transition:border-color .3s,box-shadow .4s,transform .3s;position:relative;overflow:hidden}.card::before{content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(120,80,180,0.03),transparent);transition:left .7s ease}.card:hover::before{left:100%}.card:hover{border-color:rgba(120,80,180,0.22);box-shadow:var(--shadow-card),var(--shadow-glow);transform:translateY(-3px)}.card-header{display:flex;align-items:center;gap:14px;margin-bottom:22px}.card-icon{width:50px;height:50px;border-radius:14px;display:grid;place-items:center;font-size:1.35rem;flex-shrink:0}.card-title{font-size:1.4rem;font-weight:800;letter-spacing:-.5px}.card p,.card li{color:var(--text-secondary);font-size:.95rem;line-height:1.8}.card ul{list-style:none;padding:0}.card ul li{padding:6px 0;padding-left:24px;position:relative}.card ul li::before{content:'▸';position:absolute;left:0;color:var(--accent-1);font-weight:700}.card strong{color:var(--text-primary)}
+        .section-label{display:flex;align-items:center;gap:14px;margin:55px 0 26px;font-size:.72rem;text-transform:uppercase;letter-spacing:3px;font-weight:700;color:var(--text-muted)}.section-label .sec-num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;background:var(--gradient-cool);color:#fff;font-size:.72rem;font-weight:800;flex-shrink:0;box-shadow:0 3px 12px rgba(120,80,180,0.22)}.section-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--glass-border),transparent)}
+        .array-vis{display:flex;justify-content:center;gap:8px;margin:20px 0;flex-wrap:wrap}
+        .array-cell{width:50px;height:50px;border-radius:8px;display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-weight:700;background:var(--glass);border:2px solid var(--glass-border);font-size:1.1rem;transition:all .3s}
+        .array-cell.left-part{border-color:var(--accent-2);background:rgba(144,96,208,0.1);color:var(--accent-4)}
+        .array-cell.right-part{border-color:var(--orange);background:rgba(192,122,64,0.1);color:#a06030}
+        .viz-controls{display:flex;justify-content:center;gap:12px;margin-top:24px;flex-wrap:wrap}.viz-btn{padding:11px 26px;border-radius:11px;border:none;font-family:'Inter',sans-serif;font-weight:600;font-size:.85rem;cursor:pointer;transition:all .25s}.viz-btn.primary{background:var(--gradient-cool);color:#fff;box-shadow:0 4px 20px rgba(120,80,180,0.25)}.viz-btn.primary:hover{transform:translateY(-2px)}.viz-btn.primary:disabled{opacity:.5;cursor:not-allowed;transform:none}.viz-btn.secondary{background:var(--glass);color:var(--text-primary);border:1px solid var(--glass-border)}.viz-btn.secondary:hover{border-color:var(--accent-1)}
+        .viz-step-info{margin-top:16px;font-size:.88rem;color:var(--text-secondary);min-height:30px;padding:10px 20px;border-radius:8px;background:rgba(120,80,180,0.04);display:inline-block}
+        .timeline{position:relative;padding-left:42px}.timeline::before{content:'';position:absolute;left:17px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,#7850B4,#9060D0,#B490E8,#d0c0f0)}.timeline-item{position:relative;margin-bottom:32px;padding-left:4px}.timeline-dot{position:absolute;left:-32px;top:4px;width:16px;height:16px;border-radius:50%;border:3px solid var(--accent-1);background:var(--bg-primary)}.timeline-item:nth-child(2) .timeline-dot{border-color:var(--accent-2)}.timeline-item:nth-child(3) .timeline-dot{border-color:var(--accent-3)}.timeline-item h4{font-size:1.02rem;font-weight:700;margin-bottom:6px}.timeline-item p{color:var(--text-secondary);font-size:.9rem;line-height:1.75}
+        .hl{padding:2px 8px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.82em;font-weight:600}.hl-purple{background:rgba(120,80,180,0.12);color:#4a2a8a}.hl-green{background:rgba(82,160,88,0.1);color:#3a7a42}.hl-blue{background:rgba(90,128,176,0.1);color:#4070a0}
+        .code-container{position:relative;border-radius:var(--radius);overflow:hidden;background:#1e1a28;border:1px solid rgba(120,80,180,0.15)}.code-topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(120,80,180,0.1)}.code-dots{display:flex;gap:7px}.code-dots span{width:12px;height:12px;border-radius:50%}.code-dots span:nth-child(1){background:#7850B4}.code-dots span:nth-child(2){background:#c49030}.code-dots span:nth-child(3){background:#52a058}.code-lang{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#8a7aaa}.code-body{padding:24px;overflow-x:auto}.code-body pre{margin:0;font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.85;color:#d0c0f0}.syn-kw{color:#b490e8}.syn-type{color:#a0c8f0}.syn-fn{color:#f0d090}.syn-num{color:#e0a0c0}.syn-cmt{color:#6a5a8a;font-style:italic}.syn-op{color:#a090c8}
+        .complexity-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.complexity-pill{padding:24px;border-radius:var(--radius-sm);background:var(--glass);border:1px solid var(--glass-border);text-align:center}.complexity-pill .label{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;color:var(--text-muted);margin-bottom:8px}.complexity-pill .big{font-size:1.5rem;font-weight:900;font-family:'JetBrains Mono',monospace}.complexity-pill .note{font-size:.78rem;color:var(--text-secondary);margin-top:6px}
+        .callout{display:flex;gap:16px;padding:22px 24px;border-radius:var(--radius-sm);border-left:4px solid;margin:20px 0}.callout.insight{background:rgba(144,96,208,0.06);border-color:var(--accent-2)}.callout.warning{background:rgba(120,80,180,0.05);border-color:var(--accent-1)}.callout .callout-icon{font-size:1.3rem;flex-shrink:0}.callout .callout-text{font-size:.9rem;color:var(--text-secondary);line-height:1.7}.callout .callout-text strong{color:var(--text-primary)}
+        .visual-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:var(--radius-sm);overflow:hidden;margin:16px 0}.visual-table th{background:rgba(120,80,180,0.07);color:var(--accent-1);font-size:.78rem;text-transform:uppercase;letter-spacing:1px;font-weight:700;padding:12px 16px;text-align:left;border-bottom:1px solid var(--glass-border)}.visual-table td{padding:12px 16px;font-size:.88rem;color:var(--text-secondary);border-bottom:1px solid rgba(120,80,180,0.04)}.visual-table tr:last-child td{border-bottom:none}.visual-table code{font-family:'JetBrains Mono',monospace;font-size:.82em;color:#4a2a8a;background:rgba(120,80,180,0.06);padding:2px 7px;border-radius:4px}
+        .pattern-badges{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.pattern-badge{display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:10px;background:var(--glass);border:1px solid var(--glass-border);font-size:.85rem;font-weight:600}.pattern-badge .emoji{font-size:1.1rem}
+        .footer{text-align:center;padding:60px 0 40px;color:var(--text-muted);font-size:.8rem}.footer .heart{color:var(--accent-1)}.footer a{color:var(--accent-4);text-decoration:none}
+        @media(max-width:640px){.card{padding:24px}.complexity-grid{grid-template-columns:1fr}.navbar-inner{padding:0 16px}.container{padding:0 16px}.nav-difficulty{display:none}}
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"><div class="orb"></div><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
+    <div id="particles"></div>
+    <nav class="navbar" id="navbar"><div class="nav-progress" id="nav-progress"></div><div class="navbar-inner"><a href="#" class="nav-brand"><div class="logo">A²</div> Algorithm Atlas</a><div class="nav-links"><span class="nav-difficulty">Hard</span><span class="nav-date">📅 17 Aug 2026</span></div></div></nav>
+    <div class="container">
+        <section class="hero">
+            <div class="hero-badge"><span class="dot"></span> Problem of the Day</div>
+            <h1><span class="gradient-text">Stone Game V</span><span class="leetcode-num">LeetCode #1563</span></h1>
+            <p class="hero-subtitle">Divide stones into two groups. Alice gets the smaller sum, and the larger sum is thrown away. Find her <strong>maximum possible score</strong>.</p>
+            <div class="hero-tags"><span class="hero-tag diff">🔴 Hard</span><span class="hero-tag cat">🧠 DP</span><span class="hero-tag pattern">➗ Divide & Conquer</span><span class="hero-tag pattern">📈 Prefix Sums</span></div>
+        </section>
+        <div class="section-label reveal"><span class="sec-num">01</span> The Problem</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(120,80,180,0.1);color:var(--accent-1)">📖</div><div class="card-title">What's the Problem?</div></div>
+            <p>You have a row of stones. Alice divides it into two non-empty parts. The part with the larger sum is discarded. She adds the smaller sum to her score and continues playing with that smaller part. If both sums are equal, she can choose either.</p>
+            <br><p>Return the <strong>maximum score</strong> Alice can achieve.</p>
+            <div class="callout insight" style="margin-top:20px"><div class="callout-icon">💡</div><div class="callout-text"><strong>Subproblems:</strong> This is a classic interval DP. To find the best score for subarray [L, R], we try every possible split point and recursively find the best score for the remaining part.</div></div>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">02</span> Try It Yourself</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(82,160,88,0.1);color:var(--green)">🎮</div><div class="card-title">Interactive Visualizer</div></div>
+            <p style="margin-bottom:14px">See how a row is split and scored.</p>
+            <div class="viz-board">
+                <div class="array-vis" id="array-display"></div>
+                <div class="viz-step-info" id="viz-info">Press Play to see optimal splits</div>
+                <div class="viz-controls"><button class="viz-btn primary" id="btn-play" onclick="playStep()">▶ Play Step</button><button class="viz-btn secondary" onclick="resetViz()">↻ Reset</button></div>
+            </div>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">03</span> Intuition</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(180,144,232,0.1);color:var(--accent-2)">🧠</div><div class="card-title">Interval DP + Prefix Sums</div></div>
+            <ul>
+                <li>To efficiently calculate the sum of any subarray during the DP, we precompute a <strong>Prefix Sum Array</strong>.</li>
+                <li>The state is defined by <span class="hl hl-purple">solve(l, r)</span> representing the max score from stones between indices l and r.</li>
+                <li>We iterate a split point `i` from `l` to `r-1`. We compare `leftSum` and `rightSum`.</li>
+                <li>We memoize the results in a 2D table `t[501][501]` to avoid recomputing overlapping subproblems.</li>
+            </ul>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">04</span> Approach</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(208,192,240,0.2);color:var(--orange)">🗺️</div><div class="card-title">Step-by-Step Approach</div></div>
+            <div class="timeline">
+                <div class="timeline-item"><div class="timeline-dot"></div><h4>1. Prefix Sums</h4><p>Build `prefix` array where `prefix[i]` is sum of first `i` stones.</p></div>
+                <div class="timeline-item"><div class="timeline-dot"></div><h4>2. Recursive DP Function</h4><p>Create `solve(l, r)` that loops through all split points `i` between `l` and `r`.</p></div>
+                <div class="timeline-item"><div class="timeline-dot"></div><h4>3. Handle Sum Comparisons</h4><p>If `leftSum < rightSum`, score is `leftSum + solve(l, i)`. If greater, use right part. If equal, take the max of both choices.</p></div>
+                <div class="timeline-item"><div class="timeline-dot"></div><h4>4. Memoization</h4><p>Cache the result in `t[l][r]` before returning.</p></div>
+            </div>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">05</span> Methods & Functions</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(192,144,48,0.1);color:var(--yellow)">⚙️</div><div class="card-title">Key Operations</div></div>
+            <table class="visual-table"><thead><tr><th>Code</th><th>Purpose</th></tr></thead><tbody>
+                <tr><td><code>getSum(l, r)</code></td><td>O(1) sum calculation: <code>prefix[r+1] - prefix[l]</code>.</td></tr>
+                <tr><td><code>solve(l, r)</code></td><td>Memoized recursive function. Base case <code>l == r</code> returns 0.</td></tr>
+                <tr><td><code>max(res, leftSum + solve(...))</code></td><td>Maximize score across all possible split points.</td></tr>
+            </tbody></table>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">06</span> Patterns Used</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(120,80,180,0.08);color:var(--accent-1)">🧩</div><div class="card-title">Design Patterns</div></div>
+            <div class="pattern-badges"><div class="pattern-badge"><span class="emoji">🧠</span> Interval DP</div><div class="pattern-badge"><span class="emoji">📈</span> Prefix Sums</div><div class="pattern-badge"><span class="emoji">💾</span> Memoization</div></div>
+            <ul style="margin-top:16px">
+                <li><strong>Interval DP:</strong> Problems involving shrinking a subarray from both ends or splitting it.</li>
+                <li><strong>Prefix Sums:</strong> Always use this when you need multiple subarray sums in O(1) time.</li>
+            </ul>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">07</span> Full Code</div>
+        <div class="card reveal" style="padding:0;overflow:hidden">
+            <div class="code-container"><div class="code-topbar"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-lang">C++ • solution.cpp</span></div><div class="code-body">
+<pre><span class="syn-kw">class</span> <span class="syn-type">Solution</span> {
+<span class="syn-kw">public</span>:
+    <span class="syn-type">int</span> t[<span class="syn-num">501</span>][<span class="syn-num">501</span>];
+    vector&lt;<span class="syn-type">int</span>&gt; prefix;
+
+    <span class="syn-type">int</span> <span class="syn-fn">getSum</span>(<span class="syn-type">int</span> l, <span class="syn-type">int</span> r) {
+        <span class="syn-kw">return</span> prefix[r <span class="syn-op">+</span> <span class="syn-num">1</span>] <span class="syn-op">-</span> prefix[l];
+    }
+
+    <span class="syn-type">int</span> <span class="syn-fn">solve</span>(vector&lt;<span class="syn-type">int</span>&gt;&amp; stones, <span class="syn-type">int</span> l, <span class="syn-type">int</span> r) {
+        <span class="syn-kw">if</span> (l <span class="syn-op">==</span> r) <span class="syn-kw">return</span> <span class="syn-num">0</span>;
+        <span class="syn-kw">if</span> (t[l][r] <span class="syn-op">!=</span> <span class="syn-num">-1</span>) <span class="syn-kw">return</span> t[l][r];
+
+        <span class="syn-type">int</span> result <span class="syn-op">=</span> <span class="syn-num">0</span>;
+        <span class="syn-kw">for</span> (<span class="syn-type">int</span> i <span class="syn-op">=</span> l; i <span class="syn-op">&lt;</span> r; i<span class="syn-op">++</span>) {
+            <span class="syn-type">int</span> leftSum <span class="syn-op">=</span> <span class="syn-fn">getSum</span>(l, i);
+            <span class="syn-type">int</span> rightSum <span class="syn-op">=</span> <span class="syn-fn">getSum</span>(i <span class="syn-op">+</span> <span class="syn-num">1</span>, r);
+
+            <span class="syn-kw">if</span> (leftSum <span class="syn-op">&lt;</span> rightSum) {
+                result <span class="syn-op">=</span> <span class="syn-fn">max</span>(result, leftSum <span class="syn-op">+</span> <span class="syn-fn">solve</span>(stones, l, i));
+            } <span class="syn-kw">else</span> <span class="syn-kw">if</span> (rightSum <span class="syn-op">&lt;</span> leftSum) {
+                result <span class="syn-op">=</span> <span class="syn-fn">max</span>(result, rightSum <span class="syn-op">+</span> <span class="syn-fn">solve</span>(stones, i <span class="syn-op">+</span> <span class="syn-num">1</span>, r));
+            } <span class="syn-kw">else</span> {
+                result <span class="syn-op">=</span> <span class="syn-fn">max</span>({result, leftSum <span class="syn-op">+</span> <span class="syn-fn">solve</span>(stones, l, i), rightSum <span class="syn-op">+</span> <span class="syn-fn">solve</span>(stones, i <span class="syn-op">+</span> <span class="syn-num">1</span>, r)});
+            }
+        }
+        <span class="syn-kw">return</span> t[l][r] <span class="syn-op">=</span> result;
+    }
+
+    <span class="syn-type">int</span> <span class="syn-fn">stoneGameV</span>(vector&lt;<span class="syn-type">int</span>&gt;&amp; stoneValue) {
+        <span class="syn-type">int</span> n <span class="syn-op">=</span> stoneValue.<span class="syn-fn">size</span>();
+        prefix.<span class="syn-fn">resize</span>(n <span class="syn-op">+</span> <span class="syn-num">1</span>, <span class="syn-num">0</span>);
+        <span class="syn-kw">for</span> (<span class="syn-type">int</span> i <span class="syn-op">=</span> <span class="syn-num">0</span>; i <span class="syn-op">&lt;</span> n; i<span class="syn-op">++</span>) prefix[i <span class="syn-op">+</span> <span class="syn-num">1</span>] <span class="syn-op">=</span> prefix[i] <span class="syn-op">+</span> stoneValue[i];
+        <span class="syn-fn">memset</span>(t, <span class="syn-num">-1</span>, <span class="syn-kw">sizeof</span>(t));
+        <span class="syn-kw">return</span> <span class="syn-fn">solve</span>(stoneValue, <span class="syn-num">0</span>, n <span class="syn-op">-</span> <span class="syn-num">1</span>);
+    }
+};</pre>
+            </div></div>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">08</span> Code Walkthrough</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(180,144,232,0.12);color:var(--accent-2)">🔍</div><div class="card-title">Line-by-Line Breakdown</div></div>
+            <table class="visual-table"><thead><tr><th style="width:42%">Code</th><th>What it does</th></tr></thead><tbody>
+                <tr><td><code>if (l == r) return 0;</code></td><td>Base case: 1 stone left, game over, score 0.</td></tr>
+                <tr><td><code>if (t[l][r] != -1) return t[l][r];</code></td><td>Memoization check: return cached answer.</td></tr>
+                <tr><td><code>if (leftSum &lt; rightSum)</code></td><td>Alice must take the smaller left part.</td></tr>
+                <tr><td><code>result = max(..., leftSum + solve(...))</code></td><td>Add leftSum to score, recurse on left part, maximize.</td></tr>
+            </tbody></table>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">09</span> Complexity Analysis</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(192,122,64,0.1);color:var(--orange)">📊</div><div class="card-title">Time & Space Complexity</div></div>
+            <div class="complexity-grid">
+                <div class="complexity-pill"><div class="label">Time</div><div class="big" style="color:var(--accent-4)">O(N³)</div><div class="note">N² states in DP, O(N)<br>loop per state to split.</div></div>
+                <div class="complexity-pill"><div class="label">Space</div><div class="big" style="color:var(--accent-1)">O(N²)</div><div class="note">2D array t[501][501]<br>for memoization.</div></div>
+            </div>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">10</span> Key Takeaways</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(82,160,88,0.1);color:var(--green)">✅</div><div class="card-title">Remember These</div></div>
+            <ul>
+                <li>Interval DP almost always uses a 2D array caching `dp[start][end]`.</li>
+                <li>Prefix sums are mandatory to avoid O(N) sum calculations inside the O(N³) loops.</li>
+                <li>When dealing with recursive max/min games, carefully outline the rules mapping to recurrence branches.</li>
+            </ul>
+        </div>
+        <footer class="footer"><p>Made with <span class="heart">♥</span> by <a href="#">Algorithm Atlas</a></p><p style="margin-top:6px;">LeetCode Problem of the Day — 17 August 2026</p></footer>
+    </div>
+    <script>
+        (function(){const c=document.getElementById('particles');for(let i=0;i<16;i++){const p=document.createElement('div');p.className='particle';const s=3+Math.random()*7;p.style.width=s+'px';p.style.height=s+'px';p.style.left=Math.random()*100+'%';p.style.animationDuration=(14+Math.random()*22)+'s';p.style.animationDelay=-(Math.random()*30)+'s';c.appendChild(p)}})();
+        const navbar=document.getElementById('navbar'),progressBar=document.getElementById('nav-progress');
+        window.addEventListener('scroll',()=>{navbar.classList.toggle('scrolled',window.scrollY>20);const h=document.documentElement.scrollHeight-window.innerHeight;progressBar.style.width=(h>0?(window.scrollY/h)*100:0)+'%'});
+        document.querySelectorAll('.reveal').forEach(r=>{new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting)en.target.classList.add('visible')})},{threshold:0.1}).observe(r)});
+        
+        const arr = [6, 2, 3, 4, 5, 5];
+        const steps=[
+            {left:[-1], right:[-1], info:"Stones: [6, 2, 3, 4, 5, 5]. We want to split it."},
+            {left:[0], right:[1,2,3,4,5], info:"Split at index 0: Left=[6], Right=[2,3,4,5,5]. Left sum=6, Right sum=19. Alice takes Left (6)."},
+            {left:[0,1,2], right:[3,4,5], info:"Optimal split at index 2: Left=[6,2,3], Right=[4,5,5]. Left sum=11, Right sum=14. Alice takes Left (11)."}
+        ];
+        let step=-1;
+        
+        function renderArray(lIdxs, rIdxs) {
+            const d = document.getElementById('array-display');
+            d.innerHTML = '';
+            arr.forEach((val, i) => {
+                const c = document.createElement('div');
+                c.className = 'array-cell';
+                if (lIdxs.includes(i)) c.classList.add('left-part');
+                if (rIdxs.includes(i)) c.classList.add('right-part');
+                c.innerText = val;
+                d.appendChild(c);
+            });
+        }
+        
+        function playStep(){
+            step++;
+            if(step >= steps.length) {
+                document.getElementById('btn-play').disabled = true;
+                return;
+            }
+            const s = steps[step];
+            renderArray(s.left, s.right);
+            document.getElementById('viz-info').innerHTML = s.info;
+        }
+        function resetViz(){
+            step = -1;
+            renderArray([], []);
+            document.getElementById('viz-info').textContent = "Press Play to see optimal splits";
+            document.getElementById('btn-play').disabled = false;
+        }
+        resetViz();
+    </script>
+</body>
+</html>
