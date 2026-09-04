@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeetCode 2029 — Stone Game IX | Algorithm Atlas</title>
+    <meta name="description" content="Interactive visual explanation of LeetCode Problem 2029: Stone Game IX using Game Theory and Modulo Arithmetic.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{--bg-primary:#faeff2;--bg-secondary:#f4e4e8;--bg-card:rgba(250,239,242,0.82);--glass:rgba(180,60,90,0.05);--glass-border:rgba(180,60,90,0.14);--text-primary:#402028;--text-secondary:#7a4e58;--text-muted:#aa7e8a;--accent-1:#B43C5A;--accent-2:#D06080;--accent-3:#E8A0B4;--accent-4:#8a1a3a;--green:#52a058;--yellow:#c49030;--orange:#c07a40;--blue:#5a80b0;--neutral-1:#f0c0d0;--neutral-2:#e8a0b4;--gradient-hero:linear-gradient(135deg,#B43C5A 0%,#D06080 40%,#E8A0B4 70%,#f0c0d0 100%);--gradient-cool:linear-gradient(135deg,#D06080,#B43C5A,#8a1a3a);--shadow-glow:0 0 60px rgba(180,60,90,0.10);--shadow-card:0 8px 32px rgba(180,60,90,0.06);--radius:18px;--radius-sm:12px}
+        html{scroll-behavior:smooth}body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg-primary);color:var(--text-primary);line-height:1.7;overflow-x:hidden;min-height:100vh}
+        .bg-mesh{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}.bg-mesh::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(180,60,90,0.04) 0%,transparent 60%),radial-gradient(circle at 80% 70%,rgba(240,192,208,0.06) 0%,transparent 50%)}.bg-mesh .orb{position:absolute;border-radius:50%;filter:blur(120px);animation:orbFloat 20s ease-in-out infinite}.bg-mesh .orb:nth-child(1){width:650px;height:650px;top:-12%;left:-8%;background:rgba(180,60,90,0.08);animation-duration:25s}.bg-mesh .orb:nth-child(2){width:500px;height:500px;top:30%;right:-10%;background:rgba(240,192,208,0.10);animation-duration:30s;animation-delay:-5s}.bg-mesh .orb:nth-child(3){width:480px;height:480px;bottom:-8%;left:20%;background:rgba(232,160,180,0.10);animation-duration:22s;animation-delay:-10s}.bg-mesh .orb:nth-child(4){width:380px;height:380px;top:55%;left:50%;background:rgba(208,96,128,0.08);animation-duration:28s;animation-delay:-15s}
+        @keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(50px,-35px) scale(1.08)}50%{transform:translate(-25px,50px) scale(0.95)}75%{transform:translate(35px,25px) scale(1.04)}}
+        .particle{position:fixed;pointer-events:none;z-index:0;border-radius:50%;animation:particleDrift linear infinite}.particle:nth-child(odd){background:rgba(180,60,90,0.12)}.particle:nth-child(even){background:rgba(232,160,180,0.18)}.particle:nth-child(3n){background:rgba(240,192,208,0.16)}.particle:nth-child(5n){background:rgba(208,96,128,0.14);border-radius:3px}
+        @keyframes particleDrift{0%{transform:translateY(100vh) rotate(0deg);opacity:0}8%{opacity:1}92%{opacity:1}100%{transform:translateY(-10vh) rotate(360deg);opacity:0}}
+        .container{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 24px}
+        .navbar{position:fixed;top:0;left:0;right:0;z-index:100;backdrop-filter:blur(20px) saturate(1.8);background:rgba(250,239,242,0.88);border-bottom:1px solid var(--glass-border);transition:box-shadow .3s,background .3s}.navbar.scrolled{box-shadow:0 4px 30px rgba(180,60,90,0.06);background:rgba(250,239,242,0.95)}.nav-progress{position:absolute;bottom:0;left:0;height:2.5px;background:var(--gradient-hero);transition:width .15s ease-out;width:0%}.navbar-inner{max-width:900px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px}.nav-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;text-decoration:none;color:var(--text-primary)}.nav-brand .logo{width:34px;height:34px;border-radius:9px;background:var(--gradient-cool);display:grid;place-items:center;font-size:.85rem;font-weight:800;color:#fff;box-shadow:0 3px 14px rgba(180,60,90,0.3)}.nav-links{display:flex;align-items:center;gap:14px}.nav-date{font-size:.82rem;color:var(--text-secondary);font-weight:500;padding:6px 14px;border-radius:20px;background:var(--glass);border:1px solid var(--glass-border)}.nav-difficulty{font-size:.72rem;font-weight:700;padding:4px 12px;border-radius:20px;background:rgba(192,144,48,0.08);color:#c49030;border:1px solid rgba(192,144,48,0.2);text-transform:uppercase;letter-spacing:1px}
+        .hero{padding:130px 0 60px;text-align:center}.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:50px;background:rgba(180,60,90,0.08);border:1px solid rgba(180,60,90,0.2);font-size:.78rem;font-weight:600;color:var(--accent-1);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:26px;animation:fadeInDown .8s ease-out}.hero-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-4);animation:pulse 2s ease-in-out infinite}@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}.hero h1{font-size:clamp(2rem,5vw,2.9rem);font-weight:900;line-height:1.12;letter-spacing:-1.5px;animation:fadeInUp .8s ease-out .1s both}.hero h1 .gradient-text{background:var(--gradient-cool);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}.hero h1 .leetcode-num{display:block;font-size:.42em;letter-spacing:3px;-webkit-text-fill-color:var(--text-muted);background:none;margin-top:8px;font-weight:700}.hero-subtitle{margin-top:20px;font-size:1.08rem;color:var(--text-secondary);max-width:660px;margin-left:auto;margin-right:auto;line-height:1.75;animation:fadeInUp .8s ease-out .25s both}.hero-tags{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:28px;animation:fadeInUp .8s ease-out .4s both}.hero-tag{padding:6px 16px;border-radius:20px;font-size:.78rem;font-weight:600;border:1px solid}.hero-tag.diff{color:#c49030;border-color:rgba(192,144,48,0.3);background:rgba(192,144,48,0.06)}.hero-tag.cat{color:#7a4e58;border-color:rgba(180,60,90,0.3);background:rgba(180,60,90,0.06)}.hero-tag.pattern{color:#6a5a30;border-color:rgba(216,208,240,0.5);background:rgba(216,208,240,0.2)}
+        @keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeInDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}.reveal{opacity:0;transform:translateY(40px);transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1)}.reveal.visible{opacity:1;transform:translateY(0)}
+        .card{background:var(--bg-card);backdrop-filter:blur(18px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:38px;margin-bottom:32px;transition:border-color .3s,box-shadow .4s,transform .3s;position:relative;overflow:hidden}.card::before{content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(180,60,90,0.03),transparent);transition:left .7s ease}.card:hover::before{left:100%}.card:hover{border-color:rgba(180,60,90,0.22);box-shadow:var(--shadow-card),var(--shadow-glow);transform:translateY(-3px)}.card-header{display:flex;align-items:center;gap:14px;margin-bottom:22px}.card-icon{width:50px;height:50px;border-radius:14px;display:grid;place-items:center;font-size:1.35rem;flex-shrink:0}.card-title{font-size:1.4rem;font-weight:800;letter-spacing:-.5px}.card p,.card li{color:var(--text-secondary);font-size:.95rem;line-height:1.8}.card ul{list-style:none;padding:0}.card ul li{padding:6px 0;padding-left:24px;position:relative}.card ul li::before{content:'▸';position:absolute;left:0;color:var(--accent-1);font-weight:700}.card strong{color:var(--text-primary)}
+        .section-label{display:flex;align-items:center;gap:14px;margin:55px 0 26px;font-size:.72rem;text-transform:uppercase;letter-spacing:3px;font-weight:700;color:var(--text-muted)}.section-label .sec-num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;background:var(--gradient-cool);color:#fff;font-size:.72rem;font-weight:800;flex-shrink:0;box-shadow:0 3px 12px rgba(180,60,90,0.22)}.section-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--glass-border),transparent)}
+        .board{display:flex;flex-direction:column;align-items:center;margin:20px 0}
+        .stone-row{display:flex;justify-content:center;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+        .stone-cell{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-weight:700;background:var(--glass);border:2px solid var(--glass-border);font-size:1.1rem;transition:all .3s}
+        .stone-cell.active{border-color:var(--accent-1);background:rgba(180,60,90,0.1);color:var(--accent-1);transform:scale(1.1)}
+        .stone-cell.taken{opacity:0.2;transform:scale(0.8)}
+        .status-box{padding:12px 24px;border-radius:12px;background:rgba(180,60,90,0.06);border:1px solid rgba(180,60,90,0.15);font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--accent-4)}
+        .viz-controls{display:flex;justify-content:center;gap:12px;margin-top:24px;flex-wrap:wrap}.viz-btn{padding:11px 26px;border-radius:11px;border:none;font-family:'Inter',sans-serif;font-weight:600;font-size:.85rem;cursor:pointer;transition:all .25s}.viz-btn.primary{background:var(--gradient-cool);color:#fff;box-shadow:0 4px 20px rgba(180,60,90,0.25)}.viz-btn.primary:hover{transform:translateY(-2px)}.viz-btn.primary:disabled{opacity:.5;cursor:not-allowed;transform:none}.viz-btn.secondary{background:var(--glass);color:var(--text-primary);border:1px solid var(--glass-border)}.viz-btn.secondary:hover{border-color:var(--accent-1)}
+        .viz-step-info{margin-top:16px;font-size:.88rem;color:var(--text-secondary);min-height:30px;padding:10px 20px;border-radius:8px;background:rgba(180,60,90,0.04);display:inline-block}
+        .timeline{position:relative;padding-left:42px}.timeline::before{content:'';position:absolute;left:17px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,#B43C5A,#D06080,#E8A0B4,#f0c0d0)}.timeline-item{position:relative;margin-bottom:32px;padding-left:4px}.timeline-dot{position:absolute;left:-32px;top:4px;width:16px;height:16px;border-radius:50%;border:3px solid var(--accent-1);background:var(--bg-primary)}.timeline-item:nth-child(2) .timeline-dot{border-color:var(--accent-2)}.timeline-item:nth-child(3) .timeline-dot{border-color:var(--accent-3)}.timeline-item h4{font-size:1.02rem;font-weight:700;margin-bottom:6px}.timeline-item p{color:var(--text-secondary);font-size:.9rem;line-height:1.75}
+        .hl{padding:2px 8px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.82em;font-weight:600}.hl-red{background:rgba(180,60,90,0.12);color:#8a1a3a}.hl-green{background:rgba(82,160,88,0.1);color:#3a7a42}.hl-blue{background:rgba(90,128,176,0.1);color:#4070a0}
+        .code-container{position:relative;border-radius:var(--radius);overflow:hidden;background:#2a1a1f;border:1px solid rgba(180,60,90,0.15)}.code-topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(180,60,90,0.1)}.code-dots{display:flex;gap:7px}.code-dots span{width:12px;height:12px;border-radius:50%}.code-dots span:nth-child(1){background:#B43C5A}.code-dots span:nth-child(2){background:#c49030}.code-dots span:nth-child(3){background:#52a058}.code-lang{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#aa7e8a}.code-body{padding:24px;overflow-x:auto}.code-body pre{margin:0;font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.85;color:#f0c0d0}.syn-kw{color:#e8a0b4}.syn-type{color:#a0c8f0}.syn-fn{color:#f0d090}.syn-num{color:#e0a0c0}.syn-cmt{color:#7a4e58;font-style:italic}.syn-op{color:#d0b0c0}
+        .complexity-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.complexity-pill{padding:24px;border-radius:var(--radius-sm);background:var(--glass);border:1px solid var(--glass-border);text-align:center}.complexity-pill .label{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;color:var(--text-muted);margin-bottom:8px}.complexity-pill .big{font-size:1.5rem;font-weight:900;font-family:'JetBrains Mono',monospace}.complexity-pill .note{font-size:.78rem;color:var(--text-secondary);margin-top:6px}
+        .callout{display:flex;gap:16px;padding:22px 24px;border-radius:var(--radius-sm);border-left:4px solid;margin:20px 0}.callout.insight{background:rgba(208,96,128,0.06);border-color:var(--accent-2)}.callout.warning{background:rgba(180,60,90,0.05);border-color:var(--accent-1)}.callout .callout-icon{font-size:1.3rem;flex-shrink:0}.callout .callout-text{font-size:.9rem;color:var(--text-secondary);line-height:1.7}.callout .callout-text strong{color:var(--text-primary)}
+        .visual-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:var(--radius-sm);overflow:hidden;margin:16px 0}.visual-table th{background:rgba(180,60,90,0.07);color:var(--accent-1);font-size:.78rem;text-transform:uppercase;letter-spacing:1px;font-weight:700;padding:12px 16px;text-align:left;border-bottom:1px solid var(--glass-border)}.visual-table td{padding:12px 16px;font-size:.88rem;color:var(--text-secondary);border-bottom:1px solid rgba(180,60,90,0.04)}.visual-table tr:last-child td{border-bottom:none}.visual-table code{font-family:'JetBrains Mono',monospace;font-size:.82em;color:#8a1a3a;background:rgba(180,60,90,0.06);padding:2px 7px;border-radius:4px}
+        .pattern-badges{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.pattern-badge{display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:10px;background:var(--glass);border:1px solid var(--glass-border);font-size:.85rem;font-weight:600}.pattern-badge .emoji{font-size:1.1rem}
+        .footer{text-align:center;padding:60px 0 40px;color:var(--text-muted);font-size:.8rem}.footer .heart{color:var(--accent-1)}.footer a{color:var(--accent-4);text-decoration:none}
+        @media(max-width:640px){.card{padding:24px}.complexity-grid{grid-template-columns:1fr}.navbar-inner{padding:0 16px}.container{padding:0 16px}.nav-difficulty{display:none}}
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"><div class="orb"></div><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
+    <div id="particles"></div>
+    <nav class="navbar" id="navbar"><div class="nav-progress" id="nav-progress"></div><div class="navbar-inner"><a href="#" class="nav-brand"><div class="logo">A²</div> Algorithm Atlas</a><div class="nav-links"><span class="nav-difficulty">Medium</span><span class="nav-date">📅 16 Aug 2026</span></div></div></nav>
+    <div class="container">
+        <section class="hero">
+            <div class="hero-badge"><span class="dot"></span> Problem of the Day</div>
+            <h1><span class="gradient-text">Stone Game IX</span><span class="leetcode-num">LeetCode #2029</span></h1>
+            <p class="hero-subtitle">Alice and Bob play a turn-based game picking stones. The sum of picked stones must <strong>not</strong> be a multiple of 3. Return true if Alice wins.</p>
+            <div class="hero-tags"><span class="hero-tag diff">🟡 Medium</span><span class="hero-tag cat">🎮 Game Theory</span><span class="hero-tag cat">📐 Math</span><span class="hero-tag pattern">🔢 Modulo Arithmetic</span></div>
+        </section>
+        <div class="section-label reveal"><span class="sec-num">01</span> The Problem</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(180,60,90,0.1);color:var(--accent-1)">📖</div><div class="card-title">What's the Problem?</div></div>
+            <p>You have an array of stones. Alice and Bob take turns picking a stone and adding its value to a running sum. The player who makes the running sum a multiple of 3 <strong>loses</strong>.</p>
+            <br><p>Alice plays first. If there are no stones left, Alice loses. Does Alice have a winning strategy?</p>
+            <div class="callout insight" style="margin-top:20px"><div class="callout-icon">💡</div><div class="callout-text"><strong>Key Insight:</strong> The actual values of the stones don't matter, only their values <strong>modulo 3</strong>. We can reduce the array to a count of 0s, 1s, and 2s!</div></div>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">02</span> Try It Yourself</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(82,160,88,0.1);color:var(--green)">🎮</div><div class="card-title">Interactive Game Visualizer</div></div>
+            <p style="margin-bottom:14px">See how picking 1s and 2s forces the other player's hand.</p>
+            <div class="viz-board">
+                <div class="board">
+                    <div class="stone-row" id="stones-display"></div>
+                    <div class="status-box" id="sum-display">Sum = 0 (Turn: Alice)</div>
+                </div>
+                <div class="viz-step-info" id="viz-info">Press Play to watch Alice and Bob play optimally</div>
+                <div class="viz-controls"><button class="viz-btn primary" id="btn-play" onclick="playStep()">▶ Play Step</button><button class="viz-btn secondary" onclick="resetViz()">↻ Reset</button></div>
+            </div>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">03</span> Intuition</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(208,96,128,0.1);color:var(--accent-2)">🧠</div><div class="card-title">Math over Simulation</div></div>
+            <ul>
+                <li>Picking a <strong>0</strong> flips the turn without changing the sum mod 3. It's just a delay tactic!</li>
+                <li>If Alice starts with a <strong>1</strong>, the sequence of valid picks must be: <span class="hl hl-red">1, 1, 2, 1, 2, 1, 2...</span></li>
+                <li>If Alice starts with a <strong>2</strong>, the sequence must be: <span class="hl hl-blue">2, 2, 1, 2, 1, 2, 1...</span></li>
+                <li>Thus, if count of 0s is <strong>even</strong>, Alice can win if there's at least one 1 and one 2 (so she can choose the winning path).</li>
+                <li>If count of 0s is <strong>odd</strong>, the turn order flips, and Alice needs a difference of > 2 between count of 1s and 2s to win.</li>
+            </ul>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">04</span> Approach</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(232,160,180,0.2);color:var(--orange)">🗺️</div><div class="card-title">Step-by-Step Approach</div></div>
+            <div class="timeline">
+                <div class="timeline-item"><div class="timeline-dot"></div><h4>1. Count Modulo Frequencies</h4><p>Create an array `cnt` of size 3 to store the count of numbers that are 0, 1, and 2 mod 3.</p></div>
+                <div class="timeline-item"><div class="timeline-dot"></div><h4>2. Check Even 0s</h4><p>If `cnt[0]` is even, Bob can always neutralize Alice's 0s. Alice wins if she has both 1s and 2s to choose from.</p></div>
+                <div class="timeline-item"><div class="timeline-dot"></div><h4>3. Check Odd 0s</h4><p>If `cnt[0]` is odd, Alice needs an overwhelming majority of 1s or 2s (difference > 2) to force Bob into a losing move.</p></div>
+            </div>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">05</span> Methods & Functions</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(192,144,48,0.1);color:var(--yellow)">⚙️</div><div class="card-title">Key Operations</div></div>
+            <table class="visual-table"><thead><tr><th>Code</th><th>Purpose</th></tr></thead><tbody>
+                <tr><td><code>cnt[s % 3]++</code></td><td>Count frequencies of mod 3 values.</td></tr>
+                <tr><td><code>cnt[0] % 2 == 0</code></td><td>Check if the number of 0s is even.</td></tr>
+                <tr><td><code>cnt[1] > 0 && cnt[2] > 0</code></td><td>Win condition for even 0s.</td></tr>
+                <tr><td><code>abs(cnt[1] - cnt[2]) > 2</code></td><td>Win condition for odd 0s.</td></tr>
+            </tbody></table>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">06</span> Patterns Used</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(180,60,90,0.08);color:var(--accent-1)">🧩</div><div class="card-title">Design Patterns</div></div>
+            <div class="pattern-badges"><div class="pattern-badge"><span class="emoji">🎮</span> Game Theory</div><div class="pattern-badge"><span class="emoji">🔢</span> Modulo Bucketing</div><div class="pattern-badge"><span class="emoji">📊</span> Frequency Counting</div></div>
+            <ul style="margin-top:16px">
+                <li><strong>Modulo Bucketing:</strong> Reduce large numbers to a small finite set of states (0, 1, 2) when the goal involves divisibility.</li>
+                <li><strong>Game Theory (Nim-like):</strong> Instead of minimax simulation, find mathematical win conditions based on parity (even/odd).</li>
+            </ul>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">07</span> Full Code</div>
+        <div class="card reveal" style="padding:0;overflow:hidden">
+            <div class="code-container"><div class="code-topbar"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-lang">C++ • solution.cpp</span></div><div class="code-body">
+<pre><span class="syn-kw">class</span> <span class="syn-type">Solution</span> {
+<span class="syn-kw">public</span>:
+    <span class="syn-type">bool</span> <span class="syn-fn">stoneGameIX</span>(vector&lt;<span class="syn-type">int</span>&gt;&amp; stones) {
+        <span class="syn-type">int</span> cnt[<span class="syn-num">3</span>] <span class="syn-op">=</span> {<span class="syn-num">0</span>, <span class="syn-num">0</span>, <span class="syn-num">0</span>};
+        <span class="syn-kw">for</span> (<span class="syn-type">int</span> s : stones) {
+            cnt[s <span class="syn-op">%</span> <span class="syn-num">3</span>]<span class="syn-op">++</span>;
+        }
+
+        <span class="syn-kw">if</span> (cnt[<span class="syn-num">0</span>] <span class="syn-op">%</span> <span class="syn-num">2</span> <span class="syn-op">==</span> <span class="syn-num">0</span>) {
+            <span class="syn-kw">return</span> cnt[<span class="syn-num">1</span>] <span class="syn-op">&gt;</span> <span class="syn-num">0</span> <span class="syn-op">&amp;&amp;</span> cnt[<span class="syn-num">2</span>] <span class="syn-op">&gt;</span> <span class="syn-num">0</span>;
+        }
+
+        <span class="syn-kw">return</span> <span class="syn-fn">abs</span>(cnt[<span class="syn-num">1</span>] <span class="syn-op">-</span> cnt[<span class="syn-num">2</span>]) <span class="syn-op">&gt;</span> <span class="syn-num">2</span>;
+    }
+};</pre>
+            </div></div>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">08</span> Code Walkthrough</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(208,96,128,0.12);color:var(--accent-2)">🔍</div><div class="card-title">Line-by-Line Breakdown</div></div>
+            <table class="visual-table"><thead><tr><th style="width:42%">Code</th><th>What it does</th></tr></thead><tbody>
+                <tr><td><code>int cnt[3] = {0, 0, 0}</code></td><td>Initialize counters for 0, 1, 2 mod 3.</td></tr>
+                <tr><td><code>cnt[s % 3]++</code></td><td>Populate frequencies.</td></tr>
+                <tr><td><code>cnt[0] % 2 == 0</code></td><td>If the number of 0s is even (they cancel out).</td></tr>
+                <tr><td><code>cnt[1] > 0 && cnt[2] > 0</code></td><td>Alice wins if she can pick a 1 or a 2 to start.</td></tr>
+                <tr><td><code>abs(cnt[1] - cnt[2]) > 2</code></td><td>If 0s are odd, Alice needs a large imbalance to win.</td></tr>
+            </tbody></table>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">09</span> Complexity Analysis</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(192,122,64,0.1);color:var(--orange)">📊</div><div class="card-title">Time & Space Complexity</div></div>
+            <div class="complexity-grid">
+                <div class="complexity-pill"><div class="label">Time</div><div class="big" style="color:var(--accent-4)">O(n)</div><div class="note">Single pass to<br>count frequencies.</div></div>
+                <div class="complexity-pill"><div class="label">Space</div><div class="big" style="color:var(--accent-1)">O(1)</div><div class="note">Array of size 3<br>is constant space.</div></div>
+            </div>
+        </div>
+        <div class="section-label reveal"><span class="sec-num">10</span> Key Takeaways</div>
+        <div class="card reveal">
+            <div class="card-header"><div class="card-icon" style="background:rgba(82,160,88,0.1);color:var(--green)">✅</div><div class="card-title">Remember These</div></div>
+            <ul>
+                <li>Game Theory problems often have <strong>O(1) space, O(N) time</strong> math solutions. Look for patterns before writing minimax!</li>
+                <li>When dealing with divisibility, always <strong>bucket by modulo</strong>.</li>
+                <li>Zero elements are often just "turn flippers" — analyze their parity (even/odd).</li>
+            </ul>
+        </div>
+        <footer class="footer"><p>Made with <span class="heart">♥</span> by <a href="#">Algorithm Atlas</a></p><p style="margin-top:6px;">LeetCode Problem of the Day — 16 August 2026</p></footer>
+    </div>
+    <script>
+        (function(){const c=document.getElementById('particles');for(let i=0;i<16;i++){const p=document.createElement('div');p.className='particle';const s=3+Math.random()*7;p.style.width=s+'px';p.style.height=s+'px';p.style.left=Math.random()*100+'%';p.style.animationDuration=(14+Math.random()*22)+'s';p.style.animationDelay=-(Math.random()*30)+'s';c.appendChild(p)}})();
+        const navbar=document.getElementById('navbar'),progressBar=document.getElementById('nav-progress');
+        window.addEventListener('scroll',()=>{navbar.classList.toggle('scrolled',window.scrollY>20);const h=document.documentElement.scrollHeight-window.innerHeight;progressBar.style.width=(h>0?(window.scrollY/h)*100:0)+'%'});
+        document.querySelectorAll('.reveal').forEach(r=>{new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting)en.target.classList.add('visible')})},{threshold:0.1}).observe(r)});
+        
+        const stones = [2, 1, 1, 2, 0];
+        const steps=[
+            {picked:-1, sum:0, turn:"Alice", info:"Stones (mod 3): [2, 1, 1, 2, 0]. Alice's turn."},
+            {picked:0, sum:2, turn:"Bob", info:"Alice picks 2. Sum = 2. Bob's turn."},
+            {picked:1, sum:3, turn:"Bob", info:"Bob picks 1. Sum = 3. 3 is a multiple of 3. Bob loses! Alice wins!"}
+        ];
+        let step=-1;
+        
+        function renderStones(pickedIdx) {
+            const d = document.getElementById('stones-display');
+            d.innerHTML = '';
+            stones.forEach((val, i) => {
+                const c = document.createElement('div');
+                c.className = 'stone-cell' + (i === pickedIdx ? ' active' : (i < pickedIdx ? ' taken' : ''));
+                c.innerText = val;
+                d.appendChild(c);
+            });
+        }
+        
+        function playStep(){
+            step++;
+            if(step >= steps.length) {
+                document.getElementById('btn-play').disabled = true;
+                return;
+            }
+            const s = steps[step];
+            renderStones(s.picked);
+            document.getElementById('sum-display').innerText = `Sum = ${s.sum} (Turn: ${s.turn})`;
+            document.getElementById('viz-info').innerHTML = s.info;
+        }
+        function resetViz(){
+            step = -1;
+            renderStones(-1);
+            document.getElementById('sum-display').innerText = "Sum = 0 (Turn: Alice)";
+            document.getElementById('viz-info').textContent = "Press Play to watch Alice and Bob play optimally";
+            document.getElementById('btn-play').disabled = false;
+        }
+        resetViz();
+    </script>
+</body>
+</html>
